@@ -1,37 +1,20 @@
 // SPDX-License-Identifier: EUPL-1.2
 using System.Text;
+using OmniEurope.Documents.Pdf.Layout;
 
 namespace OmniEurope.Documents.Pdf.Text;
 
 /// <summary>
-/// Plain text from letters: letters on the same baseline (within a third of the font size) form a line,
-/// lines go from top to bottom, letters left to right, and a gap wider than a quarter of the font size
-/// becomes a space.
+/// Plain text from letters: letters are grouped into lines as the layout analysis does (one baseline, a
+/// superscript or subscript kept on the line of its text), lines go from top to bottom, letters left to right,
+/// and a gap wider than a quarter of the font size, or a baseline shift (into or out of a superscript or
+/// subscript), becomes a space.
 /// </summary>
 internal static class SimpleTextOrder
 {
     public static string Build(IReadOnlyList<PdfLetter> letters)
     {
-        var visible = letters.Where(l => l.Value.Length > 0).ToList();
-        if (visible.Count == 0)
-        {
-            return string.Empty;
-        }
-
-        var lines = new List<List<PdfLetter>>();
-        foreach (var letter in visible.OrderByDescending(l => Math.Round(l.Y, 1)).ThenBy(l => l.X))
-        {
-            var line = lines.Count > 0 ? lines[^1] : null;
-            if (line is not null && Math.Abs(line[0].Y - letter.Y) <= Math.Max(line[0].FontSize, letter.FontSize) / 3)
-            {
-                line.Add(letter);
-            }
-            else
-            {
-                lines.Add([letter]);
-            }
-        }
-
+        var lines = LineGrouping.Group(letters.Where(l => l.Value.Length > 0).Select(l => new PlacedLetter(l, l.X, l.Y)));
         var text = new StringBuilder();
         foreach (var line in lines)
         {
@@ -46,23 +29,24 @@ internal static class SimpleTextOrder
         return text.ToString();
     }
 
-    private static void AppendLine(List<PdfLetter> line, StringBuilder text)
+    private static void AppendLine(List<PlacedLetter> line, StringBuilder text)
     {
-        PdfLetter? previous = null;
+        PlacedLetter? previous = null;
         foreach (var letter in line)
         {
-            if (previous is not null)
+            if (previous is { } p && NeedsSpace(p, letter, text))
             {
-                var gap = letter.X - (previous.X + previous.Width);
-                var endsWithSpace = text.Length > 0 && text[^1] == ' ';
-                if (gap > Math.Max(previous.FontSize, 1) * 0.25 && !endsWithSpace && letter.Value != " ")
-                {
-                    text.Append(' ');
-                }
+                text.Append(' ');
             }
 
-            text.Append(letter.Value);
+            text.Append(letter.Letter.Value);
             previous = letter;
         }
+    }
+
+    private static bool NeedsSpace(PlacedLetter previous, PlacedLetter letter, StringBuilder text)
+    {
+        var apart = letter.X - previous.Right > previous.Size * 0.25 || LineGrouping.IsShifted(previous, letter);
+        return apart && text[^1] != ' ' && letter.Letter.Value != " ";
     }
 }

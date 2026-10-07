@@ -11,6 +11,9 @@ namespace OmniEurope.Documents.Pdf.Layout;
 /// blocks into reading order by recursive XY-cut (columns read top to bottom, left column first). Across a
 /// document, blocks repeated near the top or bottom of most pages are marked as decoration.
 /// Text written at an angle is laid out in its own direction.
+/// A superscript or subscript (a smaller run raised or lowered against the text, such as a footnote reference)
+/// stays on the line of the text it belongs to but is a word of its own; letters of different sizes on one
+/// baseline with no gap between them (small capitals) stay one word.
 /// </summary>
 public static class PdfLayoutAnalyzer
 {
@@ -62,64 +65,39 @@ public static class PdfLayoutAnalyzer
         {
             var angle = direction.Key * Math.PI / 180;
             var (cos, sin) = (Math.Cos(-angle), Math.Sin(-angle));
-            var projected = direction.Select(l => (Letter: l, X: (l.X * cos) - (l.Y * sin), Y: (l.X * sin) + (l.Y * cos))).ToList();
-            foreach (var baseline in GroupBaselines(projected))
+            var projected = direction.Select(l => new PlacedLetter(l, (l.X * cos) - (l.Y * sin), (l.X * sin) + (l.Y * cos)));
+            foreach (var line in LineGrouping.Group(projected))
             {
-                lines.AddRange(Segments(baseline));
+                lines.AddRange(Segments(line));
             }
         }
 
         return lines;
     }
 
-    // Letters whose projected baselines are within a third of the font size share a line.
-    private static List<List<(PdfLetter Letter, double X, double Y)>> GroupBaselines(List<(PdfLetter Letter, double X, double Y)> letters)
+    // Splits a line into words at blanks, gaps and baseline shifts, and into segments at gaps wide enough to be a
+    // gutter.
+    private static IEnumerable<PdfTextLine> Segments(List<PlacedLetter> line)
     {
-        var groups = new List<List<(PdfLetter Letter, double X, double Y)>>();
-        foreach (var letter in letters.OrderByDescending(l => l.Y).ThenBy(l => l.X))
+        var words = new List<List<PlacedLetter>>();
+        var segments = new List<List<List<PlacedLetter>>>();
+        List<PlacedLetter>? word = null;
+        PlacedLetter? previous = null;
+        foreach (var current in line.OrderBy(l => l.X))
         {
-            var group = groups.Count > 0 ? groups[^1] : null;
-            var tolerance = Math.Max(letter.Letter.FontSize, 1) / 3;
-            if (group is not null && Math.Abs(group[0].Y - letter.Y) <= tolerance)
-            {
-                group.Add(letter);
-            }
-            else
-            {
-                groups.Add([letter]);
-            }
-        }
-
-        return groups;
-    }
-
-    // Splits a baseline into words at spaces and gaps, and into segments at gaps wide enough to be a gutter.
-    private static IEnumerable<PdfTextLine> Segments(List<(PdfLetter Letter, double X, double Y)> baseline)
-    {
-        var sorted = baseline.OrderBy(l => l.X).ToList();
-        var words = new List<List<(PdfLetter Letter, double X, double Y)>>();
-        var segments = new List<List<List<(PdfLetter Letter, double X, double Y)>>>();
-        List<(PdfLetter Letter, double X, double Y)>? word = null;
-        (PdfLetter Letter, double X, double Y)? previous = null;
-        foreach (var current in sorted)
-        {
-            var size = Math.Max(current.Letter.FontSize, 1);
-            var gap = previous is { } p ? current.X - (p.X + p.Letter.Width) : 0;
-            if (previous is not null && gap > size * 1.6)
-            {
-                Close(ref word, words);
-                if (words.Count > 0)
-                {
-                    segments.Add(words);
-                    words = [];
-                }
-            }
-            else if (string.IsNullOrWhiteSpace(current.Letter.Value) || (previous is not null && gap > size * 0.2))
+            var cut = previous is { } p ? LineGrouping.Between(p, current) : LetterBreak.None;
+            if (cut != LetterBreak.None)
             {
                 Close(ref word, words);
             }
 
-            if (!string.IsNullOrWhiteSpace(current.Letter.Value))
+            if (cut == LetterBreak.Segment && words.Count > 0)
+            {
+                segments.Add(words);
+                words = [];
+            }
+
+            if (!current.IsBlank)
             {
                 (word ??= []).Add(current);
             }
@@ -133,14 +111,14 @@ public static class PdfLayoutAnalyzer
             segments.Add(words);
         }
 
-        foreach (var segment in segments)
+        return segments.Select(segment =>
         {
             var built = segment.Select(w => new PdfWord(string.Concat(w.Select(l => l.Letter.Value)), Bounds(w.Select(l => l.Letter.BoundingBox)), w.Select(l => l.Letter).ToList())).ToList();
-            yield return new PdfTextLine(built, Bounds(built.Select(w => w.BoundingBox)));
-        }
+            return new PdfTextLine(built, Bounds(built.Select(w => w.BoundingBox)));
+        });
     }
 
-    private static void Close(ref List<(PdfLetter Letter, double X, double Y)>? word, List<List<(PdfLetter Letter, double X, double Y)>> words)
+    private static void Close(ref List<PlacedLetter>? word, List<List<PlacedLetter>> words)
     {
         if (word is { Count: > 0 })
         {

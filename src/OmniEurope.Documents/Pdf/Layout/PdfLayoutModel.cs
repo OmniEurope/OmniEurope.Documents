@@ -25,8 +25,9 @@ public sealed record PdfTextLine(IReadOnlyList<PdfWord> Words, PdfRectangle Boun
     /// <summary>The words joined by single spaces.</summary>
     public string Text => string.Join(' ', Words.Select(w => w.Text));
 
-    /// <summary>The baseline (y of the first letter).</summary>
-    public double Baseline => Words[0].Letters[0].Y;
+    /// <summary>The baseline of the main text: the y shared by the most letters, weighted by their size, so a
+    /// raised or lowered run (a footnote reference at the start of the line) does not move it.</summary>
+    public double Baseline => Words.SelectMany(w => w.Letters).GroupBy(l => Math.Round(l.Y, 1)).MaxBy(g => g.Sum(l => l.FontSize))!.First().Y;
 
     /// <summary>The most frequent font size of the line.</summary>
     public double FontSize => Words.SelectMany(w => w.Letters).GroupBy(l => Math.Round(l.FontSize, 1)).MaxBy(g => g.Count())!.Key;
