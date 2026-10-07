@@ -20,6 +20,6 @@ un plan décrit un travail, pas l'état du produit.
 
 | Plan | Travail | ADR |
 |---|---|---|
-| [PLAN-003](archive/PLAN-003-tests-integration.md) | Tests d'intégration : parcours complets, robustesse, volume, parallélisme ; 97,69 % des lignes, 89,90 % des branches | Aucun |
+| [PLAN-003](archive/PLAN-003-tests-integration.md) | Tests d'intégration : parcours complets, robustesse, volume, parallélisme ; suite rapide à 96,95 % des lignes et 87,71 % des branches | Aucun |
 | [PLAN-002](archive/PLAN-002-couverture-95.md) | Couverture des lignes portée de 91,66 % à 96,81 %, sans faux test | Aucun |
 | [PLAN-001](archive/PLAN-001-perimetre-initial.md) | Périmètre initial zéro dépendance : CSV, Markdown, diff, HTML, Excel, images, polices, PDF (écriture, lecture, opérations, analyse, rendu), Word et Word vers PDF, conversions, publication | Aucun |

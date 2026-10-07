@@ -136,6 +136,11 @@ internal sealed class TiffPage(byte[] data, Dictionary<int, uint[]> tags)
         var tiled = Tags(322).Length > 0;
         var chunkWidth = tiled ? (int)Tag(322) : width;
         var chunkHeight = tiled ? (int)Tag(323) : (int)Math.Min(Tag(278, (uint)height), (uint)height);
+        if (chunkWidth < 1 || chunkHeight < 1)
+        {
+            throw new InvalidDataException("Invalid TIFF tile or strip size.");
+        }
+
         var layout = new TiffLayout(width, height, samples, bits, chunkWidth, chunkHeight, Tag(-1) == 1);
         var raw = ReadChunks(layout, compression, photometric);
         var image = new TiffSamples(layout, photometric, Tags(320), Tags(338).Length > 0).ToImage(raw);

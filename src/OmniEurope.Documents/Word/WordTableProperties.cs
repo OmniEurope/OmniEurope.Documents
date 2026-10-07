@@ -216,8 +216,9 @@ public sealed record WordTableCellProperties
     /// <summary>Text is not wrapped.</summary>
     public bool? NoWrap { get; init; }
 
-    /// <summary>Spreadsheet text wider than its cell: laid out on one line, placed by its alignment and clipped
-    /// to the cell. Used by the conversions, never read from or written to a package.</summary>
+    /// <summary>Spreadsheet content on one line: laid out at its own width, placed by its alignment and clipped
+    /// to the cell widened by the empty neighbours it runs over. Used by the conversions, never read from or
+    /// written to a package.</summary>
     internal WordCellOverflow? Overflow { get; init; }
 
     /// <summary>The members of <paramref name="top"/> that are set replace these.</summary>
@@ -235,8 +236,9 @@ public sealed record WordTableCellProperties
     };
 }
 
-/// <summary>One line of cell content: its width (points) and the side it is anchored to.</summary>
-internal sealed record WordCellOverflow(double Width, WordAlignment Alignment);
+/// <summary>One line of cell content: its width (points), the side it is anchored to, and how far (points) it
+/// may run past the left and right edges of its cell.</summary>
+internal sealed record WordCellOverflow(double Width, WordAlignment Alignment, double ExtendLeft = 0, double ExtendRight = 0);
 
 /// <summary>Part of a table that a conditional format of a table style targets.</summary>
 public enum WordTableRegion

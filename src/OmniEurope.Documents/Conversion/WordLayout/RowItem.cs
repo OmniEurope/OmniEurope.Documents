@@ -138,18 +138,24 @@ internal sealed class RowItem : FlowItem
 
     public override void Paint(PaintContext context, double x, double y, double width)
     {
-        var canvas = context.Canvas;
+        // Fills first, then contents, then borders: content that runs over a neighbouring cell stays on top of
+        // that cell's fill, and borders stay on top of everything.
         foreach (var cell in Cells)
         {
-            var height = cell.SpanHeight ?? Height;
-            var left = x + cell.X;
             if (TextStyle.ParseColor(cell.Properties.Shading) is { } shading)
             {
-                canvas.FillRectangle(left, y, cell.Width, cell.MergedAbove ? Height : height, shading);
+                context.Canvas.FillRectangle(x + cell.X, y, cell.Width, cell.MergedAbove ? Height : cell.SpanHeight ?? Height, shading);
             }
+        }
 
-            PaintContent(context, cell, left, y, height);
-            PaintBorders(context, cell, left, y);
+        foreach (var cell in Cells)
+        {
+            PaintContent(context, cell, x + cell.X, y, cell.SpanHeight ?? Height);
+        }
+
+        foreach (var cell in Cells)
+        {
+            PaintBorders(context, cell, x + cell.X, y);
         }
     }
 
@@ -164,11 +170,13 @@ internal sealed class RowItem : FlowItem
         };
         var innerWidth = Math.Max(1, cell.Width - cell.Margins.Left - cell.Margins.Right);
         var (start, lineWidth) = Placement(cell, left, innerWidth);
-        var clipped = ExactHeight || cell.Properties.Overflow is not null;
+        var overflow = cell.Properties.Overflow;
+        var clipped = ExactHeight || overflow is not null;
         if (clipped)
         {
+            var (before, after) = (overflow?.ExtendLeft ?? 0, overflow?.ExtendRight ?? 0);
             context.Canvas.SaveState();
-            context.Canvas.ClipRectangle(left, y, cell.Width, ExactHeight ? Height : height);
+            context.Canvas.ClipRectangle(left - before, y, cell.Width + before + after, ExactHeight ? Height : height);
         }
 
         foreach (var item in cell.Items)

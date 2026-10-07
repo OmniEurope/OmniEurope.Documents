@@ -28,6 +28,22 @@ public sealed class TiffDecoderTests
         Assert.Throws<ArgumentOutOfRangeException>(() => TiffDecoder.Decode(file, 2));
     }
 
+    [Theory]
+    [InlineData(322, 0u)]
+    [InlineData(323, 0u)]
+    [InlineData(278, 0u)]
+    public void A_zero_tile_or_strip_size_is_damaged_data(ushort tag, uint value)
+    {
+        // TileWidth (322), TileLength (323) or RowsPerStrip (278) of 0; the other tile dimension is 8.
+        (ushort, ushort, uint[])[] tags = tag == 278
+            ? [Grey8, BlackIsZero, (278, Long, [value])]
+            : [Grey8, BlackIsZero, (322, Long, [tag == 322 ? value : 8]), (323, Long, [tag == 323 ? value : 8]), (324, Long, [8]), (325, Long, [64])];
+        var file = Write(true, new Page(8, 8, tags, new byte[64]));
+
+        var error = Assert.Throws<InvalidDataException>(() => TiffDecoder.Decode(file));
+        Assert.Equal("Invalid TIFF tile or strip size.", error.Message);
+    }
+
     [Fact]
     public void Fill_order_2_reverses_the_bits_of_each_byte()
     {

@@ -26,6 +26,9 @@ Companion tools: HTML parsing and sanitising, text diff (lines and words).
 - **No OCR**: a scanned PDF (images only) gives no text.
 - **No user interface**: components that display or edit documents belong to a separate UI library, which
   can use this package.
+- **No lossless workbook editing yet**: saving a loaded `.xlsx` keeps cells, styles, merges, panes and
+  filters, but drops charts, pictures, conditional formats, data validation, comments and pivot tables.
+- **No formula evaluation**: formulas are kept with their last computed result, never recalculated.
 
 ## Layout
 

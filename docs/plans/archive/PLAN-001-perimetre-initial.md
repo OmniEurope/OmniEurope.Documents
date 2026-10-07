@@ -67,7 +67,7 @@ Chaque lot se termine par un commit sur `develop` quand la suite de tests est ve
 - [x] PNG (décodage tous types et profondeurs, entrelacement, encodage), JPEG (lecture d'en-tête,
   décodage baseline et progressif, encodage baseline), GIF (décodage), BMP/DIB, TIFF (non compressé,
   PackBits, LZW, Deflate, CCITT G3/G4).
-- Contrôle : images de référence produites par des codecs externes : décodage sans perte identique au pixel près (PNG, GIF, BMP, TIFF dont CCITT G3/G4), JPEG proche du décodage de référence, JPEG produits par lencodeur relus par un décodeur externe. Non couvert par un fichier de référence : JPEG CMJN/YCCK.
+- Contrôle : images de référence produites par des codecs externes : décodage sans perte identique au pixel près (PNG, GIF, BMP, TIFF dont CCITT G3/G4), JPEG proche du décodage de référence, JPEG produits par l'encodeur relus par un décodeur externe. Non couvert par un fichier de référence : JPEG CMJN/YCCK.
 
 ## Lot 7 : polices
 

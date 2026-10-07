@@ -34,7 +34,8 @@ jobs:
           --configuration Release --no-build --no-progress
           --report-trx --report-trx-filename tests.trx --results-directory artifacts/tests
       - name: Verify test results
-        # A run that leaves no result file, or a file without tests, is a failure, never a silent pass.
+        # A run that leaves no result file, executes no test, or reports a failed, errored, timed-out or
+        # aborted test is a failure, never a silent pass.
         shell: pwsh
         run: ./.github/scripts/verify-trx.ps1 -Directory artifacts/tests -Name tests.trx
 

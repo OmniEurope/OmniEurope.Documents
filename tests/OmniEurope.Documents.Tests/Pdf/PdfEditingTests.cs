@@ -159,6 +159,29 @@ public sealed class PdfEditingTests
     }
 
     [Fact]
+    public void Images_with_a_colour_key_or_stencil_mask_keep_their_transparency()
+    {
+        // A colour-key mask (array) and an explicit mask (stream): re-encoding would lose the transparency.
+        var noise = new byte[120 * 80 * 3];
+        new Random(3).NextBytes(noise);
+        var pdf = RawPdf.Page(
+            "q 120 0 0 80 0 0 cm /Im1 Do Q q 120 0 0 80 0 100 cm /Im2 Do Q",
+            "/XObject << /Im1 5 0 R /Im2 6 0 R >>",
+            string.Empty,
+            RawPdf.Stream("/Type /XObject /Subtype /Image /Width 120 /Height 80 /BitsPerComponent 8 /ColorSpace /DeviceRGB /Mask [0 10 0 10 0 10]", noise),
+            RawPdf.Stream("/Type /XObject /Subtype /Image /Width 120 /Height 80 /BitsPerComponent 8 /ColorSpace /DeviceRGB /Mask 7 0 R", noise),
+            RawPdf.Stream("/Type /XObject /Subtype /Image /Width 120 /Height 80 /ImageMask true", new byte[1200]));
+
+        var compressed = PdfDocument.Open(PdfCompressor.Compress(PdfDocument.Open(pdf), new PdfCompressionOptions { ImageQuality = 60, MaxImageSide = 40 }));
+
+        var images = compressed.GetPage(1).Images;
+        Assert.All(images, i => Assert.Equal((120, 80), (i.PixelWidth, i.PixelHeight)));
+        Assert.All(images, i => Assert.DoesNotContain("DCTDecode", i.Filters));
+        var text = Encoding.Latin1.GetString(PdfCompressor.Compress(PdfDocument.Open(pdf), new PdfCompressionOptions { ImageQuality = 60 }));
+        Assert.DoesNotContain("DCTDecode", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Text_inside_form_xobjects_is_extracted_once_even_when_a_form_draws_itself()
     {
         var pdf = RawPdf.Page(

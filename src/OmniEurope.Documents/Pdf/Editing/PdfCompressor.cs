@@ -11,12 +11,13 @@ namespace OmniEurope.Documents.Pdf.Editing;
 public sealed record PdfCompressionOptions
 {
     /// <summary>Re-encode colour and greyscale images as JPEG at this quality (1-100) when that makes them
-    /// smaller; null keeps images as they are. Default null (lossless only).</summary>
+    /// smaller; null keeps images as they are. Default null (lossless only). Images made transparent by a
+    /// <c>/Mask</c> are never re-encoded.</summary>
     public int? ImageQuality { get; init; }
 
     /// <summary>Scale colour and greyscale images down so neither side exceeds this many pixels (with
     /// <see cref="ImageQuality"/>; a scaled image stays lossless when JPEG would not be smaller); null keeps
-    /// their size.</summary>
+    /// their size. Images made transparent by a <c>/Mask</c> are kept as they are.</summary>
     public int? MaxImageSide { get; init; }
 }
 
@@ -98,7 +99,9 @@ public static class PdfCompressor
 
     private static PdfStream? Reencode(PdfObjectStore store, PdfStream stream, int quality, int? maxSide)
     {
-        if (store.Get(stream, "ImageMask") is PdfBoolean { Value: true } || store.Number(stream, "BitsPerComponent", 8) < 8)
+        // Stencil masks, low bit depths and images made transparent by a /Mask (colour key or explicit mask)
+        // stay as they are: re-encoding would drop that transparency.
+        if (store.Get(stream, "ImageMask") is PdfBoolean { Value: true } || store.Number(stream, "BitsPerComponent", 8) < 8 || stream["Mask"] is not null)
         {
             return null;
         }

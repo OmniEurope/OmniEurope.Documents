@@ -8,6 +8,8 @@ $ErrorActionPreference = 'Stop'
 $trx = Get-ChildItem -LiteralPath $Directory -Filter $Name -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
 if (-not $trx) { throw "The test run produced no $Name." }
 $counters = ([xml](Get-Content -LiteralPath $trx.FullName -Raw)).TestRun.ResultSummary.Counters
-if ([int]$counters.total -eq 0) { throw "$Name holds no test." }
-if ([int]$counters.failed -gt 0) { throw "$Name reports $($counters.failed) failed test(s)." }
+if ([int]$counters.executed -eq 0) { throw "$Name holds no executed test." }
+foreach ($outcome in "failed", "error", "timeout", "aborted") {
+    if ([int]$counters.$outcome -gt 0) { throw "$Name reports $($counters.$outcome) $outcome test(s)." }
+}
 "Tests: $($counters.passed) passed of $($counters.total)."

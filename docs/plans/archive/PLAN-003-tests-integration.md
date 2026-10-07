@@ -62,7 +62,9 @@ Chaque lot se termine par un commit sur `develop` quand la suite de tests et le 
   retrouvée par son texte et par sa couleur dans le rendu, le tampon vérifié comme mise à jour incrémentale
   (le fichier d'origine reste intact en tête). Défaut corrigé : `MaxImageSide` était ignoré pour une image
   de moins de 64 × 64 pixels ou quand le JPEG n'était pas plus petit ; l'image est désormais toujours
-  réduite et reste sans perte si le JPEG ne paie pas.
+  réduite et reste sans perte si le JPEG ne paie pas. Corrigé en revue : une image rendue transparente par
+  un `/Mask` (clé de couleur ou masque explicite) est laissée telle quelle, la réencoder perdrait sa
+  transparence.
 
 ## Lot 5 : robustesse
 
@@ -74,7 +76,9 @@ Chaque lot se termine par un commit sur `develop` quand la suite de tests et le 
   les décodeurs JPEG, GIF et TIFF levaient des erreurs d'index internes sur un fichier tronqué ou corrompu
   (1 157 entrées), ils lèvent désormais `InvalidDataException` ; un TIFF sans répertoire lisible levait
   `ArgumentOutOfRangeException` sur le numéro de page ; `ImageInfo.TryIdentify` plantait au lieu de rendre
-  false sur un TIFF abîmé.
+  false sur un TIFF abîmé. Corrigé en revue : un TIFF dont la taille de tuile ou de bande vaut zéro est
+  refusé par `InvalidDataException` ; chaque harnais lit d'abord les fichiers sains, qui doivent se lire
+  sans erreur, et échoue si aucune des entrées abîmées n'a été lue avec succès.
 
 ## Lot 6 : volume, parallélisme et déterminisme
 
@@ -87,13 +91,18 @@ Chaque lot se termine par un commit sur `develop` quand la suite de tests et le 
   quadratique. Six productions refaites à l'identique à l'octet, et 24 en parallèle identiques aux
   séquentielles. Écart trouvé puis traité à la demande du propriétaire : en PDF, le texte d'une cellule
   Excel sans renvoi à la ligne passait à la ligne ; il reste désormais sur une ligne, déborde sur les
-  cellules vides voisines (à droite, à gauche ou des deux côtés selon l'alignement) et est coupé au bord de
-  la première cellule non vide (`ExcelTextOverflowTests`, chaque lettre contrôlée dans le rendu). Les tests
-  longs sont dans `tests/OmniEurope.Documents.StressTests`, hors de la suite rapide.
+  cellules vides voisines (à droite, à gauche ou des deux côtés selon l'alignement, par-dessus un fond ou
+  une bordure, sans quadrillage dessous) et est coupé au bord de la première cellule qui contient une valeur
+  ou une formule ; au bord de la plage imprimée il passe à la ligne plutôt que d'être coupé. Un nombre ne
+  passe jamais à la ligne : une colonne de largeur w contient w chiffres de la police par défaut, au-delà le
+  nombre est raccourci ou remplacé par `#` (`ExcelTextOverflowTests`, chaque lettre contrôlée dans le
+  rendu). Les tests longs sont dans `tests/OmniEurope.Documents.StressTests`, hors de la suite rapide.
 
 ## Lot 7 : mesure finale
 
 - [x] Suite complète mesurée.
 - Contrôle : au moins 95 % des lignes et 85 % des branches, `CRAP gate passed`.
-  Fait : 97,69 % des lignes (530 non exécutées sur 22 918), 89,90 % des branches, 1 006 tests,
-  `CRAP gate passed` (2 303 méthodes).
+  Fait : suite rapide seule (celle que mesure la couverture depuis la séparation des suites), après les
+  corrections de revue : 96,95 % des lignes (704 non exécutées sur 23 087), 87,71 % des branches,
+  981 tests rapides et 39 longs, `CRAP gate passed` (2 321 méthodes). La première mesure (97,69 % et
+  89,90 %, 1 006 tests) comptait aussi les tests longs.

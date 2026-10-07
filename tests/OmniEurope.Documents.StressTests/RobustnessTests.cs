@@ -45,7 +45,7 @@ public sealed class RobustnessTests
             {
                 _ = WordToPdf.Convert(document);
             }
-        });
+        }, sources);
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public sealed class RobustnessTests
             {
                 _ = ExcelToPdf.Convert(workbook);
             }
-        });
+        }, source);
     }
 
     [Fact]
@@ -94,7 +94,7 @@ public sealed class RobustnessTests
                 _ = PdfEditor.Merge(pdf, pdf);
                 _ = PdfCompressor.Compress(pdf);
             }
-        });
+        }, sources);
     }
 
     [Theory]
@@ -107,7 +107,7 @@ public sealed class RobustnessTests
         {
             _ = ImageInfo.TryIdentify(bytes, out _);
             _ = ImageDecoder.Decode(bytes);
-        });
+        }, source);
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public sealed class RobustnessTests
             var font = TrueTypeFont.Load(bytes);
             _ = font.MeasureText("Société Ωmega", 12);
             _ = TrueTypeSubsetter.Subset(font, [0, font.GetGlyphIndex('A'), font.GetGlyphIndex('é')]);
-        });
+        }, copy.ToArray());
     }
 
     [Fact]
@@ -152,21 +152,29 @@ public sealed class RobustnessTests
 
     private static byte[] Fixture(string folder, string file) => File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Fixtures", folder, file));
 
-    // Runs every input, then fails with the list of undocumented exceptions and time-outs.
-    private static async Task Survive(IEnumerable<byte[]> inputs, Action<byte[], int> read)
+    // Reads the sound files first (they must read cleanly), then every damaged input; fails with the list of
+    // undocumented exceptions and time-outs, or when no input at all was read successfully.
+    private static async Task Survive(IEnumerable<byte[]> inputs, Action<byte[], int> read, params byte[][] sound)
     {
+        foreach (var file in sound)
+        {
+            read(file, 0);
+        }
+
         var failures = new List<string>();
         var index = 0;
+        var successes = 0;
         foreach (var input in inputs)
         {
             var i = index++;
             try
             {
                 await Task.Run(() => read(input, i), TestContext.Current.CancellationToken).WaitAsync(Limit, TestContext.Current.CancellationToken);
+                successes++;
             }
             catch (TimeoutException)
             {
-                failures.Add($"#{i}: still running after {Limit.TotalSeconds} s");
+                failures.Add($"Still running after {Limit.TotalSeconds} s (first: #{i})");
             }
             catch (Exception exception) when (exception is InvalidDataException or DocumentFormatException or NotSupportedException or PdfPasswordException)
             {
@@ -182,5 +190,6 @@ public sealed class RobustnessTests
         // One line per failing place in the code, with how many inputs reached it.
         var places = failures.GroupBy(f => f[..f.LastIndexOf(" (first", StringComparison.Ordinal)]).Select(g => $"{g.Count()} x {g.First()}");
         Assert.True(failures.Count == 0, $"{failures.Count} of {index} inputs failed:\n" + string.Join("\n", places));
+        Assert.True(successes > 0, $"None of the {index} inputs was read successfully: the reader refuses everything.");
     }
 }
