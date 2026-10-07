@@ -9,11 +9,3 @@ TestResults/
 coverage/
 *.nupkg
 *.snupkg
-
-.claude/
-/AGENTS.md
-/CLAUDE.md
-/docs/agents.md
-/docs/code-rules.md
-/docs/test-config.md
-/docs/build-and-ci-pitfalls.md

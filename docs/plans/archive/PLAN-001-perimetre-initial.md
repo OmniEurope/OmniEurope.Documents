@@ -15,7 +15,7 @@ Chaque lot se termine par un commit sur `develop` quand la suite de tests est ve
 
 ## Lot 0 : socle
 
-- [x] Politique zéro dépendance dans le README et AGENTS.md, projet `tests/OmniEurope.Documents.Tests`
+- [x] Politique zéro dépendance dans le README, projet `tests/OmniEurope.Documents.Tests`
  .
 - Contrôle : la suite de tests exécute au moins un test.
 

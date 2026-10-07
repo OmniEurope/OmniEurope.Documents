@@ -9,11 +9,12 @@ un plan décrit un travail, pas l'état du produit.
 - Format obligatoire : `PLAN-NNN-description-minimale.md`.
 - `NNN` est dense et suit l'ordre du registre ci-dessous.
 - Un plan terminé est déplacé dans `archive/` ; il garde son numéro.
-- Un plan numéroté vit ici, jamais sous `.claude/`.
 
 ## Plans actifs
 
-Aucun.
+| Plan | Travail | ADR |
+|---|---|---|
+| [PLAN-004](PLAN-004-fonctionnalites-suivantes.md) | Fonctionnalités suivantes : édition Excel sans perte, formules, formulaires PDF, PDF/A, conversions, fidélité du rendu | Aucun |
 
 ## Plans archivés
 
