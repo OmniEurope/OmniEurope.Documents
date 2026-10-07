@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OmniEurope.Documents/OmniEurope.Documents.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OmniEurope.Documents.Tests/OmniEurope.Documents.Tests.csproj" />
+    <Project Path="tests/OmniEurope.Documents.StressTests/OmniEurope.Documents.StressTests.csproj" />
+  </Folder>
+</Solution>

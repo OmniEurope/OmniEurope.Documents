@@ -1,0 +1,13 @@
+* text=auto eol=lf
+
+docs/third-party-licenses/** -text
+*.ttf binary
+*.png binary
+*.jpg binary
+*.gif binary
+*.bmp binary
+*.tif binary
+*.bgr binary
+*.pdf binary
+*.docx binary
+*.xlsx binary

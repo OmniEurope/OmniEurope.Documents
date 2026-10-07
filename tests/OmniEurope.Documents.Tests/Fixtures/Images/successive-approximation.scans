@@ -1,0 +1,12 @@
+# Progressive scan script with successive approximation (spectral selection plus bit refinement):
+# components, first:last coefficient, Ah, Al.
+0,1,2: 0-0, 0, 1;
+0: 1-5, 0, 2;
+2: 1-63, 0, 1;
+1: 1-63, 0, 1;
+0: 6-63, 0, 2;
+0: 1-63, 2, 1;
+0,1,2: 0-0, 1, 0;
+2: 1-63, 1, 0;
+1: 1-63, 1, 0;
+0: 1-63, 1, 0;

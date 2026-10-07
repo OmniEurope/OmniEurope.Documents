@@ -1,0 +1,186 @@
+// SPDX-License-Identifier: EUPL-1.2
+using OmniEurope.Documents.Word;
+
+namespace OmniEurope.Documents.Conversion.WordLayout;
+
+/// <summary>
+/// Lays blocks out at a given width into flow items: paragraphs into lines (with their spacing, keep rules
+/// and decorations), tables into rows. Paragraph keep rules become "no break before" marks: all lines of a
+/// keep-lines paragraph, the second and last lines under widow control, and the first line after a
+/// keep-with-next paragraph.
+/// </summary>
+internal sealed class BlockLayout
+{
+    private readonly LayoutContext _context;
+
+    public BlockLayout(LayoutContext context)
+    {
+        _context = context;
+        Shapes = new ShapeFactory(context, this);
+    }
+
+    public ShapeFactory Shapes { get; }
+
+    public List<FlowItem> Layout(IReadOnlyList<WordBlock> blocks, double width, CellStyle? cell = null, bool numbering = true)
+    {
+        var items = new List<FlowItem>();
+        WordParagraphProperties? previous = null;
+        List<FlowItem>? previousItems = null;
+        foreach (var block in blocks)
+        {
+            WordParagraphProperties? resolved = null;
+            List<FlowItem> blockItems;
+            if (block is WordParagraph paragraph)
+            {
+                resolved = Resolve(paragraph, cell);
+                blockItems = Paragraph(paragraph, resolved, width, cell, numbering);
+                ContextualSpacing(previous, previousItems, resolved, blockItems);
+            }
+            else
+            {
+                blockItems = new TableLayout(_context, this).Layout((WordTable)block, width);
+            }
+
+            if (previous?.KeepNext == true && blockItems.Count > 0)
+            {
+                blockItems[0].CanBreakBefore = false;
+            }
+
+            // A page or column break ending the previous paragraph moves this block on.
+            if (items.Count > 0 && items[^1] is LineItem { Line.BreakAfter: { } pending } && blockItems.Count > 0)
+            {
+                blockItems[0].PageBreakBefore |= pending == WordBreakKind.Page;
+                blockItems[0].ColumnBreakBefore |= pending == WordBreakKind.Column;
+            }
+
+            items.AddRange(blockItems);
+            previous = resolved;
+            previousItems = blockItems;
+        }
+
+        return items;
+    }
+
+    private WordParagraphProperties Resolve(WordParagraph paragraph, CellStyle? cell)
+    {
+        var resolved = _context.Styles.ResolveParagraph(paragraph.Properties, _context.Document.Numbering, cell?.TableStyleId);
+        return cell?.ParagraphOverlay is { } overlay ? resolved.Overlay(overlay).Overlay(paragraph.Properties with { StyleId = resolved.StyleId }) : resolved;
+    }
+
+    // Space between two paragraphs of the same style is dropped on the side that asks for it.
+    private static void ContextualSpacing(WordParagraphProperties? previous, List<FlowItem>? previousItems, WordParagraphProperties current, List<FlowItem> items)
+    {
+        if (previous is null || previousItems is not { Count: > 0 } || items.Count == 0 || previous.StyleId != current.StyleId)
+        {
+            return;
+        }
+
+        if (previous.ContextualSpacing == true)
+        {
+            previousItems[^1].SpaceAfter = 0;
+        }
+
+        if (current.ContextualSpacing == true)
+        {
+            items[0].SpaceBefore = 0;
+        }
+    }
+
+    private List<FlowItem> Paragraph(WordParagraph paragraph, WordParagraphProperties p, double width, CellStyle? cell, bool numbering)
+    {
+        var resolver = new RunResolver(_context, p, cell);
+        var tokens = new InlineBuilder(resolver, Shapes, numbering).Build(paragraph);
+        var left = p.IndentLeft ?? 0;
+        var right = Math.Max(left + 1, width - (p.IndentRight ?? 0));
+        var firstLine = p.FirstLineIndent ?? 0;
+        var geometry = new LineGeometry(
+            width, left, right, firstLine, p.Tabs ?? [], _context.Document.Settings.DefaultTabStop, p.Alignment ?? WordAlignment.Left,
+            p.LineSpacing, p.LineSpacingRule ?? WordLineSpacingRule.Multiple, resolver.Style(p.MarkProperties ?? WordRunProperties.Empty));
+        var lines = new LineBreaker(_context, geometry).Break(tokens);
+        var frame = new ParagraphFrame(Math.Min(left, left + firstLine), right, TextStyle.ParseColor(p.Shading), p.Borders);
+        var items = new List<FlowItem>(lines.Count);
+        for (var i = 0; i < lines.Count; i++)
+        {
+            var item = new LineItem(lines[i], frame, i == 0, i == lines.Count - 1) { Height = lines[i].Height };
+            item.CanBreakBefore = i == 0 || CanBreakBefore(p, i, lines.Count);
+            item.PageBreakBefore = i > 0 && lines[i - 1].BreakAfter == WordBreakKind.Page;
+            item.ColumnBreakBefore = i > 0 && lines[i - 1].BreakAfter == WordBreakKind.Column;
+            items.Add(item);
+        }
+
+        var first = items[0];
+        first.SpaceBefore = p.SpacingBefore ?? 0;
+        first.PageBreakBefore |= p.PageBreakBefore == true;
+        items[^1].SpaceAfter = p.SpacingAfter ?? 0;
+        if (p.OutlineLevel is >= 0 and < 9 && paragraph.Text.Trim() is { Length: > 0 } title)
+        {
+            first.Bookmark = title.Replace('\n', ' ').Replace('\t', ' ');
+        }
+
+        return items;
+    }
+
+    // Under widow control (Word's default) neither the first nor the last line stands alone on a page.
+    private static bool CanBreakBefore(WordParagraphProperties p, int line, int count)
+    {
+        if (p.KeepLines == true)
+        {
+            return false;
+        }
+
+        return p.WidowControl == false || (line != 1 && line != count - 1);
+    }
+}
+
+/// <summary>Paint actions for pictures and text boxes.</summary>
+internal sealed class ShapeFactory(LayoutContext context, BlockLayout blocks)
+{
+    private const double BoxInsetX = 7.2;
+    private const double BoxInsetY = 3.6;
+
+    public Action<PaintContext, double, double> Painter(WordShape shape) => shape switch
+    {
+        WordPicture picture => (paint, x, y) => Picture(paint, picture, x, y),
+        WordTextBox box => TextBox(box),
+        _ => (_, _, _) => { },
+    };
+
+    private void Picture(PaintContext paint, WordPicture picture, double x, double y)
+    {
+        if (context.Image(picture.Image) is { } image)
+        {
+            paint.Canvas.DrawImage(image, x, y, picture.Width, picture.Height);
+            return;
+        }
+
+        if (picture.Image.ContentType is "image/x-emf" or "image/emf" && Emf.EmfRenderer.TryDraw(paint, picture.Image.Data, x, y, picture.Width, picture.Height))
+        {
+            return;
+        }
+
+        context.Gaps.Add($"picture format {picture.Image.ContentType} drawn as an empty frame");
+        paint.Canvas.StrokeRectangle(x, y, picture.Width, picture.Height, Pdf.PdfColor.LightGray, 0.5);
+    }
+
+    // The box content is laid out once, then drawn clipped to the box.
+    private Action<PaintContext, double, double> TextBox(WordTextBox box)
+    {
+        var width = Math.Max(1, box.Width - (2 * BoxInsetX));
+        var items = blocks.Layout(box.Blocks, width);
+        return (paint, x, y) =>
+        {
+            var canvas = paint.Canvas;
+            canvas.SaveState();
+            canvas.ClipRectangle(x, y, box.Width, box.Height);
+            var top = y + BoxInsetY;
+            foreach (var item in items)
+            {
+                top += item.SpaceBefore;
+                item.Paint(paint, x + BoxInsetX, top, width);
+                top += item.Height + item.SpaceAfter;
+            }
+
+            canvas.RestoreState();
+        };
+    }
+}

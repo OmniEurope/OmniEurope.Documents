@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Every public member carries an XML doc (CS1591 is an error under TreatWarningsAsErrors). -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <!-- Consumed by Blazor WebAssembly apps published trimmed: the analyzers keep it safe. -->
+    <IsTrimmable>true</IsTrimmable>
+    <IsAotCompatible>true</IsAotCompatible>
+    <PackageId>OmniEurope.Documents</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>OmniEurope contributors</Authors>
+    <Company>OmniEurope</Company>
+    <Description>Create, edit, convert and read Word, Excel, PDF, Markdown and CSV documents, without OCR, without UI and without any dependency.</Description>
+    <PackageTags>documents;pdf;word;excel;markdown;csv;eupl</PackageTags>
+    <PackageLicenseExpression>EUPL-1.2</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/OmniEurope/OmniEurope.Documents</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/OmniEurope/OmniEurope.Documents</PackageProjectUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="OmniEurope.Documents.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <!-- Bundled fonts (SIL OFL 1.1): embedded so PDF output never depends on fonts installed on the host. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Fonts\Bundled\*.ttf" LogicalName="OmniEurope.Documents.Fonts.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Fonts\Bundled\LICENSE-*.txt" LogicalName="OmniEurope.Documents.Fonts.%(Filename)%(Extension)" />
+    <None Include="Fonts\Bundled\LICENSE-*.txt" Pack="true" PackagePath="fonts\" />
+  </ItemGroup>
+
+</Project>
