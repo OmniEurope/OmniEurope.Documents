@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Restore
+        run: dotnet restore OmniEurope.Documents.slnx
+      - name: Build
+        # Directory.Build.props sets TreatWarningsAsErrors: any warning fails this step.
+        run: dotnet build OmniEurope.Documents.slnx --configuration Release --no-restore
+      - name: Unit tests
+        # global.json runs dotnet test on Microsoft.Testing.Platform: xunit.v3 is the runner.
+        run: >-
+          dotnet test --project tests/OmniEurope.Documents.Tests/OmniEurope.Documents.Tests.csproj
+          --configuration Release --no-build --no-progress
+          --report-trx --report-trx-filename tests.trx --results-directory artifacts/tests
+      - name: Verify test results
+        # A run that leaves no result file, or a file without tests, is a failure, never a silent pass.
+        shell: pwsh
+        run: ./.github/scripts/verify-trx.ps1 -Directory artifacts/tests -Name tests.trx
+
+  integration:
+    # Thousands of damaged files, large documents and parallel conversions, kept out of the fast suite.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Restore
+        run: dotnet restore OmniEurope.Documents.slnx
+      - name: Build
+        run: dotnet build OmniEurope.Documents.slnx --configuration Release --no-restore
+      - name: Integration tests
+        run: >-
+          dotnet test --project tests/OmniEurope.Documents.StressTests/OmniEurope.Documents.StressTests.csproj
+          --configuration Release --no-build --no-progress
+          --report-trx --report-trx-filename integration.trx --results-directory artifacts/integration
+      - name: Verify test results
+        shell: pwsh
+        run: ./.github/scripts/verify-trx.ps1 -Directory artifacts/integration -Name integration.trx

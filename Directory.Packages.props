@@ -2,7 +2,7 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
-  <!-- Test-only packages. src/ has no dependency at all (README, section Dépendances). -->
+  <!-- Test-only packages. src/ has no dependency at all (README, section Dependencies). -->
   <ItemGroup>
     <PackageVersion Include="coverlet.MTP" Version="10.1.0" />
     <PackageVersion Include="Microsoft.Testing.Extensions.TrxReport" Version="2.4.1" />
