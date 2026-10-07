@@ -6,6 +6,8 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- `PdfCanvas.DrawRotatedText`: one line of text turned by any angle counter-clockwise around the start of its
+  baseline (90 reads from bottom to top, 270 from top to bottom), with colour and character spacing.
 - Word, Excel, PDF, Markdown, CSV and HTML reading, writing and conversion, with the .NET base class
   library only.
 - Word to HTML (`WordToHtml.Convert`): one standalone page with each section at its page width and margins,
@@ -36,6 +38,21 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Fixed
 
+- PDF word extraction (`PdfLayoutAnalyzer.Words`, `Lines`, `AnalyzePage`, `PdfPage.Text`): a row of spaces printed
+  under the text (a blank lying for more than half its advance over visible letters) no longer splits every
+  letter into a word of its own (`Official Journal`, not `O f f i c i a l J o u r n a l`). Letter-spaced
+  (tracked) text is split into words against its own spacing: in a run of a line with at least three gaps
+  between visible letters, when the median gap is wider than a word gap but at most three quarters of the size,
+  and two thirds of the gaps lie within a tenth of the size of it, that gap is the run's tracking and is taken off
+  every gap of the run before it is judged; a spaced-out title is one word, normal text and short words with a
+  normal space are unchanged, and a space glyph still ends a word.
+- PDF text drawn at an angle (a page or a table turned by 90 degrees, a vertical column heading, text read
+  downwards) is grouped by direction first: `PdfPage.Text` reads each direction along its own baselines
+  (directions in the order they are first drawn) instead of one letter per line mixed with the horizontal text.
+  The layout analysis builds the blocks of each direction along it (the lines of a turned paragraph are one
+  block), reads all blocks in the frame of the direction carrying the most letters, and judges running heads,
+  footers and page numbers in the frame of each block's own direction, so the column of a turned table standing
+  along the bottom edge of the page is no longer taken for page numbers.
 - PDF layout analysis: a superscript or subscript (a smaller run raised or lowered against the text, such as a
   footnote reference) stays on the line of its text, in its reading order, instead of becoming a line or block of
   its own, and is a word of its own instead of being glued to the word before it (`assessed` and `1`, not

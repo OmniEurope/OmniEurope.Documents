@@ -214,6 +214,74 @@ public sealed class PdfLayoutWordTests
         Assert.StartsWith("right line 0", layout.Blocks[1].Text, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData(0.3, false)]
+    [InlineData(0.3, true)]
+    [InlineData(0.6, false)]
+    [InlineData(0.22, true)]
+    public void Letter_spaced_text_forms_its_words_against_its_own_spacing(double tracking, bool spaceGlyphs)
+    {
+        const string head = "Official Journal of the European Union";
+        var page = Page(canvas => Spaced(canvas, head, 72, 60, 9, tracking * 9, spaceGlyphs));
+
+        Assert.Equal(head.Split(' '), PdfLayoutAnalyzer.Words(page).Select(w => w.Text));
+        Assert.Equal(head, Assert.Single(PdfLayoutAnalyzer.Lines(page.Letters)).Text);
+        Assert.Equal(head, page.Text);
+    }
+
+    [Fact]
+    public void A_spaced_out_title_is_one_word_and_body_text_beside_it_is_unchanged()
+    {
+        var page = Page(canvas =>
+        {
+            Spaced(canvas, "REGULATION", 72, 60, 14, 5, spaceGlyphs: false);
+            Spaced(canvas, "to be or not", 72, 100, 11, 0, spaceGlyphs: false);
+            canvas.DrawText("a b c d e", 72, 130, PdfFont.Sans, 11);
+        });
+
+        Assert.Equal(["REGULATION", "to", "be", "or", "not", "a", "b", "c", "d", "e"], PdfLayoutAnalyzer.Words(page).Select(w => w.Text));
+        Assert.Equal("REGULATION\nto be or not\na b c d e", page.Text);
+    }
+
+    [Fact]
+    public void Character_spacing_keeps_words_whole()
+    {
+        var page = Page(canvas => canvas.DrawText("Spaced heading of the page", 72, 60, PdfFont.Sans, 10, characterSpacing: 3));
+
+        Assert.Equal(["Spaced", "heading", "of", "the", "page"], PdfLayoutAnalyzer.Words(page).Select(w => w.Text));
+        Assert.Equal("Spaced heading of the page", page.Text);
+    }
+
+    [Fact]
+    public void A_row_of_spaces_printed_under_the_text_does_not_split_its_words()
+    {
+        var page = Page(canvas =>
+        {
+            canvas.DrawText("L 12/2", 40, 60, PdfFont.Sans, 9);
+            canvas.DrawText(new string(' ', 120), 72, 60 + 0.17, PdfFont.Sans, 9);
+            canvas.DrawText("EN", 110, 60 - 0.5, PdfFont.Sans, 8.5);
+            canvas.DrawText("Official Journal of the Union", 200, 60, PdfFont.Sans, 9);
+        });
+
+        Assert.Equal(["L", "12/2", "EN", "Official", "Journal", "of", "the", "Union"], PdfLayoutAnalyzer.Words(page).Select(w => w.Text));
+        Assert.Equal(["L", "12/2", "EN", "Official", "Journal", "of", "the", "Union"], page.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+    }
+
+    // Draws text letter by letter, each letter followed by its advance and the tracking; spaces are drawn as glyphs
+    // or only skipped.
+    private static void Spaced(PdfCanvas canvas, string text, double x, double baseline, double size, double tracking, bool spaceGlyphs)
+    {
+        foreach (var letter in text.Select(c => c.ToString()))
+        {
+            if (letter != " " || spaceGlyphs)
+            {
+                canvas.DrawText(letter, x, baseline, PdfFont.Sans, size);
+            }
+
+            x += canvas.MeasureText(letter, PdfFont.Sans, size) + tracking;
+        }
+    }
+
     private static PdfPage Page(Action<PdfCanvas> draw)
     {
         var builder = new PdfDocumentBuilder();

@@ -56,7 +56,7 @@ public sealed class PdfCanvas
         Opacity(opacity);
         foreach (var (face, run) in Runs(text, font))
         {
-            x += DrawRun(face, run, x, baseline, size, fill, characterSpacing);
+            x += DrawRun(face, run, (1, 0, x, Y(baseline)), size, fill, characterSpacing);
         }
 
         _content.RestoreState();
@@ -76,6 +76,28 @@ public sealed class PdfCanvas
             }
         }
 
+        return width;
+    }
+
+    /// <summary>Draws one line of text turned by <paramref name="angle"/> degrees counter-clockwise around the start
+    /// of its baseline (<paramref name="x"/>, <paramref name="baseline"/>): 90 reads from bottom to top, 270 from top
+    /// to bottom. Returns its width along the baseline. Line breaks and control characters are not drawn.</summary>
+    public double DrawRotatedText(string text, double x, double baseline, double angle, PdfFont font, double size, PdfColor? color = null,
+        double characterSpacing = 0)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(font);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(size);
+        var radians = angle * Math.PI / 180;
+        var (cos, sin) = (Math.Cos(radians), Math.Sin(radians));
+        double width = 0;
+        _content.SaveState();
+        foreach (var (face, run) in Runs(text, font))
+        {
+            width += DrawRun(face, run, (cos, sin, x + (width * cos), Y(baseline) + (width * sin)), size, color ?? PdfColor.Black, characterSpacing);
+        }
+
+        _content.RestoreState();
         return width;
     }
 
@@ -330,7 +352,8 @@ public sealed class PdfCanvas
         }
     }
 
-    private double DrawRun(TrueTypeFont face, List<(int Glyph, string Text)> run, double x, double baseline, double size, PdfColor color, double characterSpacing)
+    // Draws a run of one face from an origin in PDF space, its baseline along the direction (cos, sin).
+    private double DrawRun(TrueTypeFont face, List<(int Glyph, string Text)> run, (double Cos, double Sin, double X, double Y) origin, double size, PdfColor color, double characterSpacing)
     {
         var font = _document.Embed(face);
         _fonts.Add(font);
@@ -351,7 +374,7 @@ public sealed class PdfCanvas
             _content.Op("Tc", characterSpacing);
         }
 
-        _content.Op("Tm", 1, 0, 0, 1, x, Y(baseline)).Hex(codes).Raw("Tj\nET\n");
+        _content.Op("Tm", origin.Cos, origin.Sin, -origin.Sin, origin.Cos, origin.X, origin.Y).Hex(codes).Raw("Tj\nET\n");
         return width;
     }
 

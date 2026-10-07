@@ -93,6 +93,29 @@ public sealed class PdfCanvasTests
     }
 
     [Fact]
+    public void Rotated_text_runs_along_its_angle_from_the_start_of_its_baseline()
+    {
+        var document = new PdfDocumentBuilder();
+        var page = document.AddPage(200, 200);
+        var upwards = page.DrawRotatedText("AB", 100, 150, 90, PdfFont.Sans, 10);
+        var downwards = page.DrawRotatedText("CD", 150, 50, 270, PdfFont.Sans, 10, Red, characterSpacing: 1);
+
+        var pdf = PdfDocument.Open(document.ToArray());
+        var letters = pdf.GetPage(1).Letters;
+        var image = PdfRenderer.Render(pdf.GetPage(1), new PdfRenderOptions { Dpi = 72 }).Image;
+
+        Assert.Equal(page.MeasureText("AB", PdfFont.Sans, 10), upwards, 3);
+        Assert.Equal(page.MeasureText("CD", PdfFont.Sans, 10, 1), downwards, 3);
+        Assert.Equal([90, 90, -90, -90], letters.Select(l => l.Rotation));
+        Assert.Equal((100, 50), (Math.Round(letters[0].X, 2), Math.Round(letters[0].Y, 2)));
+        Assert.Equal(Math.Round(50 + page.MeasureText("A", PdfFont.Sans, 10), 2), Math.Round(letters[1].Y, 2));
+        Assert.Equal(Math.Round(150 - page.MeasureText("C", PdfFont.Sans, 10) - 1, 2), Math.Round(letters[3].Y, 2));
+        Assert.Contains(Enumerable.Range(150, 8), x => Pixel(image, x, 51) is ( > 200, < 100, < 100));
+        Assert.Equal((255, 255, 255), Pixel(image, 160, 46));
+        Assert.Equal("AB\nCD", pdf.GetPage(1).Text);
+    }
+
+    [Fact]
     public void Control_characters_are_not_drawn_and_unbalanced_states_are_closed()
     {
         var document = new PdfDocumentBuilder();

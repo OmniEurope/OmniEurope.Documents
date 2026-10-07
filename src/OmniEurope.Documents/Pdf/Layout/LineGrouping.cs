@@ -27,7 +27,12 @@ internal readonly record struct PlacedLetter(PdfLetter Letter, double X, double 
 /// the larger size (a superscript, a subscript, a footnote reference) whose every run sits against a letter of the
 /// main baseline. A word ends at a blank, at a gap wider than a fifth of the smaller of the two letters' sizes, or
 /// where the baseline shifts by more than 15 % of the larger size (5 % when the size changes too); a line segment
-/// ends at a gap wider than 1.6 times the smaller size.
+/// ends at a gap wider than 1.6 times the smaller size. A blank lying for more than half its advance over visible
+/// letters (a row of spaces printed under the text) is no word break and is left out. Letters spaced out (tracked)
+/// are measured against their own spacing: in a run of the line (between gutters and baseline shifts) with at
+/// least three gaps between visible letters, when the median gap is wider than a word gap but at most three
+/// quarters of the size, and at least two thirds of the gaps lie within a tenth of the size of it, that gap is the
+/// run's tracking and is taken off every gap between two visible letters of the run before it is judged.
 /// </summary>
 internal static class LineGrouping
 {
@@ -49,6 +54,14 @@ internal static class LineGrouping
     private const double BaselineShift = 0.15;
     private const double ResizedShift = 0.05;
 
+    // A blank covering visible letters over more than this fraction of its advance is printed under the text.
+    private const double Underlay = 0.5;
+
+    // Tracking: at least this many gaps, at most this wide (fraction of the size), this even (fraction of the size).
+    private const int TrackedGaps = 3;
+    private const double MaxTracking = 0.75;
+    private const double Evenness = 0.1;
+
     /// <summary>The letters of each line, lines from top to bottom (decreasing y).</summary>
     public static List<List<PlacedLetter>> Group(IEnumerable<PlacedLetter> letters)
     {
@@ -68,10 +81,34 @@ internal static class LineGrouping
         return lines.Select(l => l.SelectMany(b => b.Letters).ToList()).ToList();
     }
 
-    /// <summary>What separates two letters that follow each other along a line.</summary>
-    public static LetterBreak Between(PlacedLetter previous, PlacedLetter current)
+    /// <summary>
+    /// The letters of a line in order along it, blanks printed under visible letters left out, each with the tracking
+    /// of its run to take off the gap before it (0 outside a tracked run).
+    /// </summary>
+    public static List<(PlacedLetter Letter, double Tracking)> Arrange(IEnumerable<PlacedLetter> line)
     {
-        var gap = current.X - previous.Right;
+        var sorted = line.OrderBy(l => l.X).ToList();
+        var visible = sorted.Where(l => !l.IsBlank).ToList();
+        var kept = sorted.Where(l => !l.IsBlank || !IsUnderlay(l, visible)).ToList();
+        var tracking = new double[kept.Count];
+        var start = 0;
+        for (var i = 1; i <= kept.Count; i++)
+        {
+            if (i == kept.Count || Between(kept[i - 1], kept[i]) == LetterBreak.Segment || IsShifted(kept[i - 1], kept[i]))
+            {
+                Track(kept, start, i, tracking);
+                start = i;
+            }
+        }
+
+        return kept.Select((l, i) => (l, tracking[i])).ToList();
+    }
+
+    /// <summary>What separates two letters that follow each other along a line, <paramref name="tracking"/> taken
+    /// off the gap between them.</summary>
+    public static LetterBreak Between(PlacedLetter previous, PlacedLetter current, double tracking = 0)
+    {
+        var gap = current.X - previous.Right - tracking;
         var smaller = Math.Min(previous.Size, current.Size);
         if (gap > smaller * SegmentGap)
         {
@@ -90,6 +127,43 @@ internal static class LineGrouping
         var larger = Math.Max(previous.Size, current.Size);
         var resized = Math.Min(previous.Size, current.Size) <= larger * ScriptRatio;
         return Math.Abs(current.Y - previous.Y) > larger * (resized ? ResizedShift : BaselineShift);
+    }
+
+    // A blank whose advance lies for more than half over visible letters: printed under the text, not between words.
+    private static bool IsUnderlay(PlacedLetter blank, List<PlacedLetter> visible)
+    {
+        var covered = 0.0;
+        for (var i = Math.Max(FirstAtOrAfter(visible, blank.X) - 1, 0); i < visible.Count && visible[i].X < blank.Right; i++)
+        {
+            covered += Math.Max(0, Math.Min(blank.Right, visible[i].Right) - Math.Max(blank.X, visible[i].X));
+        }
+
+        return covered > blank.Letter.Width * Underlay;
+    }
+
+    // The letters [start, end) of a run: when the gaps between its visible letters are mostly one even width,
+    // wider than a word gap, that width is the run's tracking.
+    private static void Track(List<PlacedLetter> letters, int start, int end, double[] tracking)
+    {
+        var pairs = Enumerable.Range(start + 1, end - start - 1).Where(i => !letters[i - 1].IsBlank && !letters[i].IsBlank).ToList();
+        if (pairs.Count < TrackedGaps)
+        {
+            return;
+        }
+
+        var gaps = pairs.Select(i => letters[i].X - letters[i - 1].Right).Order().ToList();
+        var sizes = pairs.Select(i => letters[i].Size).Order().ToList();
+        var (shared, size) = (gaps[(gaps.Count - 1) / 2], sizes[(sizes.Count - 1) / 2]);
+        var even = gaps.Count(g => Math.Abs(g - shared) <= size * Evenness);
+        if (shared <= size * WordGap || shared > size * MaxTracking || even * 3 < gaps.Count * 2)
+        {
+            return;
+        }
+
+        foreach (var i in pairs)
+        {
+            tracking[i] = shared;
+        }
     }
 
     private static List<Baseline> Baselines(IEnumerable<PlacedLetter> letters)

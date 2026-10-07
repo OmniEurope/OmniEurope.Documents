@@ -10,7 +10,11 @@ namespace OmniEurope.Documents.Pdf.Layout;
 /// (never across a column gutter), segments into blocks (aligned lines with a regular spacing and size), and
 /// blocks into reading order by recursive XY-cut (columns read top to bottom, left column first). Across a
 /// document, blocks repeated near the top or bottom of most pages are marked as decoration.
-/// Text written at an angle is laid out in its own direction.
+/// Text written at an angle (a page or a table turned by 90 degrees, a vertical column heading) is grouped by
+/// direction first: its words, lines and blocks are built along its own baselines, and the blocks of all
+/// directions are read in the frame of the direction carrying the most letters.
+/// Blanks printed under visible letters are no word breaks, and letter-spaced (tracked) text is split into words
+/// against its own letter spacing.
 /// A superscript or subscript (a smaller run raised or lowered against the text, such as a footnote reference)
 /// stays on the line of the text it belongs to but is a word of its own; letters of different sizes on one
 /// baseline with no gap between them (small capitals) stay one word.
@@ -29,9 +33,10 @@ public static class PdfLayoutAnalyzer
     public static PdfPageLayout AnalyzePage(PdfPage page)
     {
         ArgumentNullException.ThrowIfNull(page);
-        var lines = Lines(page.Letters);
-        var blocks = BlockBuilder.Build(lines);
-        var ordered = XyCut.Order(blocks).Select((b, i) => b with { ReadingOrder = i }).ToList();
+        var directions = LinesByDirection(page.Letters).ToList();
+        var reading = directions.OrderByDescending(d => d.Lines.Sum(l => l.Words.Sum(w => w.Letters.Count))).Select(d => d.Direction).FirstOrDefault();
+        var blocks = directions.SelectMany(d => BlockBuilder.Build(d.Lines, d.Direction)).ToList();
+        var ordered = XyCut.Order(blocks, reading).Select((b, i) => b with { ReadingOrder = i }).ToList();
         return new PdfPageLayout(page, ordered, IsScanned(page));
     }
 
@@ -58,22 +63,11 @@ public static class PdfLayoutAnalyzer
         return page.Images.Any(i => i.Bounds.Width * i.Bounds.Height >= area * 0.5);
     }
 
-    internal static List<PdfTextLine> Lines(IReadOnlyList<PdfLetter> letters)
-    {
-        var lines = new List<PdfTextLine>();
-        foreach (var direction in letters.Where(l => l.RenderingMode != 7).GroupBy(l => Math.Round(l.Rotation / 5) * 5))
-        {
-            var angle = direction.Key * Math.PI / 180;
-            var (cos, sin) = (Math.Cos(-angle), Math.Sin(-angle));
-            var projected = direction.Select(l => new PlacedLetter(l, (l.X * cos) - (l.Y * sin), (l.X * sin) + (l.Y * cos)));
-            foreach (var line in LineGrouping.Group(projected))
-            {
-                lines.AddRange(Segments(line));
-            }
-        }
+    internal static List<PdfTextLine> Lines(IReadOnlyList<PdfLetter> letters) => LinesByDirection(letters).SelectMany(d => d.Lines).ToList();
 
-        return lines;
-    }
+    // The line segments of each direction, top to bottom along it; clipping-only text (mode 7) is not drawn.
+    private static IEnumerable<(TextDirection Direction, List<PdfTextLine> Lines)> LinesByDirection(IReadOnlyList<PdfLetter> letters) =>
+        TextDirection.Group(letters.Where(l => l.RenderingMode != 7)).Select(d => (d.Direction, LineGrouping.Group(d.Letters).SelectMany(Segments).ToList()));
 
     // Splits a line into words at blanks, gaps and baseline shifts, and into segments at gaps wide enough to be a
     // gutter.
@@ -83,9 +77,9 @@ public static class PdfLayoutAnalyzer
         var segments = new List<List<List<PlacedLetter>>>();
         List<PlacedLetter>? word = null;
         PlacedLetter? previous = null;
-        foreach (var current in line.OrderBy(l => l.X))
+        foreach (var (current, tracking) in LineGrouping.Arrange(line))
         {
-            var cut = previous is { } p ? LineGrouping.Between(p, current) : LetterBreak.None;
+            var cut = previous is { } p ? LineGrouping.Between(p, current, tracking) : LetterBreak.None;
             if (cut != LetterBreak.None)
             {
                 Close(ref word, words);
@@ -140,13 +134,13 @@ public static class PdfLayoutAnalyzer
     }
 }
 
-/// <summary>Groups line segments into blocks.</summary>
+/// <summary>Groups the line segments of one direction into blocks, measured along that direction.</summary>
 internal static class BlockBuilder
 {
-    public static List<PdfTextBlock> Build(List<PdfTextLine> lines)
+    public static List<PdfTextBlock> Build(List<PdfTextLine> lines, TextDirection direction)
     {
-        var blocks = new List<List<PdfTextLine>>();
-        foreach (var line in lines.OrderByDescending(l => l.BoundingBox.Top).ThenBy(l => l.BoundingBox.Left))
+        var blocks = new List<List<FramedLine>>();
+        foreach (var line in lines.Select(l => FramedLine.Of(l, direction)).OrderByDescending(l => l.Box.Top).ThenBy(l => l.Box.Left))
         {
             var target = blocks.LastOrDefault(b => Continues(b, line));
             if (target is null)
@@ -159,16 +153,16 @@ internal static class BlockBuilder
             }
         }
 
-        return blocks.Select(b => new PdfTextBlock(b, PdfLayoutAnalyzer.Bounds(b.Select(l => l.BoundingBox)))).ToList();
+        return blocks.Select(b => new PdfTextBlock(b.Select(l => l.Line).ToList(), PdfLayoutAnalyzer.Bounds(b.Select(l => l.Line.BoundingBox)))).ToList();
     }
 
     // The next line of a block: just below its last line, overlapping it horizontally, same size, and
     // not much further away than the block's own line spacing.
-    private static bool Continues(List<PdfTextLine> block, PdfTextLine line)
+    private static bool Continues(List<FramedLine> block, FramedLine line)
     {
         var last = block[^1];
-        var size = Math.Max(last.FontSize, 1);
-        if (Math.Abs(last.FontSize - line.FontSize) > size * 0.25)
+        var size = Math.Max(last.Line.FontSize, 1);
+        if (Math.Abs(last.Line.FontSize - line.Line.FontSize) > size * 0.25)
         {
             return false;
         }
@@ -185,15 +179,33 @@ internal static class BlockBuilder
             return false;
         }
 
-        var overlap = Math.Min(last.BoundingBox.Right, line.BoundingBox.Right) - Math.Max(last.BoundingBox.Left, line.BoundingBox.Left);
-        return overlap > Math.Min(last.BoundingBox.Width, line.BoundingBox.Width) * 0.3;
+        var overlap = Math.Min(last.Box.Right, line.Box.Right) - Math.Max(last.Box.Left, line.Box.Left);
+        return overlap > Math.Min(last.Box.Width, line.Box.Width) * 0.3;
+    }
+
+    // A line with its box and baseline in the frame of its direction (the baseline shared by the most letters,
+    // weighted by their size, as PdfTextLine.Baseline is on the page).
+    private sealed record FramedLine(PdfTextLine Line, PdfRectangle Box, double Baseline)
+    {
+        public static FramedLine Of(PdfTextLine line, TextDirection direction)
+        {
+            var baseline = line.Words.SelectMany(w => w.Letters).Select(l => (Y: direction.Project(l.X, l.Y).Y, Size: l.FontSize))
+                .GroupBy(l => Math.Round(l.Y, 1)).MaxBy(g => g.Sum(l => l.Size))!.First().Y;
+            return new FramedLine(line, direction.Project(line.BoundingBox), baseline);
+        }
     }
 }
 
-/// <summary>Recursive XY-cut: split by the widest horizontal white band, else by the widest vertical one.</summary>
+/// <summary>
+/// Recursive XY-cut in the frame of the page's main text direction: split by the widest white band across it, else
+/// by the widest one along it.
+/// </summary>
 internal static class XyCut
 {
-    public static List<PdfTextBlock> Order(List<PdfTextBlock> blocks)
+    public static List<PdfTextBlock> Order(List<PdfTextBlock> blocks, TextDirection direction) =>
+        Order(blocks.Select(b => new FramedBlock(b, direction.Project(b.BoundingBox))).ToList()).Select(b => b.Block).ToList();
+
+    private static List<FramedBlock> Order(List<FramedBlock> blocks)
     {
         if (blocks.Count <= 1)
         {
@@ -206,18 +218,18 @@ internal static class XyCut
         var columns = Split(blocks, horizontal: false, out var columnGap);
         var chosen = rows is not null && (columns is null || rowGap >= columnGap) ? rows : columns;
         return chosen is null
-            ? blocks.OrderByDescending(b => b.BoundingBox.Top).ThenBy(b => b.BoundingBox.Left).ToList()
+            ? blocks.OrderByDescending(b => b.Box.Top).ThenBy(b => b.Box.Left).ToList()
             : chosen.SelectMany(Order).ToList();
     }
 
     // Splits at every gap of the projection; rows top to bottom, columns left to right. Null when no gap.
-    private static List<List<PdfTextBlock>>? Split(List<PdfTextBlock> blocks, bool horizontal, out double widestGap)
+    private static List<List<FramedBlock>>? Split(List<FramedBlock> blocks, bool horizontal, out double widestGap)
     {
         widestGap = 0;
-        var spans = blocks.Select(b => horizontal ? (Start: -b.BoundingBox.Top, End: -b.BoundingBox.Bottom, Block: b) : (Start: b.BoundingBox.Left, End: b.BoundingBox.Right, Block: b))
+        var spans = blocks.Select(b => horizontal ? (Start: -b.Box.Top, End: -b.Box.Bottom, Block: b) : (Start: b.Box.Left, End: b.Box.Right, Block: b))
             .OrderBy(s => s.Start).ToList();
-        var groups = new List<List<PdfTextBlock>>();
-        var current = new List<PdfTextBlock>();
+        var groups = new List<List<FramedBlock>>();
+        var current = new List<FramedBlock>();
         var reach = double.MinValue;
         foreach (var span in spans)
         {
@@ -235,7 +247,11 @@ internal static class XyCut
         groups.Add(current);
         return groups.Count > 1 ? groups : null;
     }
+
+    // A block with its box in the reading frame.
+    private sealed record FramedBlock(PdfTextBlock Block, PdfRectangle Box);
 }
+
 
 /// <summary>Marks running headers, footers and page numbers.</summary>
 internal static class Decorations
@@ -267,21 +283,34 @@ internal static class Decorations
         }).ToList();
     }
 
+    // A block is in a margin when it lies in the top or bottom 12 % of the page, both measured in the frame
+    // of the block's own direction: a running head is horizontal, while a column of a table turned on the page lies
+    // along an edge without being in a margin of its text.
     private static bool InMargin(PdfTextBlock block, PdfPage page)
     {
-        var box = page.CropBox;
-        var band = box.Height * 0.12;
-        return block.BoundingBox.Bottom >= box.Top - band || block.BoundingBox.Top <= box.Bottom + band;
+        var (box, crop) = Frame(block, page);
+        var band = crop.Height * 0.12;
+        return box.Bottom >= crop.Top - band || box.Top <= crop.Bottom + band;
     }
 
-    // Same text with numbers masked, in the same band and at about the same height.
+    // Same text with numbers masked, in the same direction, band and at about the same height.
     private static string Key(PdfTextBlock block, PdfPage page)
     {
+        var (box, crop) = Frame(block, page);
         var text = Digits.Replace(block.Text.Trim(), "#");
-        var top = block.BoundingBox.Bottom >= page.CropBox.Top - (page.CropBox.Height * 0.12);
-        var height = Math.Round((block.BoundingBox.Bottom - page.CropBox.Bottom) / 10);
-        return new StringBuilder(text).Append('|').Append(top ? 'T' : 'B').Append('|').Append(height).ToString();
+        var top = box.Bottom >= crop.Top - (crop.Height * 0.12);
+        var height = Math.Round((box.Bottom - crop.Bottom) / 10);
+        return new StringBuilder(text).Append('|').Append(top ? 'T' : 'B').Append('|').Append(height).Append('|').Append(Direction(block).Angle).ToString();
     }
+
+    // The block and the page in the frame of the block's direction.
+    private static (PdfRectangle Block, PdfRectangle Page) Frame(PdfTextBlock block, PdfPage page)
+    {
+        var direction = Direction(block);
+        return (direction.Project(block.BoundingBox), direction.Project(page.CropBox));
+    }
+
+    private static TextDirection Direction(PdfTextBlock block) => TextDirection.Of(block.Lines[0].Words[0].Letters[0].Rotation);
 
     private static bool IsPageNumber(PdfTextBlock block)
     {
