@@ -35,7 +35,7 @@ internal static class Symbols
     public static PdfFont Font(string? symbolFont, PdfFont current) => IsSymbolFont(symbolFont) ? current with { Family = "Liberation Sans" } : current;
 
     /// <summary>The text with symbol-font characters replaced by look-alikes.</summary>
-    public static string Map(string text, string? font, LayoutContext context)
+    public static string Map(string text, string? font, ISet<string> gaps)
     {
         var symbol = font?.Equals("Symbol", StringComparison.OrdinalIgnoreCase) == true;
         var dingbats = IsSymbolFont(font) && !symbol;
@@ -46,7 +46,7 @@ internal static class Symbols
             var mapped = symbol ? MapSymbol(code) : dingbats ? MapDingbat(code) : (char?)null;
             if (mapped is null && c is >= '' and <= '')
             {
-                context.Gaps.Add("symbol font characters approximated");
+                gaps.Add("symbol font characters approximated");
                 mapped = (char)code;
             }
 

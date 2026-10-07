@@ -32,6 +32,7 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
         for (var s = 0; s < sections.Count; s++)
         {
             _section = sections[s];
+            context.Notes.Section = s;
             var width = ColumnWidths(_section.Page)[0].Width;
             var items = blocks.Layout(_section.Blocks, width);
             if (s == sections.Count - 1)
@@ -316,7 +317,7 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
 
     private List<FlowItem> Endnotes(double width)
     {
-        var notes = context.EndnoteOrder.Where(context.Document.Endnotes.ContainsKey).ToList();
+        var notes = context.Notes.EndnoteOrder.Where(context.Document.Endnotes.ContainsKey).ToList();
         if (notes.Count == 0)
         {
             return [];

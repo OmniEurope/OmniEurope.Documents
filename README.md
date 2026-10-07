@@ -10,7 +10,7 @@ NuGet package, no user interface, no dependency, licensed under EUPL-1.2.
 
 | Format | Create | Edit | Read | Convert |
 |---|---|---|---|---|
-| Word (`.docx`) | yes | yes | text and structure | to PDF |
+| Word (`.docx`) | yes | yes | text and structure | to PDF, to HTML |
 | Excel (`.xlsx`) | yes | yes | cells and sheets | to PDF, to CSV |
 | PDF | yes | merge, split, compress, reorder, rotate, stamp | text, **no OCR** | from Word, Excel, Markdown, HTML, images; to PNG |
 | Markdown | yes | yes | yes | to PDF, to Word, to HTML |
@@ -18,6 +18,11 @@ NuGet package, no user interface, no dependency, licensed under EUPL-1.2.
 
 PDF operations: merge several files, split a file (by pages or ranges), compress (images and streams),
 extract the text of a PDF that contains text, read the metadata, render a page to a PNG image.
+
+Word to HTML gives one standalone page (styles embedded, pictures as `data:` URIs, nothing fetched) in which
+every paragraph carries `data-address`, the address `WordEditor` gives the same paragraph, so a viewer can
+point at the paragraph an edit will touch. Document text is always encoded and only `http`, `https` and
+`mailto` links keep their address.
 
 Companion tools: HTML parsing and sanitising, text diff (lines and words).
 
@@ -29,6 +34,8 @@ Companion tools: HTML parsing and sanitising, text diff (lines and words).
 - **No lossless workbook editing yet**: saving a loaded `.xlsx` keeps cells, styles, merges, panes and
   filters, but drops charts, pictures, conditional formats, data validation, comments and pivot tables.
 - **No formula evaluation**: formulas are kept with their last computed result, never recalculated.
+- **No Word to Markdown yet**; Word to HTML leaves line and page breaks to the browser and lists what it
+  approximates in its gaps.
 
 ## Layout
 
@@ -41,7 +48,8 @@ One package, one namespace per format, conversions on their own:
 - `OmniEurope.Documents.Csv`
 - `OmniEurope.Documents.Html`
 - `OmniEurope.Documents.Diff`
-- `OmniEurope.Documents.Conversion` (Word to PDF, Markdown to PDF, and so on)
+- `OmniEurope.Documents.Conversion` (Word to PDF, Word to HTML, Excel to PDF, HTML and Markdown to Word or
+  PDF, images to PDF)
 
 ## Dependencies
 

@@ -45,6 +45,10 @@ public sealed class RobustnessTests
             {
                 _ = WordToPdf.Convert(document);
             }
+            else if (i % 5 == 1)
+            {
+                _ = WordToHtml.Convert(document);
+            }
         }, sources);
     }
 

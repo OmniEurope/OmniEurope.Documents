@@ -119,7 +119,7 @@ internal static class WordPartsWriter
         var footnotes = NoteProperties("footnotePr", settings.FootnoteFormat, WordNumberFormat.Decimal, settings.FootnoteStart);
         if (settings.FootnoteRestart != WordNoteRestart.Continuous)
         {
-            footnotes.Add(ValElement("numRestart", settings.FootnoteRestart == WordNoteRestart.EachPage ? "eachPage" : "eachSect"));
+            footnotes.Add(ValElement("numRestart", WordStructureWriter.NoteRestart(settings.FootnoteRestart)));
         }
 
         AddSeparators(footnotes, "footnote", hasFootnotes);

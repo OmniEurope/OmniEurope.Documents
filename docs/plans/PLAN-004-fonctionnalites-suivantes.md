@@ -1,8 +1,9 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 # PLAN-004 : Fonctionnalités suivantes
 
-> Statut : **à faire** (2026-10-07). Feuille de route proposée au propriétaire ; l'ordre des lots est celui
-> de la valeur attendue. Un lot ne commence qu'après accord du propriétaire.
+> Statut : **en cours** (2026-10-07 : lot 5 Word vers HTML fait). Feuille de route proposée au
+> propriétaire ; l'ordre des lots est celui de la valeur attendue. Un lot ne commence qu'après accord du
+> propriétaire.
 
 ## Objectif
 
@@ -52,9 +53,18 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
 
 ## Lot 5 : Word vers HTML et Markdown
 
-- [ ] Titres, paragraphes, listes, tableaux, liens, images (en `data:`), notes ; ce qui n'a pas d'équivalent
-  est listé dans `Gaps`.
-- Contrôle : aller-retour Word, HTML, Word sans perte de texte ni de structure.
+- [x] Word vers HTML (2026-10-07) : `WordToHtml.Convert` donne une page autonome (styles embarqués, rien
+  n'est chargé) : sections à leur largeur de page et à leurs marges, en-tête et pied de page par défaut de
+  la première section, titres, paragraphes et runs avec leur mise en forme résolue, listes avec leurs
+  libellés calculés, tableaux avec fusions horizontales et verticales, notes de bas de page puis de fin
+  reliées dans les deux sens, images en `data:` (TIFF et EMF convertis en PNG), zones de texte en blocs,
+  liens `http`, `https` et `mailto` seulement, révisions acceptées ou marquées. Chaque paragraphe lu
+  d'un paquet porte `data-address`, l'adresse que lui donne `WordEditor` (`WordParagraph.SourceAddress`),
+  et `HighlightAddress` le met en évidence. Ce qui n'est qu'approché est listé dans `Gaps`.
+- [ ] Word vers Markdown : reste à faire.
+- Contrôle : aller-retour Word, HTML, Word sans perte de texte ni de structure (fait pour le HTML :
+  `WordToHtmlTests`, adresses vérifiées contre `WordEditor` dans le corps, les cellules, les en-têtes, les
+  pieds de page, les notes et les zones de texte, document d'un autre producteur compris).
 
 ## Lot 6 : révisions, table des matières et champs Word
 
@@ -82,6 +92,9 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
 
 ## Lot 10 : fidélité de la mise en page Word
 
+- [x] Numérotation des notes de bas de page qui recommence à chaque page ou à chaque section (réglage du
+  document et `w:footnotePr` de chaque section, lu et écrit), dans l'appel en texte comme dans la note
+  (2026-10-07).
 - [ ] Texte qui contourne les objets flottants, écriture de droite à gauche, colonnes de largeurs inégales.
 - Contrôle : positions des lignes vérifiées au point près sur des pages calibrées.
 

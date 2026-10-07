@@ -213,12 +213,7 @@ internal static class WordPartsReader
             UpdateFieldsOnOpen = OnOff(root, "updateFields") ?? false,
             FootnoteFormat = WordStructureReader.NumberFormat(Val(footnotes, "numFmt")) ?? result.FootnoteFormat,
             FootnoteStart = Int(Val(footnotes, "numStart")) ?? result.FootnoteStart,
-            FootnoteRestart = Val(footnotes, "numRestart") switch
-            {
-                "eachSect" => WordNoteRestart.EachSection,
-                "eachPage" => WordNoteRestart.EachPage,
-                _ => WordNoteRestart.Continuous,
-            },
+            FootnoteRestart = WordStructureReader.NoteRestart(Val(footnotes, "numRestart")) ?? WordNoteRestart.Continuous,
             EndnoteFormat = WordStructureReader.NumberFormat(Val(endnotes, "numFmt")) ?? result.EndnoteFormat,
             EndnoteStart = Int(Val(endnotes, "numStart")) ?? result.EndnoteStart,
         };

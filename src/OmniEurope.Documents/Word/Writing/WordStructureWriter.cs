@@ -147,6 +147,7 @@ internal static class WordStructureWriter
     public static XElement Section(WordPageSetup page, IEnumerable<XElement> references)
     {
         var element = new XElement(W + "sectPr", references);
+        Add(element, FootnoteNumbering(page.FootnoteNumbering));
         if (page.Start != WordSectionStart.NextPage)
         {
             element.Add(ValElement("type", page.Start switch
@@ -217,6 +218,28 @@ internal static class WordStructureWriter
 
         return element;
     }
+
+    // CT_FtnProps: numFmt, numStart, numRestart.
+    private static XElement? FootnoteNumbering(WordNoteNumbering? numbering)
+    {
+        if (numbering is null)
+        {
+            return null;
+        }
+
+        var element = new XElement(W + "footnotePr");
+        Add(element, numbering.Format is { } format ? ValElement("numFmt", NumberFormat(format)) : null);
+        Add(element, numbering.Start is { } start ? ValElement("numStart", Format(start)) : null);
+        Add(element, numbering.Restart is { } restart ? ValElement("numRestart", NoteRestart(restart)) : null);
+        return element.HasElements ? element : null;
+    }
+
+    public static string NoteRestart(WordNoteRestart restart) => restart switch
+    {
+        WordNoteRestart.EachPage => "eachPage",
+        WordNoteRestart.EachSection => "eachSect",
+        _ => "continuous",
+    };
 
     public static string NumberFormat(WordNumberFormat format) => WordValues.Name(WordValues.NumberFormats, format);
 }

@@ -29,6 +29,8 @@ public sealed record WordPdfResult(byte[] Pdf, int PageCount, IReadOnlyList<stri
 /// </summary>
 public static class WordToPdf
 {
+    private const int MaxPasses = 4;
+
     /// <summary>Converts a loaded document.</summary>
     public static WordPdfResult Convert(WordDocument document, WordPdfOptions? options = null)
     {
@@ -45,11 +47,30 @@ public static class WordToPdf
             Creator = "OmniEurope.Documents",
         };
         var context = new LayoutContext(document, builder);
-        var pages = new Paginator(context, new BlockLayout(context)).Run();
+        var pages = Paginate(context);
         ReportFloatingShapes(document, context);
         new PagePainter(context, options.Bookmarks).Paint(pages);
         var gaps = document.Gaps.Concat(context.Gaps).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToList();
         return new WordPdfResult(builder.ToArray(), pages.Count, gaps);
+    }
+
+    // Footnotes restarting at each page are numbered after the pages of the previous layout, until the
+    // numbers no longer move a footnote to another page.
+    private static List<PageFrame> Paginate(LayoutContext context)
+    {
+        var pages = new Paginator(context, new BlockLayout(context)).Run();
+        for (var pass = 1; context.Restart(pages); pass++)
+        {
+            if (pass == MaxPasses)
+            {
+                context.Gaps.Add("footnote numbers restarting at each page may not match their final page");
+                break;
+            }
+
+            pages = new Paginator(context, new BlockLayout(context)).Run();
+        }
+
+        return pages;
     }
 
     /// <summary>Loads a .docx package and converts it.</summary>

@@ -169,8 +169,34 @@ internal static class WordStructureReader
             Start = SectionStart(Val(sectPr, "type")),
             PageNumberStart = Int(Attr(numbers, "start")),
             PageNumberFormat = NumberFormat(Attr(numbers, "fmt")) ?? WordNumberFormat.Decimal,
+            FootnoteNumbering = NoteNumbering(sectPr.Element(W + "footnotePr")),
         };
     }
+
+    private static WordNoteNumbering? NoteNumbering(XElement? properties)
+    {
+        if (properties is null)
+        {
+            return null;
+        }
+
+        var numbering = new WordNoteNumbering
+        {
+            Format = NumberFormat(Val(properties, "numFmt")),
+            Start = Int(Val(properties, "numStart")),
+            Restart = NoteRestart(Val(properties, "numRestart")),
+        };
+        return numbering == new WordNoteNumbering() ? null : numbering;
+    }
+
+    /// <summary>The <c>w:numRestart</c> value of note properties, or null when absent.</summary>
+    public static WordNoteRestart? NoteRestart(string? value) => value switch
+    {
+        null => null,
+        "eachSect" => WordNoteRestart.EachSection,
+        "eachPage" => WordNoteRestart.EachPage,
+        _ => WordNoteRestart.Continuous,
+    };
 
     private static List<double>? ColumnWidths(XElement? columns)
     {

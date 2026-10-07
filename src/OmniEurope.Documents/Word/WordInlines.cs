@@ -331,7 +331,7 @@ public sealed class WordImage
         }
 
         // EMF: header record type 1 and the " EMF" signature at offset 40; WMF: the placeable-file key.
-        if (data.Length > 44 && data.AsSpan(0, 4).SequenceEqual(EmfRecord) && data.AsSpan(40, 4).SequenceEqual(EmfSignature))
+        if (IsEnhancedMetafile(data))
         {
             return new WordImage(data, "image/x-emf");
         }
@@ -343,6 +343,10 @@ public sealed class WordImage
 
         throw new ArgumentException("Unrecognised image format.", nameof(data));
     }
+
+    /// <summary>True for bytes that start like an Enhanced Metafile: header record type 1 and the " EMF" signature.</summary>
+    internal static bool IsEnhancedMetafile(byte[] data) =>
+        data.Length > 44 && data.AsSpan(0, 4).SequenceEqual(EmfRecord) && data.AsSpan(40, 4).SequenceEqual(EmfSignature);
 
     private static ReadOnlySpan<byte> EmfRecord => [1, 0, 0, 0];
 

@@ -11,10 +11,30 @@ namespace OmniEurope.Documents.Word.Reading;
 internal sealed class WordReadContext(OpcPackage package)
 {
     private readonly Dictionary<string, WordImage> _images = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<XElement, Dictionary<XElement, int>> _paragraphIndexes = [];
 
     public OpcPackage Package { get; } = package;
 
     public SortedSet<string> Gaps { get; } = new(StringComparer.Ordinal);
+
+    /// <summary>The editor address (<c>part#index</c>) of a paragraph element of <paramref name="part"/>, counted
+    /// as <see cref="Editing.WordEditor.Paragraphs"/> counts them; null when the editor does not see it.</summary>
+    public string? Address(string part, XElement paragraph)
+    {
+        var root = paragraph.AncestorsAndSelf().Last();
+        if (!_paragraphIndexes.TryGetValue(root, out var indexes))
+        {
+            indexes = new Dictionary<XElement, int>(ReferenceEqualityComparer.Instance);
+            foreach (var element in Editing.WordRunScanner.Paragraphs(root))
+            {
+                indexes[element] = indexes.Count;
+            }
+
+            _paragraphIndexes[root] = indexes;
+        }
+
+        return indexes.TryGetValue(paragraph, out var index) ? part + "#" + index.ToString(CultureInfo.InvariantCulture) : null;
+    }
 
     public WordImage? Image(string partName)
     {
@@ -114,7 +134,7 @@ internal sealed class WordContentReader
 
     public WordParagraph Paragraph(XElement p)
     {
-        var paragraph = new WordParagraph { Properties = WordPropertyReader.Paragraph(p.Element(W + "pPr")) ?? WordParagraphProperties.Empty };
+        var paragraph = new WordParagraph { Properties = WordPropertyReader.Paragraph(p.Element(W + "pPr")) ?? WordParagraphProperties.Empty, SourceAddress = Context.Address(Part, p) };
         _fields.Clear();
         Inlines(p, paragraph.Inlines, null);
         while (_fields.Count > 0)

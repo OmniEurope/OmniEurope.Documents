@@ -11,11 +11,7 @@ internal sealed class RunResolver(LayoutContext context, WordParagraphProperties
 
     public WordParagraphProperties Paragraph { get; } = paragraph;
 
-    public WordRunProperties Resolve(WordRunProperties direct)
-    {
-        var resolved = Context.Styles.ResolveRun(Paragraph, direct, cell?.TableStyleId);
-        return cell?.RunOverlay is { } overlay ? resolved.Overlay(overlay).Overlay(direct with { StyleId = null }) : resolved;
-    }
+    public WordRunProperties Resolve(WordRunProperties direct) => WordResolution.Run(Context.Styles, Paragraph, direct, cell);
 
     public TextStyle Style(WordRunProperties direct, string? link = null) => TextStyle.From(Resolve(direct), link);
 }
@@ -59,7 +55,7 @@ internal sealed class InlineBuilder(RunResolver resolver, ShapeFactory shapes, b
         style = style with { Font = Symbols.Font(font, style.Font) };
         if (next.Label.Length > 0)
         {
-            AddText(Symbols.Map(next.Label, font, Context), style, null);
+            AddText(Symbols.Map(next.Label, font, Context.Gaps), style, null);
         }
 
         switch (next.Level.Suffix)
@@ -95,7 +91,7 @@ internal sealed class InlineBuilder(RunResolver resolver, ShapeFactory shapes, b
         switch (inline)
         {
             case WordText text when Symbols.IsSymbolFont(style.Font.Family):
-                AddText(Symbols.Map(text.Value, style.Font.Family, Context), style with { Font = Symbols.Font(style.Font.Family, style.Font) }, null);
+                AddText(Symbols.Map(text.Value, style.Font.Family, Context.Gaps), style with { Font = Symbols.Font(style.Font.Family, style.Font) }, null);
                 break;
             case WordText text:
                 AddText(text.Value, style, null);
@@ -108,7 +104,7 @@ internal sealed class InlineBuilder(RunResolver resolver, ShapeFactory shapes, b
                 _breakNext = true;
                 break;
             case WordSymbol symbol:
-                AddText(Symbols.Map(symbol.Character.ToString(), symbol.Font, Context), style with { Font = Symbols.Font(symbol.Font, style.Font) }, null);
+                AddText(Symbols.Map(symbol.Character.ToString(), symbol.Font, Context.Gaps), style with { Font = Symbols.Font(symbol.Font, style.Font) }, null);
                 break;
             default:
                 AddComplex(inline, style, link);
@@ -131,7 +127,7 @@ internal sealed class InlineBuilder(RunResolver resolver, ShapeFactory shapes, b
                 AddInlines(hyperlink.Inlines, hyperlink.Target ?? link);
                 break;
             case WordNoteReference note:
-                var label = Context.NoteLabel(note.Kind, note.Id);
+                var label = Context.Notes.Label(note.Kind, note.Id);
                 AddText(label, style, note.IsMark ? null : (note.Kind, note.Id));
                 break;
             case WordShape shape:

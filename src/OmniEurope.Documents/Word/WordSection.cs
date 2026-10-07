@@ -96,6 +96,10 @@ public sealed record WordPageSetup
     /// <summary>Page number style.</summary>
     public WordNumberFormat PageNumberFormat { get; init; } = WordNumberFormat.Decimal;
 
+    /// <summary>Footnote numbering of the section (<c>w:sectPr/w:footnotePr</c>); null, or a member left null,
+    /// follows <see cref="WordSettings"/>.</summary>
+    public WordNoteNumbering? FootnoteNumbering { get; init; }
+
     /// <summary>The same setup turned to landscape (width and height swapped).</summary>
     public WordPageSetup ToLandscape() => Landscape ? this : this with { Landscape = true, Width = Height, Height = Width };
 
@@ -201,6 +205,20 @@ public enum WordNoteRestart
 
     /// <summary>At each page.</summary>
     EachPage,
+}
+
+/// <summary>Note numbering set on a section; each member that is set replaces the document setting for the
+/// notes of that section.</summary>
+public sealed record WordNoteNumbering
+{
+    /// <summary>Number style.</summary>
+    public WordNumberFormat? Format { get; init; }
+
+    /// <summary>The number of the first note, and the number numbering restarts at.</summary>
+    public int? Start { get; init; }
+
+    /// <summary>When numbering restarts.</summary>
+    public WordNoteRestart? Restart { get; init; }
 }
 
 /// <summary>Document-wide settings. Distances are in points.</summary>

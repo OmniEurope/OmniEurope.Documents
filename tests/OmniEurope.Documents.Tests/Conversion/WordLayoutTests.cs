@@ -242,7 +242,7 @@ public sealed class WordLayoutTests
     }
 
     [Fact]
-    public void Unsupported_numbering_restarts_and_unreadable_pictures_are_reported()
+    public void Unreadable_pictures_are_reported_and_numbering_restarts_no_longer_are()
     {
         var document = new WordDocument { Settings = new WordSettings { FootnoteRestart = WordNoteRestart.EachPage } };
         document.AddParagraph("Texte").Add(document.AddFootnote("note"));
@@ -250,7 +250,7 @@ public sealed class WordLayoutTests
 
         var gaps = WordToPdf.Convert(document).Gaps;
 
-        Assert.Contains("footnote numbering restarts are not applied", gaps);
+        Assert.DoesNotContain(gaps, g => g.Contains("footnote", StringComparison.Ordinal));
         Assert.Contains("unreadable picture replaced by a frame", gaps);
     }
 

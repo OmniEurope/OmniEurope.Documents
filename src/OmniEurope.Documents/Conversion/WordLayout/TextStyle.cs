@@ -84,7 +84,8 @@ internal sealed record TextStyle(PdfFont Font, double Size, PdfColor Color)
         };
     }
 
-    private static PdfColor? BackgroundOf(WordRunProperties p) =>
+    /// <summary>The highlight colour of the run, else its shading; null when neither is set.</summary>
+    public static PdfColor? BackgroundOf(WordRunProperties p) =>
         p.Highlight is { } name && name != "none" && Highlights.TryGetValue(name, out var highlight) ? highlight : ParseColor(p.Shading);
 
     /// <summary>A colour written as <c>RRGGBB</c>; null for <c>auto</c> or anything else.</summary>

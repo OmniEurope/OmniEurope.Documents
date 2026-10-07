@@ -44,6 +44,13 @@ public sealed class WordParagraph : WordBlock
     /// <summary>Inline content in order.</summary>
     public List<WordInline> Inlines { get; } = [];
 
+    /// <summary>
+    /// Where the paragraph was read from: the <see cref="Editing.WordEditableParagraph.Address"/> of the same
+    /// paragraph in the loaded package (<c>part#index</c>). Null for a paragraph built in code or read from
+    /// alternate-content fallback markup. It is not updated when blocks are added or removed.
+    /// </summary>
+    public string? SourceAddress { get; internal set; }
+
     /// <inheritdoc />
     public override string Text => WordInline.TextOf(Inlines);
 

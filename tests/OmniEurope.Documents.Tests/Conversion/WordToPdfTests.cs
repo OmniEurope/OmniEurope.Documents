@@ -90,6 +90,49 @@ public sealed class WordToPdfTests
     }
 
     [Fact]
+    public void Footnote_numbers_restart_at_each_page_then_at_the_section_that_asks_for_it()
+    {
+        var document = NotesOnTheBaseline(Exact(pageLines: 8));
+        document.Settings = document.Settings with { FootnoteRestart = WordNoteRestart.EachPage, FootnoteStart = 1 };
+        document.AddParagraph("Alpha").Add(document.AddFootnote("Note alpha"));
+        document.AddParagraph("Bravo").Add(document.AddFootnote("Note bravo"));
+        document.AddPageBreak();
+        document.AddParagraph("Charlie").Add(document.AddFootnote("Note charlie"));
+        var numbering = new WordNoteNumbering { Restart = WordNoteRestart.EachSection, Format = WordNumberFormat.LowerRoman, Start = 2 };
+        document.AddSection(document.Sections[0].Page with { FootnoteNumbering = numbering });
+        document.AddParagraph("Delta").Add(document.AddFootnote("Note delta"));
+        document.AddPageBreak();
+        document.AddParagraph("Echo").Add(document.AddFootnote("Note echo"));
+
+        var result = WordToPdf.Convert(document);
+        var pages = PdfDocument.Open(result.Pdf).Pages.Select(p => Lines(p.Text)).ToList();
+
+        Assert.Equal(4, pages.Count);
+        Assert.Equal(["Alpha1", "Bravo2", "1 Note alpha", "2 Note bravo"], pages[0]);
+        Assert.Equal(["Charlie1", "1 Note charlie"], pages[1]);
+        Assert.Equal(["Deltaii", "ii Note delta"], pages[2]);
+        Assert.Equal(["Echoiii", "iii Note echo"], pages[3]);
+        Assert.DoesNotContain(result.Gaps, g => g.Contains("footnote", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Footnote_numbers_restarting_at_each_page_follow_the_page_a_note_lands_on()
+    {
+        var document = NotesOnTheBaseline(Exact(pageLines: 6));
+        document.Settings = document.Settings with { FootnoteRestart = WordNoteRestart.EachPage, FootnoteFormat = WordNumberFormat.UpperLetter };
+        foreach (var name in new[] { "Un", "Deux", "Trois", "Quatre" })
+        {
+            document.AddParagraph(name).Add(document.AddFootnote("Note " + name));
+        }
+
+        var pages = PdfDocument.Open(WordToPdf.Convert(document).Pdf).Pages.Select(p => Lines(p.Text)).ToList();
+
+        Assert.Equal(2, pages.Count);
+        Assert.Equal(["UnA", "DeuxB", "A Note Un", "B Note Deux"], pages[0]);
+        Assert.Equal(["TroisA", "QuatreB", "A Note Trois", "B Note Quatre"], pages[1]);
+    }
+
+    [Fact]
     public void Long_tables_repeat_their_header_rows_and_split_between_rows()
     {
         var document = new WordDocument();
@@ -298,6 +341,17 @@ public sealed class WordToPdfTests
         document.Sections[0].Page = WordPageSetup.A4 with { Height = 40 + (pageLines * Line) + 1, MarginTop = 20, MarginBottom = 20, HeaderDistance = 10, FooterDistance = 10 };
         return document;
     }
+
+    // Note marks on the baseline and note lines at the exact line height, so each extracted line keeps a
+    // mark next to its word and the page capacity is known.
+    private static WordDocument NotesOnTheBaseline(WordDocument document)
+    {
+        document.Styles.Add(document.Styles.Get("FootnoteReference")! with { RunProperties = new WordRunProperties() });
+        document.Styles.Add(document.Styles.Get("FootnoteText")! with { ParagraphProperties = null });
+        return document;
+    }
+
+    private static List<string> Lines(string text) => text.Split('\n').Select(l => l.Trim()).Where(l => l.Length > 0).ToList();
 
     private static OmniEurope.Documents.Pdf.Text.PdfLetter First(PdfPage page, string value) => page.Letters.First(l => l.Value == value);
 }

@@ -64,4 +64,41 @@ public sealed class WordReadingTests
         Assert.Equal((20.0, 10.0), (pictures[0].Width, pictures[0].Height));
         Assert.Contains("missing image part", document.Gaps);
     }
+
+    [Fact]
+    public void Section_footnote_numbering_is_read_and_written_back()
+    {
+        var document = WordDocument.Load(Build(
+            "<w:p><w:pPr><w:sectPr><w:footnotePr><w:numFmt w:val=\"upperRoman\"/><w:numStart w:val=\"3\"/><w:numRestart w:val=\"eachSect\"/></w:footnotePr></w:sectPr></w:pPr></w:p>"
+            + "<w:p><w:pPr><w:sectPr><w:footnotePr><w:numRestart w:val=\"eachPage\"/></w:footnotePr></w:sectPr></w:pPr></w:p>"
+            + "<w:p><w:pPr><w:sectPr><w:footnotePr><w:pos w:val=\"beneathText\"/></w:footnotePr></w:sectPr></w:pPr></w:p>"
+            + "<w:sectPr><w:footnotePr><w:numRestart w:val=\"continuous\"/></w:footnotePr></w:sectPr>"));
+
+        var read = document.Sections.Select(s => s.Page.FootnoteNumbering).ToList();
+
+        Assert.Equal(new WordNoteNumbering { Format = WordNumberFormat.UpperRoman, Start = 3, Restart = WordNoteRestart.EachSection }, read[0]);
+        Assert.Equal(new WordNoteNumbering { Restart = WordNoteRestart.EachPage }, read[1]);
+        Assert.Null(read[2]);
+        Assert.Equal(new WordNoteNumbering { Restart = WordNoteRestart.Continuous }, read[3]);
+        var saved = document.ToArray();
+        Assert.Contains("<w:footnotePr><w:numFmt w:val=\"upperRoman\" /><w:numStart w:val=\"3\" /><w:numRestart w:val=\"eachSect\" /></w:footnotePr>", Part(saved, "word/document.xml"), StringComparison.Ordinal);
+        Assert.Equal(read, WordDocument.Load(saved).Sections.Select(s => s.Page.FootnoteNumbering));
+    }
+
+    [Fact]
+    public void Paragraphs_remember_the_address_the_editor_gives_them()
+    {
+        var bytes = Build(
+            "<w:p><w:r><w:t>Un</w:t></w:r></w:p>"
+            + "<w:p><w:r><mc:AlternateContent><mc:Choice Requires=\"wps\"><w:t>choix</w:t></mc:Choice><mc:Fallback><w:pict><w:p><w:r><w:t>repli</w:t></w:r></w:p></w:pict></mc:Fallback></mc:AlternateContent></w:r></w:p>"
+            + "<w:tbl><w:tr><w:tc><w:p><w:r><w:t>Cellule</w:t></w:r></w:p></w:tc></w:tr></w:tbl>");
+
+        var document = WordDocument.Load(bytes);
+        var editor = Documents.Word.Editing.WordEditor.Open(bytes).Paragraphs();
+
+        var paragraphs = document.Blocks.OfType<WordParagraph>().Concat(document.Blocks.OfType<WordTable>().SelectMany(t => t.Rows[0].Cells[0].Blocks.OfType<WordParagraph>())).ToList();
+        Assert.Equal(["word/document.xml#0", "word/document.xml#1", "word/document.xml#2"], paragraphs.Select(p => p.SourceAddress));
+        Assert.Equal(editor.Select(p => p.Address), paragraphs.Select(p => p.SourceAddress));
+        Assert.Null(new WordParagraph("construit").SourceAddress);
+    }
 }

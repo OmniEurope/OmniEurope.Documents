@@ -61,11 +61,7 @@ internal sealed class BlockLayout
         return items;
     }
 
-    private WordParagraphProperties Resolve(WordParagraph paragraph, CellStyle? cell)
-    {
-        var resolved = _context.Styles.ResolveParagraph(paragraph.Properties, _context.Document.Numbering, cell?.TableStyleId);
-        return cell?.ParagraphOverlay is { } overlay ? resolved.Overlay(overlay).Overlay(paragraph.Properties with { StyleId = resolved.StyleId }) : resolved;
-    }
+    private WordParagraphProperties Resolve(WordParagraph paragraph, CellStyle? cell) => WordResolution.Paragraph(_context.Document, paragraph, cell);
 
     // Space between two paragraphs of the same style is dropped on the side that asks for it.
     private static void ContextualSpacing(WordParagraphProperties? previous, List<FlowItem>? previousItems, WordParagraphProperties current, List<FlowItem> items)

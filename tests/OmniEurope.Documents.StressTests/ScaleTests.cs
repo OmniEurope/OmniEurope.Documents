@@ -136,6 +136,7 @@ public sealed class ScaleTests
         Func<byte[]>[] conversions =
         [
             () => WordToPdf.Convert(SampleDocuments.Report()).Pdf,
+            () => System.Text.Encoding.UTF8.GetBytes(WordToHtml.Convert(SampleDocuments.Report().ToArray()).Html),
             () => ExcelToPdf.Convert(SampleDocuments.Workbook()).Pdf,
             () => MarkdownToPdf.Convert("# Titre\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n- un\n- deux").Pdf,
             () => SampleDocuments.MergedPdf(),
