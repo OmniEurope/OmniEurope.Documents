@@ -13,6 +13,12 @@ internal static class WordPartsReader
         var fonts = theme?.Root?.Descendants(A + "fontScheme").FirstOrDefault();
         var sheet = new WordStyleSheet { MajorFont = ThemeFont(fonts, "majorFont"), MinorFont = ThemeFont(fonts, "minorFont") };
         var root = styles?.Root;
+        if (root?.Element(W + "docDefaults") is null)
+        {
+            // Without document defaults Word sets paragraphs 8 pt apart at 1.15 lines (measured against Word).
+            sheet.DefaultParagraphProperties = new WordParagraphProperties { SpacingAfter = 8, LineSpacing = 1.15, LineSpacingRule = WordLineSpacingRule.Multiple };
+        }
+
         if (root is null)
         {
             return sheet;
@@ -20,7 +26,11 @@ internal static class WordPartsReader
 
         var defaults = root.Element(W + "docDefaults");
         sheet.DefaultRunProperties = WordPropertyReader.Run(Child(defaults, "rPrDefault", "rPr")) ?? WordRunProperties.Empty;
-        sheet.DefaultParagraphProperties = WordPropertyReader.Paragraph(Child(defaults, "pPrDefault", "pPr")) ?? WordParagraphProperties.Empty;
+        if (defaults is not null)
+        {
+            sheet.DefaultParagraphProperties = WordPropertyReader.Paragraph(Child(defaults, "pPrDefault", "pPr")) ?? WordParagraphProperties.Empty;
+        }
+
         foreach (var element in root.Elements(W + "style"))
         {
             if (Style(element) is { } style)

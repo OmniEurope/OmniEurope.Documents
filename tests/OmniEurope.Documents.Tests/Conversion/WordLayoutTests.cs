@@ -273,6 +273,28 @@ public sealed class WordLayoutTests
         Assert.Equal(Math.Round(page.Height - top, 1), Math.Round(bounds.Top, 1));
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(24)]
+    public void A_paragraph_opening_with_a_page_break_keeps_its_first_line_and_space_before_on_the_next_page(double before)
+    {
+        var document = new WordDocument(language: null);
+        document.Body.Add(new WordParagraph("First page"));
+        var hanging = new WordParagraph { Properties = new WordParagraphProperties { SpacingBefore = before, IndentLeft = 50, FirstLineIndent = -50 } };
+        document.Body.Add(hanging.Add(new WordBreak(WordBreakKind.Page)).AddText("Second"));
+
+        var pdf = PdfDocument.Open(WordToPdf.Convert(document).Pdf);
+        var page = pdf.GetPage(2);
+        var letter = page.Letters.First(l => l.Value == "S");
+
+        Assert.Equal(2, pdf.PageCount);
+        // On the first line's indent (the hanging indent), not one step in.
+        Assert.Equal(Math.Round(document.Sections[0].Page.MarginLeft, 1), Math.Round(letter.X, 1));
+        // The space before is kept at the top of the page the break opened.
+        var top = page.Height - document.Sections[0].Page.MarginTop - letter.Y;
+        Assert.InRange(top, before + 5, before + 15);
+    }
+
     private static (PdfPage Page, RasterImage Image) Render(WordDocument document)
     {
         var page = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1);

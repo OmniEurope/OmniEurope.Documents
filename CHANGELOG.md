@@ -43,6 +43,12 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Changed
 
+- Word to PDF lays lines out as Word does: a single line holds the font's external leading (its hhea line gap beyond
+  the Windows ascent and descent) above its text; the extra space of a multiple line spacing goes below the text;
+  after a page or column break the paragraph mark starts a line of its own; a paragraph opening with a page or
+  column break keeps its first-line indent for what follows the break, and its space before on the page it opens.
+- Reading a Word: section properties without a page size or margins mean US Letter with one inch margins, and a
+  styles part without document defaults (or no styles part) sets paragraphs 8 pt apart at 1.15 lines, as Word does.
 - Word to PDF: footnote numbers restart at each page or each section as the document settings or the
   section ask, with the section's number style and first number, in the reference and in the note; the gap
   "footnote numbering restarts are not applied" is gone. Numbers restarting at each page are fixed by laying

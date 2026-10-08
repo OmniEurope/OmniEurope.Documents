@@ -137,9 +137,11 @@ internal static class WordStructureReader
 
     public static WordTableRegion? Region(string? type) => WordValues.Find(WordValues.Regions, type);
 
+    // Without section properties the page is A4 (the documents this package serves); section properties without a page
+    // size or margins mean what the standard and Word take then: US Letter, one inch margins.
     public static WordPageSetup Page(XElement? sectPr)
     {
-        var page = WordPageSetup.A4;
+        var page = sectPr is null ? WordPageSetup.A4 : WordPageSetup.Letter;
         if (sectPr is null)
         {
             return page;

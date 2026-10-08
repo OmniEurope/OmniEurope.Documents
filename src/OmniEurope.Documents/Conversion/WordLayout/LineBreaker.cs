@@ -54,20 +54,26 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
         var index = 0;
         do
         {
-            var state = new LineState(lines.Count == 0 ? geometry.Left + geometry.FirstLine : geometry.Left);
+            // A page or column break opening the paragraph leaves its first line (and first-line indent) to what follows.
+            var state = new LineState(lines.TrueForAll(OpensWithBreak) ? geometry.Left + geometry.FirstLine : geometry.Left);
             index = Fill(index, state);
             lines.Add(Finish(state, last: index >= _tokens.Count));
         }
         while (index < _tokens.Count);
 
-        if (lines[^1].BreakAfter == WordBreakKind.Line)
+        if (lines[^1].BreakAfter is not null)
         {
-            // A trailing line break leaves an empty line below it, as in Word.
+            // After a break the paragraph mark starts a line of its own, as in Word (a page or column break moves it on).
             lines.Add(Finish(new LineState(geometry.Left), last: true));
         }
 
         return lines;
     }
+
+    /// <summary>True for a line holding nothing but a page or column break.</summary>
+    public static bool OpensWithBreak(Line line) =>
+        line.BreakAfter is WordBreakKind.Page or WordBreakKind.Column
+        && line.Items.TrueForAll(i => i.Token is BreakToken or AnchorToken || i.Token is TextToken { Text: var text } && string.IsNullOrWhiteSpace(text));
 
     private int Fill(int start, LineState state)
     {
@@ -220,7 +226,7 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
         state.CloseSegment();
         var line = new Line { BreakAfter = state.BreakAfter };
         var content = state.Items.Where(i => i.Token is not AnchorToken and not BreakToken).ToList();
-        var ascent = content.Count == 0 ? context.Metrics(geometry.MarkStyle).Ascent : content.Max(i => i.Token.Ascent(context));
+        var ascent = content.Count == 0 ? context.LineMetrics(geometry.MarkStyle).Ascent : content.Max(i => i.Token.Ascent(context));
         var descent = content.Count == 0 ? context.Metrics(geometry.MarkStyle).Descent : content.Max(i => i.Token.Descent(context));
         var natural = ascent + descent;
         line.Height = geometry.Rule switch
@@ -229,7 +235,14 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
             WordLineSpacingRule.AtLeast when geometry.LineSpacing is { } least => Math.Max(natural, least),
             _ => natural * (geometry.LineSpacing ?? 1),
         };
-        line.Baseline = line.Height - descent;
+        line.Baseline = geometry.Rule switch
+        {
+            // An exact height smaller than the text cuts its descent first.
+            WordLineSpacingRule.Exact when geometry.LineSpacing is not null => line.Height - (descent * Math.Min(1, line.Height / Math.Max(natural, 0.01))),
+            WordLineSpacingRule.AtLeast when geometry.LineSpacing is not null => line.Height - descent,
+            // Word puts the extra space of a multiple below the text: the baseline stays one ascent down.
+            _ => ascent,
+        };
         line.Items.AddRange(Align(state, last || state.BreakAfter is not null));
         if (state.BreakAfter is not null && line.Items.Count == 1 && last)
         {

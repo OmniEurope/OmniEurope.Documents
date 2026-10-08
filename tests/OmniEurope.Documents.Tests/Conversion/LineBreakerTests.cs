@@ -75,11 +75,19 @@ public sealed class LineBreakerTests
         var exact = Break(Geometry(spacing: 30, rule: WordLineSpacingRule.Exact), Word("a", 10)).Single();
         var atLeast = Break(Geometry(spacing: 2, rule: WordLineSpacingRule.AtLeast), Word("a", 10)).Single();
         var broken = Break(Geometry(), Word("a", 10), new BreakToken(Style, WordBreakKind.Line));
+        var paged = Break(Geometry(), Word("a", 10), new BreakToken(Style, WordBreakKind.Page));
+        var multiple = Break(Geometry(spacing: 1.5), Word("a", 10)).Single();
 
         Assert.Equal(30, exact.Height);
-        Assert.Equal(Context.Metrics(Style).LineHeight, atLeast.Height, 3);
+        // A single line holds the external leading of the font above its text, as in Word.
+        Assert.Equal(Context.LineMetrics(Style).LineHeight, atLeast.Height, 3);
+        Assert.True(Context.LineMetrics(Style).LineHeight > Context.Metrics(Style).LineHeight);
+        // The extra space of a multiple goes below the text.
+        Assert.Equal(Context.LineMetrics(Style).Ascent, multiple.Baseline, 3);
         Assert.Equal(2, broken.Count);
         Assert.Empty(broken[1].Items);
+        Assert.Equal(2, paged.Count);
+        Assert.Equal(WordBreakKind.Page, paged[0].BreakAfter);
     }
 
     private static LineGeometry Geometry(double width = 100, IReadOnlyList<WordTabStop>? tabs = null, double left = 0, double first = 0,

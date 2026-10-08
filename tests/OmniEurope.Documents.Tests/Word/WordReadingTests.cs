@@ -86,6 +86,24 @@ public sealed class WordReadingTests
     }
 
     [Fact]
+    public void Missing_page_size_and_document_defaults_take_what_Word_takes()
+    {
+        const string Styles = "<w:styles xmlns:w=\"" + W + "\"><w:docDefaults><w:pPrDefault/></w:docDefaults></w:styles>";
+        var bare = WordDocument.Load(Build("<w:p><w:r><w:t>Texte</w:t></w:r></w:p><w:sectPr><w:cols w:num=\"2\"/></w:sectPr>"));
+        var withoutSection = WordDocument.Load(Build("<w:p><w:r><w:t>Texte</w:t></w:r></w:p>"));
+        var withDefaults = WordDocument.Load(Build(
+            "<w:p><w:r><w:t>Texte</w:t></w:r></w:p>",
+            extraParts: new Dictionary<string, string> { ["word/styles.xml"] = Styles },
+            documentRelationships: "<Relationship Id=\"rId1\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles\" Target=\"styles.xml\"/>"));
+
+        Assert.Equal((612, 792, 72, 72), (bare.Sections[0].Page.Width, bare.Sections[0].Page.Height, bare.Sections[0].Page.MarginTop, bare.Sections[0].Page.MarginLeft));
+        Assert.Equal(2, bare.Sections[0].Page.Columns);
+        Assert.Equal(WordPageSetup.A4, withoutSection.Sections[0].Page);
+        Assert.Equal(new WordParagraphProperties { SpacingAfter = 8, LineSpacing = 1.15, LineSpacingRule = WordLineSpacingRule.Multiple }, bare.Styles.DefaultParagraphProperties);
+        Assert.Equal(WordParagraphProperties.Empty, withDefaults.Styles.DefaultParagraphProperties);
+    }
+
+    [Fact]
     public void Paragraphs_remember_the_address_the_editor_gives_them()
     {
         var bytes = Build(

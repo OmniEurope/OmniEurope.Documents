@@ -106,6 +106,12 @@ internal sealed class BlockLayout
 
         var first = items[0];
         first.SpaceBefore = p.SpacingBefore ?? 0;
+        if (items.Count > 1 && items[1].PageBreakBefore && LineBreaker.OpensWithBreak(lines[0]))
+        {
+            // A paragraph that opens with a page break starts on the next page, its space before kept.
+            items[1].SpaceBefore = first.SpaceBefore;
+        }
+
         first.PageBreakBefore |= p.PageBreakBefore == true;
         items[^1].SpaceAfter = p.SpacingAfter ?? 0;
         if (p.OutlineLevel is >= 0 and < 9 && paragraph.Text.Trim() is { Length: > 0 } title)

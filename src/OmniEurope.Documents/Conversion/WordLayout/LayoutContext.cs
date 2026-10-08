@@ -11,6 +11,7 @@ internal sealed class LayoutContext
 {
     private readonly Dictionary<WordImage, PdfImage?> _images = new(ReferenceEqualityComparer.Instance);
     private readonly Dictionary<(PdfFont, double), Pdf.Writing.PdfFontMetrics> _metrics = [];
+    private readonly Dictionary<(PdfFont, double), Pdf.Writing.PdfFontMetrics> _lineMetrics = [];
     private readonly HashSet<string> _checkedFonts = new(StringComparer.OrdinalIgnoreCase);
 
     public LayoutContext(WordDocument document, PdfDocumentBuilder builder)
@@ -46,6 +47,23 @@ internal sealed class LayoutContext
         }
 
         return metrics;
+    }
+
+    /// <summary>
+    /// The metrics a line is laid out with: Word's single line is the font's Windows ascent and descent plus its
+    /// external leading, above the text (<see cref="Metrics"/> keeps the font's own ascent, for painting).
+    /// </summary>
+    public Pdf.Writing.PdfFontMetrics LineMetrics(TextStyle style)
+    {
+        if (!_lineMetrics.TryGetValue((style.Font, style.Size), out var line))
+        {
+            var metrics = Metrics(style);
+            var leading = Builder.ExternalLeading(style.Font, style.Size);
+            line = metrics with { Ascent = metrics.Ascent + leading, LineHeight = metrics.LineHeight + leading };
+            _lineMetrics[(style.Font, style.Size)] = line;
+        }
+
+        return line;
     }
 
     /// <summary>

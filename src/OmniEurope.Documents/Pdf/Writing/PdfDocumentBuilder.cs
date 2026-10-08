@@ -131,6 +131,15 @@ public sealed class PdfDocumentBuilder
             face.CapHeight * scale, -face.UnderlinePosition * scale, Math.Max(face.UnderlineThickness * scale, 0.25));
     }
 
+    /// <summary>The external leading of a font at a size: the part of its line gap (hhea) beyond its Windows ascent and
+    /// descent, which Word adds above the text of a single line.</summary>
+    internal double ExternalLeading(PdfFont font, double size)
+    {
+        var face = Fonts.Resolve(font.Family, font.Bold, font.Italic);
+        var windows = face.WinAscent + face.WinDescent;
+        return Math.Max(0, face.LineGap - (windows - (face.Ascender - face.Descender))) * size / face.UnitsPerEm;
+    }
+
     /// <summary>Writes the document. A document is finished once saved: saving again writes the same bytes,
     /// adding pages afterwards throws.</summary>
     public void Save(Stream output)

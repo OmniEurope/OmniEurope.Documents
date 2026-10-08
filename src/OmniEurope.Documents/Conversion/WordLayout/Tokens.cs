@@ -62,7 +62,7 @@ internal sealed class TextToken(string text, TextStyle style) : Token(style)
     /// <summary>The note this token marks, if it is a note reference.</summary>
     public (WordNoteKind Kind, int Id)? Note { get; init; }
 
-    public override double Ascent(LayoutContext context) => context.Metrics(Style).Ascent + Style.Shift;
+    public override double Ascent(LayoutContext context) => context.LineMetrics(Style).Ascent + Style.Shift;
 
     public override double Descent(LayoutContext context) => Math.Max(0, context.Metrics(Style).Descent - Style.Shift);
 }
@@ -75,7 +75,7 @@ internal sealed class TabToken(TextStyle style, WordTab? positional) : Token(sty
     /// <summary>The leader filling the tab, set while lines are built.</summary>
     public WordTabLeader Leader { get; set; }
 
-    public override double Ascent(LayoutContext context) => context.Metrics(Style).Ascent;
+    public override double Ascent(LayoutContext context) => context.LineMetrics(Style).Ascent;
 
     public override double Descent(LayoutContext context) => context.Metrics(Style).Descent;
 }
@@ -85,7 +85,7 @@ internal sealed class BreakToken(TextStyle style, WordBreakKind kind) : Token(st
 {
     public WordBreakKind Kind { get; } = kind;
 
-    public override double Ascent(LayoutContext context) => context.Metrics(Style).Ascent;
+    public override double Ascent(LayoutContext context) => context.LineMetrics(Style).Ascent;
 
     public override double Descent(LayoutContext context) => context.Metrics(Style).Descent;
 }
@@ -95,7 +95,7 @@ internal sealed class FieldToken(TextStyle style, string kind) : Token(style)
 {
     public string Kind { get; } = kind;
 
-    public override double Ascent(LayoutContext context) => context.Metrics(Style).Ascent + Style.Shift;
+    public override double Ascent(LayoutContext context) => context.LineMetrics(Style).Ascent + Style.Shift;
 
     public override double Descent(LayoutContext context) => context.Metrics(Style).Descent;
 }
