@@ -40,7 +40,10 @@ try {
     }
 
     foreach ($licence in $bundled | Where-Object Name -like 'LICENSE-*.txt') {
-        if ("fonts/$($licence.Name)" -notin $entries) { throw "$($package.Name) does not ship fonts/$($licence.Name)." }
+        if ("fonts/$($licence.Name)" -notin $entries) {
+            $found = @($entries | Where-Object { $_ -like '*LICENSE*' }) -join ', '
+            throw "$($package.Name) does not ship fonts/$($licence.Name) (licence entries: $(if ($found) { $found } else { 'none' }))."
+        }
     }
 
     $families = @($bundled | Where-Object Extension -eq '.ttf' | ForEach-Object { ($_.BaseName -split '-')[0] -replace '(Sans|Serif|Mono)$', '' } | Sort-Object -Unique)

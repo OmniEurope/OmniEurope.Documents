@@ -32,7 +32,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Fonts\Bundled\*.ttf" LogicalName="OmniEurope.Documents.Fonts.%(Filename)%(Extension)" />
     <EmbeddedResource Include="Fonts\Bundled\LICENSE-*.txt" LogicalName="OmniEurope.Documents.Fonts.%(Filename)%(Extension)" />
-    <None Include="Fonts\Bundled\LICENSE-*.txt" Pack="true" PackagePath="fonts\" />
+    <None Include="Fonts\Bundled\LICENSE-*.txt" Pack="true" PackagePath="fonts/" />
   </ItemGroup>
 
 </Project>
