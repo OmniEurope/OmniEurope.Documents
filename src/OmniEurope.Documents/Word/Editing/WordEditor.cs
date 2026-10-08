@@ -13,6 +13,12 @@ namespace OmniEurope.Documents.Word.Editing;
 /// </summary>
 public sealed class WordEditor
 {
+    private static readonly (string Type, WordPartKind Kind)[] StoryTypes =
+    [
+        (HeaderType, WordPartKind.Header), (FooterType, WordPartKind.Footer), (FootnotesType, WordPartKind.Footnote),
+        (EndnotesType, WordPartKind.Endnote), (CommentsType, WordPartKind.Comment),
+    ];
+
     private readonly OpcPackage _package;
     private readonly string _main;
 
@@ -47,38 +53,31 @@ public sealed class WordEditor
     /// The text-bearing parts in a fixed order: body, headers, footers, footnotes, endnotes, comments
     /// (headers and footers sorted by part name).
     /// </summary>
-    public IReadOnlyList<string> TextParts
-    {
-        get
-        {
-            var relationships = _package.Relationships(_main).Where(r => !r.External && _package.Contains(r.Target)).ToList();
-            var parts = new List<string> { _main };
-            foreach (var type in new[] { HeaderType, FooterType, FootnotesType, EndnotesType, CommentsType })
-            {
-                parts.AddRange(relationships.Where(r => r.Type == type).Select(r => r.Target).Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.Ordinal));
-            }
+    public IReadOnlyList<string> TextParts => Stories().Select(s => s.PartName).ToList();
 
-            return parts;
-        }
-    }
-
-    /// <summary>Every paragraph of the text parts, in <see cref="TextParts"/> order then document order.</summary>
+    /// <summary>
+    /// Every paragraph of the text parts, in <see cref="TextParts"/> order then document order: a paragraph comes
+    /// before the paragraphs of its own text boxes, and paragraphs inside tables, content controls, custom XML
+    /// and text boxes are included (alternate-content fallbacks are not). The order, addresses and locations are
+    /// the same for the document saved again without change.
+    /// </summary>
     public IReadOnlyList<WordEditableParagraph> Paragraphs()
     {
-        var context = new WordReadContext(_package);
+        var context = new WordEditContext(_package, _main);
         var result = new List<WordEditableParagraph>();
-        foreach (var part in TextParts)
+        foreach (var story in Stories())
         {
-            var root = _package.GetXml(part)?.Root;
+            var root = _package.GetXml(story.PartName)?.Root;
             if (root is null)
             {
                 continue;
             }
 
+            var locator = new WordParagraphLocator(story);
             var index = 0;
             foreach (var paragraph in WordRunScanner.Paragraphs(root))
             {
-                result.Add(new WordEditableParagraph(context, part, index++, paragraph));
+                result.Add(new WordEditableParagraph(context, story.PartName, index++, paragraph, locator.Locate(paragraph)));
             }
         }
 
@@ -90,6 +89,29 @@ public sealed class WordEditor
     {
         ArgumentNullException.ThrowIfNull(address);
         return Paragraphs().FirstOrDefault(p => string.Equals(p.Address, address, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>The paragraph at a location from <see cref="WordEditableParagraph.Location"/>, or null.</summary>
+    public WordEditableParagraph? FindParagraph(WordParagraphLocation location)
+    {
+        ArgumentNullException.ThrowIfNull(location);
+        return Paragraphs().FirstOrDefault(p => p.Location == location);
+    }
+
+    // The text parts with their kinds; a part referred to several times appears once, with its first id.
+    private List<WordStory> Stories()
+    {
+        var relationships = _package.Relationships(_main).Where(r => !r.External && _package.Contains(r.Target)).ToList();
+        var stories = new List<WordStory> { new(_main, WordPartKind.Body, null) };
+        foreach (var (type, kind) in StoryTypes)
+        {
+            stories.AddRange(relationships.Where(r => r.Type == type)
+                .GroupBy(r => r.Target, StringComparer.OrdinalIgnoreCase)
+                .Select(g => new WordStory(g.Key, kind, kind is WordPartKind.Header or WordPartKind.Footer ? g.First().Id : null))
+                .OrderBy(s => s.PartName, StringComparer.Ordinal));
+        }
+
+        return stories;
     }
 
     /// <summary>Replaces every occurrence of <paramref name="search"/> in all text parts, also across run

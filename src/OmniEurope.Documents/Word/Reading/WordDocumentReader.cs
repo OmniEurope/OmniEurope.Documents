@@ -59,7 +59,7 @@ internal static class WordDocumentReader
         return document;
     }
 
-    private static XDocument? Part(OpcPackage package, List<OpcRelationship> relationships, string type)
+    internal static XDocument? Part(OpcPackage package, List<OpcRelationship> relationships, string type)
     {
         var target = relationships.Find(r => r.Type == type && !r.External)?.Target;
         return target is null ? null : package.GetXml(target);

@@ -6,6 +6,19 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- `WordEditableParagraph.Location` (`WordParagraphLocation`, `WordPathStep`, `WordPartKind`): where a paragraph of
+  `WordEditor.Paragraphs()` sits: its part and kind, the relationship id of a header or footer, the id of a note or
+  comment (separator and continuation notes flagged), and the block path down to it (blocks, table rows and cells,
+  content controls, custom XML, text boxes; row and cell wrappers are transparent, alternate-content fallbacks are
+  left out). `WordEditor.FindParagraph(WordParagraphLocation)` finds it again.
+- `WordEditableParagraph.Runs()` (`WordEditableRun`, `WordRunKind`): the paragraph's own runs in order (not those of
+  its text boxes, not deleted ones), each with its kind (text, field, note reference, drawing, symbol, page break,
+  other), its text, its direct formatting and the formatting it shows; `ResolveProperties()` and
+  `ResolveRunProperties()` give the paragraph's resolved formatting.
+- `WordEditableParagraph.SetContent` (`WordContentPiece`, `WordTextPiece`, `WordKeptRun`): rewrites the paragraph's
+  runs from new text pieces and kept runs (a kept run of a field keeps the whole field; runs that are not text and
+  that no piece names follow the new content), the new text in the format of the first text run with each piece's
+  format on top, optionally in a language; nothing changes when the content is already the one asked.
 - `PdfLayoutAnalyzer.Lines(PdfPage)`: the line segments of a page, each text direction read along its own baselines
   (lines top to bottom, segments left to right), so a table turned on the page is read row after row.
 - `PdfCanvas.DrawRotatedText`: one line of text turned by any angle counter-clockwise around the start of its
