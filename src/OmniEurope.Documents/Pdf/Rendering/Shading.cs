@@ -91,6 +91,14 @@ internal abstract class ShadingFunction
             }
 
             var count = (int)size[0];
+            return new Sampled(Samples(data, count, outputs, bits, range), Numbers(store, stream, "Domain") ?? [0, 1]);
+        }
+
+        // Each sample is in the data (checked by the caller): outputs values of 8 or 16 bits mapped onto Range.
+        private static double[][] Samples(byte[] data, int count, int outputs, int bits, double[] range)
+        {
+            var bytes = bits / 8;
+            var max = bits == 8 ? 255.0 : 65535.0;
             var samples = new double[count][];
             for (var i = 0; i < count; i++)
             {
@@ -98,13 +106,12 @@ internal abstract class ShadingFunction
                 for (var o = 0; o < outputs; o++)
                 {
                     var at = ((i * outputs) + o) * bytes;
-                    var raw = at + bytes <= data.Length ? (bytes == 1 ? data[at] : (data[at] << 8) | data[at + 1]) : 0;
-                    var max = bits == 8 ? 255.0 : 65535.0;
+                    var raw = bytes == 1 ? data[at] : (data[at] << 8) | data[at + 1];
                     samples[i][o] = range[2 * o] + (raw / max * (range[(2 * o) + 1] - range[2 * o]));
                 }
             }
 
-            return count == 0 ? null : new Sampled(samples, Numbers(store, stream, "Domain") ?? [0, 1]);
+            return samples;
         }
 
         public override double[] Evaluate(double t)
