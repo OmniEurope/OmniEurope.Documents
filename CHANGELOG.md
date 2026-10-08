@@ -49,6 +49,10 @@ Notable changes to this project are documented here, following the Keep a Change
   column break keeps its first-line indent for what follows the break, and its space before on the page it opens.
 - Word to PDF: between two paragraphs the larger of the space after and the space before is kept, not their sum, as
   Word does; the full space before stays at the top of a page or column a hard break opens.
+- Reading a Word: a VML shape or picture positioned absolutely (CSS `position:absolute`) floats like an anchored
+  drawing: its margins place it from the column, margin, page or character and the paragraph, margin, page or line
+  (`mso-position-*-relative`), with its `w10:wrap` and a negative z-index behind the text; Word to PDF no longer lays
+  it out in the flow of the text.
 - Reading a Word: section properties without a page size or margins mean US Letter with one inch margins, and a
   styles part without document defaults (or no styles part) sets paragraphs 8 pt apart at 1.15 lines, as Word does.
 - Word to PDF: footnote numbers restart at each page or each section as the document settings or the

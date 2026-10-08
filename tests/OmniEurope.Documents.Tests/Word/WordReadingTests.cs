@@ -104,6 +104,25 @@ public sealed class WordReadingTests
     }
 
     [Fact]
+    public void An_absolutely_positioned_vml_text_box_floats_and_an_inline_one_does_not()
+    {
+        const string Namespaces = "xmlns:v=\"urn:schemas-microsoft-com:vml\" xmlns:w10=\"urn:schemas-microsoft-com:office:word\"";
+        var document = WordDocument.Load(Build(
+            "<w:p><w:r><w:pict " + Namespaces + "><v:shape style=\"position:absolute;margin-left:10pt;margin-top:20pt;width:100pt;height:50pt;"
+            + "mso-position-horizontal-relative:page;z-index:-3\"><w10:wrap type=\"square\"/><v:textbox><w:txbxContent><w:p><w:r><w:t>Flottant</w:t></w:r></w:p>"
+            + "</w:txbxContent></v:textbox></v:shape></w:pict></w:r></w:p>"
+            + "<w:p><w:r><w:pict " + Namespaces + "><v:shape style=\"width:80pt;height:30pt\"><v:textbox><w:txbxContent><w:p><w:r><w:t>Dans le texte</w:t>"
+            + "</w:r></w:p></w:txbxContent></v:textbox></v:shape></w:pict></w:r></w:p>"));
+
+        var boxes = document.Blocks.OfType<WordParagraph>().SelectMany(p => p.Inlines).OfType<WordTextBox>().ToList();
+
+        Assert.Equal(new WordFloatingPosition(10, "page", 20, "paragraph", WordWrap.Square, BehindText: true), boxes[0].Floating);
+        Assert.Equal((100, 50), (boxes[0].Width, boxes[0].Height));
+        Assert.Null(boxes[1].Floating);
+        Assert.Equal((80, 30), (boxes[1].Width, boxes[1].Height));
+    }
+
+    [Fact]
     public void Paragraphs_remember_the_address_the_editor_gives_them()
     {
         var bytes = Build(

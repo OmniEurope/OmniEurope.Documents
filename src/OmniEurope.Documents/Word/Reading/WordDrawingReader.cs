@@ -46,15 +46,73 @@ internal sealed class WordDrawingReader(WordContentReader owner)
     public WordShape? Vml(XElement container)
     {
         var shape = container.Descendants(V + "shape").FirstOrDefault() ?? container.Descendants(V + "rect").FirstOrDefault();
-        var (width, height) = VmlSize((string?)shape?.Attribute("style"));
+        var style = Css((string?)shape?.Attribute("style"));
+        var (width, height) = (CssLength(style.GetValueOrDefault("width", "0")), CssLength(style.GetValueOrDefault("height", "0")));
         var imageData = container.Descendants(V + "imagedata").FirstOrDefault();
-        if (imageData is not null)
+        var box = container.Descendants(W + "txbxContent").FirstOrDefault();
+        WordShape? result = imageData is not null ? Picture(imageData.Attribute(R + "id")?.Value, width, height)
+            : box is null ? Unsupported("VML shape")
+            : TextBox(box, width, height, "VML shape");
+        if (result is not null)
         {
-            return Picture(imageData.Attribute(R + "id")?.Value, width, height);
+            result.Floating = VmlFloating(style, container);
         }
 
-        var box = container.Descendants(W + "txbxContent").FirstOrDefault();
-        return box is null ? Unsupported("VML shape") : TextBox(box, width, height, "VML shape");
+        return result;
+    }
+
+    // A VML shape positioned absolutely floats: its CSS margins place it from the column (or margin, page, character)
+    // and the paragraph (or margin, page, line); without a w10:wrap it lies over the text, a negative z-index behind it.
+    private static WordFloatingPosition? VmlFloating(Dictionary<string, string> style, XElement container)
+    {
+        if (!string.Equals(style.GetValueOrDefault("position"), "absolute", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var wrap = (string?)container.Descendants(W10 + "wrap").FirstOrDefault()?.Attribute("type") switch
+        {
+            "square" => WordWrap.Square,
+            "tight" => WordWrap.Tight,
+            "through" => WordWrap.Through,
+            "topAndBottom" => WordWrap.TopAndBottom,
+            _ => WordWrap.None,
+        };
+        return new WordFloatingPosition(
+            CssLength(style.GetValueOrDefault("margin-left", "0")),
+            style.GetValueOrDefault("mso-position-horizontal-relative") switch
+            {
+                "margin" => "margin",
+                "page" => "page",
+                "char" => "character",
+                _ => "column",
+            },
+            CssLength(style.GetValueOrDefault("margin-top", "0")),
+            style.GetValueOrDefault("mso-position-vertical-relative") switch
+            {
+                "margin" => "margin",
+                "page" => "page",
+                "line" => "line",
+                _ => "paragraph",
+            },
+            wrap,
+            int.TryParse(style.GetValueOrDefault("z-index"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var z) && z < 0);
+    }
+
+    // The declarations of a CSS style attribute ("width:120pt;height:3cm"), by property name.
+    private static Dictionary<string, string> Css(string? style)
+    {
+        var declarations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var declaration in (style ?? string.Empty).Split(';'))
+        {
+            var colon = declaration.IndexOf(':');
+            if (colon > 0)
+            {
+                declarations[declaration[..colon].Trim()] = declaration[(colon + 1)..].Trim();
+            }
+        }
+
+        return declarations;
     }
 
     private WordPicture? Picture(string? relationshipId, double width, double height)
@@ -130,33 +188,6 @@ internal sealed class WordDrawingReader(WordContentReader owner)
         }
 
         return WordWrap.None;
-    }
-
-    // VML sizes come from CSS: "width:120pt;height:3cm".
-    private static (double Width, double Height) VmlSize(string? style)
-    {
-        double width = 0, height = 0;
-        foreach (var declaration in (style ?? string.Empty).Split(';'))
-        {
-            var colon = declaration.IndexOf(':');
-            if (colon < 0)
-            {
-                continue;
-            }
-
-            var name = declaration[..colon].Trim();
-            var value = CssLength(declaration[(colon + 1)..].Trim());
-            if (name == "width")
-            {
-                width = value;
-            }
-            else if (name == "height")
-            {
-                height = value;
-            }
-        }
-
-        return (width, height);
     }
 
     private static double CssLength(string value)
