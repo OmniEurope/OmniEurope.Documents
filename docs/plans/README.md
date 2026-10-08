@@ -15,12 +15,12 @@ un plan décrit un travail, pas l'état du produit.
 | Plan | Travail | ADR |
 |---|---|---|
 | [PLAN-004](PLAN-004-fonctionnalites-suivantes.md) | Fonctionnalités suivantes : édition Excel sans perte, formules, formulaires PDF, PDF/A, conversions, fidélité du rendu | Aucun |
-| [PLAN-005](PLAN-005-robustesse-et-fidelite.md) | Robustesse et fidélité : fichiers forgés refusés, rendus conformes, contrats tenus | Aucun |
 
 ## Plans archivés
 
 | Plan | Travail | ADR |
 |---|---|---|
+| [PLAN-005](archive/PLAN-005-robustesse-et-fidelite.md) | Robustesse et fidélité : fichiers forgés refusés (16 tests), rendus et écritures conformes (9), contrats tenus (6) | Aucun |
 | [PLAN-003](archive/PLAN-003-tests-integration.md) | Tests d'intégration : parcours complets, robustesse, volume, parallélisme ; suite rapide à 96,95 % des lignes et 87,71 % des branches | Aucun |
 | [PLAN-002](archive/PLAN-002-couverture-95.md) | Couverture des lignes portée de 91,66 % à 96,81 %, sans faux test | Aucun |
 | [PLAN-001](archive/PLAN-001-perimetre-initial.md) | Périmètre initial zéro dépendance : CSV, Markdown, diff, HTML, Excel, images, polices, PDF (écriture, lecture, opérations, analyse, rendu), Word et Word vers PDF, conversions, publication | Aucun |

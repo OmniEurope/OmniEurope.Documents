@@ -57,6 +57,10 @@ public sealed class TextValueParserTests
     [InlineData("a:b")]
     [InlineData("1:2:3:4")]
     [InlineData("-1")]
+    [InlineData("79228162514264337593543950335")]
+    [InlineData("256204778")]
+    [InlineData("2147483647:00")]
+    [InlineData("256204778:48:06")]
     public void Rejects_bad_durations(string text)
     {
         Assert.False(TextValueParser.TryParseDuration(text, out _));

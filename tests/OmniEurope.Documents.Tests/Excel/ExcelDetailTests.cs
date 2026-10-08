@@ -79,6 +79,36 @@ public sealed class ExcelDetailTests
         Assert.Throws<ArgumentOutOfRangeException>(() => ExcelDate.FromSerial(-1));
     }
 
+    [Theory]
+    [InlineData(2958465.99999, false, "9999-12-31")]
+    [InlineData(2958466, false, "########")]
+    [InlineData(2957003.5, true, "9999-12-31")]
+    [InlineData(2957004, true, "########")]
+    [InlineData(2958465, true, "########")]
+    public void Serials_past_the_last_day_of_each_date_system_show_hashes(double serial, bool date1904, string expected)
+    {
+        // 31 December 9999 is serial 2958465 counted from 1900, 2957003 counted from 1904.
+        Assert.Equal(expected, NumberFormatter.Format(serial, "yyyy-mm-dd", CultureInfo.InvariantCulture, date1904));
+        Assert.Equal(expected != "########", ExcelDate.IsInRange(serial, date1904));
+    }
+
+    [Fact]
+    public void A_1904_workbook_keeps_a_date_cell_past_its_range_as_a_number()
+    {
+        var workbook = new XlsxWorkbook { Date1904 = true };
+        var sheet = workbook.AddWorksheet("Dates");
+        sheet.Cell("A1").Value = 2958000.0;
+        sheet.Cell("A1").Style = XlsxStyle.Default with { NumberFormat = "yyyy-mm-dd" };
+        sheet.Cell("A2").Value = 1.5;
+        sheet.Cell("A2").Style = XlsxStyle.Default with { NumberFormat = "yyyy-mm-dd" };
+
+        var reread = XlsxWorkbook.Load(workbook.ToArray()).Worksheet("Dates");
+
+        Assert.Equal(XlsxValueType.Number, reread.Cell("A1").ValueType);
+        Assert.Equal("########", reread.Cell("A1").FormatValue(CultureInfo.InvariantCulture));
+        Assert.Equal(new DateTime(1904, 1, 2, 12, 0, 0), reread.Cell("A2").Value);
+    }
+
     [Fact]
     public void Workbooks_read_the_1904_flag_and_refuse_damage()
     {

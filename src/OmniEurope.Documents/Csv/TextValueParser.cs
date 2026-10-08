@@ -43,7 +43,9 @@ public static class TextValueParser
         text = text.Trim();
         if (text.IndexOf(':') < 0)
         {
-            if (!TryParseDecimal(text, out var hours) || hours < 0)
+            // From the last whole hour a TimeSpan holds (256,204,778) on, the text is refused: the conversion
+            // below cannot overflow.
+            if (!TryParseDecimal(text, out var hours) || hours < 0 || hours >= TimeSpan.MaxValue.Ticks / TimeSpan.TicksPerHour)
             {
                 return false;
             }
@@ -67,6 +69,11 @@ public static class TextValueParser
 
         var s = 0;
         if (count == 3 && (!int.TryParse(text[parts[2]], NumberStyles.None, CultureInfo.InvariantCulture, out s) || s > 59))
+        {
+            return false;
+        }
+
+        if (((long)h * 3600) + (m * 60) + s > TimeSpan.MaxValue.Ticks / TimeSpan.TicksPerSecond)
         {
             return false;
         }

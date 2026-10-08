@@ -9,14 +9,16 @@ internal static class DateFormatter
 {
     public static string Format(double serial, List<FormatToken> tokens, CultureInfo culture, bool date1904)
     {
-        if (serial < 0 || serial > 2958466)
+        var fractionDigits = tokens.Where(t => t.Kind == FormatTokenKind.FractionalSeconds).Select(t => t.Text.Length).DefaultIfEmpty(0).Max();
+        var rounding = Math.Pow(10, fractionDigits) * 86400;
+        serial = Math.Round(serial * rounding, MidpointRounding.AwayFromZero) / rounding;
+
+        // Excel shows '#' for a number that is no date of its date system, checked once rounded.
+        if (!ExcelDate.IsInRange(serial, date1904))
         {
             return new string('#', 8);
         }
 
-        var fractionDigits = tokens.Where(t => t.Kind == FormatTokenKind.FractionalSeconds).Select(t => t.Text.Length).DefaultIfEmpty(0).Max();
-        var rounding = Math.Pow(10, fractionDigits) * 86400;
-        serial = Math.Round(serial * rounding, MidpointRounding.AwayFromZero) / rounding;
         var date = ExcelDate.FromSerial(serial, date1904);
         var twelveHour = tokens.Exists(t => t.Kind == FormatTokenKind.AmPm);
         var minutes = MinuteTokens(tokens);

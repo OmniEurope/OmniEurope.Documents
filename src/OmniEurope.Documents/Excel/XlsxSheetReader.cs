@@ -170,7 +170,7 @@ internal sealed class XlsxSheetReader(XlsxWorksheet sheet, List<string> sharedSt
 
         var number = XlsxPackageReader.ParseDouble(value);
         // A duration ([h]:mm) stays a number of days, as a TimeSpan value is stored.
-        if (NumberFormatter.IsDateFormat(style.NumberFormat) && !NumberFormatter.IsDurationFormat(style.NumberFormat) && number is >= 0 and <= 2958465)
+        if (NumberFormatter.IsDateFormat(style.NumberFormat) && !NumberFormatter.IsDurationFormat(style.NumberFormat) && number <= 2958465 && ExcelDate.IsInRange(number, sheet.Workbook.Date1904))
         {
             return (ExcelDate.FromSerial(number, sheet.Workbook.Date1904), XlsxValueType.DateTime);
         }

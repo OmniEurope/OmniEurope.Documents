@@ -114,19 +114,24 @@ public static class ExcelDate
     }
 
     /// <summary>The date of a serial number in the 1900 (default) or 1904 date system.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">The serial is negative, not a number, or after 31 December
+    /// 9999 in its date system.</exception>
     public static DateTime FromSerial(double serial, bool date1904 = false)
     {
-        if (double.IsNaN(serial) || serial < 0 || serial > 2958466)
+        if (!IsInRange(serial, date1904))
         {
             throw new ArgumentOutOfRangeException(nameof(serial), serial, "Outside the Excel date range.");
         }
 
-        if (date1904)
-        {
-            return Epoch1904.AddMilliseconds(Math.Round(serial * 86_400_000d));
-        }
-
-        var adjusted = serial < 61 && serial >= 1 ? serial + 1 : serial;
-        return Epoch1900.AddMilliseconds(Math.Round(adjusted * 86_400_000d));
+        return (date1904 ? Epoch1904 : Epoch1900).AddMilliseconds(Milliseconds(serial, date1904));
     }
+
+    /// <summary>True when <see cref="FromSerial"/> gives a date for <paramref name="serial"/>: the bound depends
+    /// on the date system (the 1904 one ends 1,462 days sooner) and holds after rounding to the millisecond.</summary>
+    internal static bool IsInRange(double serial, bool date1904) =>
+        serial >= 0 && Milliseconds(serial, date1904) <= ((date1904 ? DateTime.MaxValue - Epoch1904 : DateTime.MaxValue - Epoch1900).Ticks / TimeSpan.TicksPerMillisecond);
+
+    // Excel counts the non-existent 29 February 1900, so serials from 1 to 60 are one day early.
+    private static double Milliseconds(double serial, bool date1904) =>
+        Math.Round((!date1904 && serial < 61 && serial >= 1 ? serial + 1 : serial) * 86_400_000d);
 }

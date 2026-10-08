@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 # PLAN-005 : Robustesse et fidélité
 
-> Statut : **en cours** (2026-10-08 : lots 1 et 2 faits). Demande du propriétaire : corriger les défauts relevés
+> Statut : **terminé** (2026-10-08). Demande du propriétaire : corriger les défauts relevés
 > par la revue complète du code, en trois lots, un commit par lot.
 
 ## Objectif
@@ -56,9 +56,12 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites (`.\ylau
 
 ## Lot 3 : contrats
 
-- [ ] CSV : `Open` et `OpenAsync` libèrent le flux possédé quand l'initialisation échoue.
-- [ ] `TryParseDuration` renvoie false hors des bornes de `TimeSpan`.
-- [ ] Dates Excel : numéros de série hors de `DateTime` refusés selon l'époque (1900 ou 1904).
-- [ ] `PdfFlowLayout` : tout ajout après `Finish` est refusé.
-- [ ] Excel vers CSV : plafond de cellules écrites, comme pour le PDF.
+- [x] CSV : `Open` et `OpenAsync` libèrent le flux possédé quand l'initialisation échoue.
+- [x] `TryParseDuration` renvoie false hors des bornes de `TimeSpan`.
+- [x] Dates Excel : numéros de série hors de `DateTime` refusés selon l'époque (1900 ou 1904).
+- [x] `PdfFlowLayout` : tout ajout après `Finish` est refusé.
+- [x] Excel vers CSV : plafond de cellules écrites, comme pour le PDF.
 - Contrôle : un test par contrat ; deux suites vertes.
+  Fait : 6 tests ajoutés. Les 5 qui compilent sur le code d'avant y échouent, hors cas témoins (flux laissé
+  ouvert à la demande, durées déjà refusées) ; celui de l'export CSV vise `maxCells`, qui n'existait pas. Plafond de
+  l'export CSV : 100 millions de cellules, l'écriture se faisant au fil de l'eau.

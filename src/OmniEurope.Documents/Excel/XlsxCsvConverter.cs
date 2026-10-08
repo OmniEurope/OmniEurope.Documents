@@ -10,18 +10,27 @@ public static class XlsxCsvConverter
     /// <summary>
     /// Writes the used range of <paramref name="sheet"/> as CSV, each cell as Excel displays it (number
     /// formats applied with <paramref name="culture"/>, invariant by default). Formulas give their last result.
+    /// A used range of more than <paramref name="maxCells"/> cells, empty ones included (a sheet holding only
+    /// <c>A1</c> and <c>XFD1048576</c> spans 17 billion), throws <see cref="DocumentFormatException"/> before
+    /// anything is written.
     /// </summary>
-    public static void WriteCsv(XlsxWorksheet sheet, TextWriter output, CsvWriterOptions? options = null, CultureInfo? culture = null)
+    public static void WriteCsv(XlsxWorksheet sheet, TextWriter output, CsvWriterOptions? options = null, CultureInfo? culture = null, long maxCells = 100_000_000)
     {
         ArgumentNullException.ThrowIfNull(sheet);
         ArgumentNullException.ThrowIfNull(output);
         culture ??= CultureInfo.InvariantCulture;
-        using var csv = new CsvWriter(output, options, leaveOpen: true);
         if (sheet.UsedRange is not { } range)
         {
             return;
         }
 
+        var cells = (long)(range.LastRow - range.FirstRow + 1) * (range.LastColumn - range.FirstColumn + 1);
+        if (cells > maxCells)
+        {
+            throw new DocumentFormatException(string.Create(CultureInfo.InvariantCulture, $"The used range {range} holds {cells:N0} cells, more than the {maxCells:N0} allowed by {nameof(maxCells)}."));
+        }
+
+        using var csv = new CsvWriter(output, options, leaveOpen: true);
         for (var row = range.FirstRow; row <= range.LastRow; row++)
         {
             for (var column = range.FirstColumn; column <= range.LastColumn; column++)
@@ -33,11 +42,12 @@ public static class XlsxCsvConverter
         }
     }
 
-    /// <summary>Returns the used range of <paramref name="sheet"/> as CSV text.</summary>
-    public static string ToCsv(XlsxWorksheet sheet, CsvWriterOptions? options = null, CultureInfo? culture = null)
+    /// <summary>Returns the used range of <paramref name="sheet"/> as CSV text, bounded by <paramref name="maxCells"/>
+    /// as in <see cref="WriteCsv"/>.</summary>
+    public static string ToCsv(XlsxWorksheet sheet, CsvWriterOptions? options = null, CultureInfo? culture = null, long maxCells = 100_000_000)
     {
         using var text = new StringWriter(CultureInfo.InvariantCulture);
-        WriteCsv(sheet, text, options, culture);
+        WriteCsv(sheet, text, options, culture, maxCells);
         return text.ToString();
     }
 

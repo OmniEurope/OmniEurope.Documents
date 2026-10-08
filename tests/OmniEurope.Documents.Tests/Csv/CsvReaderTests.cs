@@ -185,6 +185,49 @@ public sealed class CsvReaderTests
         Assert.Equal(["a", "  b  "], rows[0]);
     }
 
+    [Theory]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    public async Task A_header_that_cannot_be_read_closes_what_the_reader_owns(bool leaveOpen, bool closed)
+    {
+        // An unterminated quote in the header: Open fails, so the caller never gets a reader to dispose.
+        var options = new CsvReaderOptions { Delimiter = ',', MaxRecordLength = 10 };
+        byte[] data = Encoding.UTF8.GetBytes("\"" + new string('x', 50) + "\n");
+
+        var stream = new TrackedStream(data);
+        Assert.Throws<CsvFormatException>(() => CsvReader.Open(stream, options, leaveOpen));
+        var asyncStream = new TrackedStream(data);
+        await Assert.ThrowsAsync<CsvFormatException>(() => CsvReader.OpenAsync(asyncStream, options, leaveOpen, TestContext.Current.CancellationToken));
+        var text = new TrackedReader(Encoding.UTF8.GetString(data));
+        Assert.Throws<CsvFormatException>(() => CsvReader.Open(text, options, leaveOpen));
+        var asyncText = new TrackedReader(Encoding.UTF8.GetString(data));
+        await Assert.ThrowsAsync<CsvFormatException>(() => CsvReader.OpenAsync(asyncText, options, leaveOpen, TestContext.Current.CancellationToken));
+
+        Assert.Equal([closed, closed, closed, closed], new[] { stream.Disposed, asyncStream.Disposed, text.Disposed, asyncText.Disposed });
+    }
+
+    private sealed class TrackedStream(byte[] data) : MemoryStream(data)
+    {
+        public bool Disposed { get; private set; }
+
+        protected override void Dispose(bool disposing)
+        {
+            Disposed = true;
+            base.Dispose(disposing);
+        }
+    }
+
+    private sealed class TrackedReader(string text) : StringReader(text)
+    {
+        public bool Disposed { get; private set; }
+
+        protected override void Dispose(bool disposing)
+        {
+            Disposed = true;
+            base.Dispose(disposing);
+        }
+    }
+
     private sealed class OneCharReader(string text) : TextReader
     {
         private int _position;

@@ -25,6 +25,8 @@ Notable changes to this project are documented here, following the Keep a Change
 - `ExcelPdfOptions.MaxCells`: the most cells Excel to PDF prints, empty cells of the used ranges included
   (250,000 by default); a larger workbook, such as a sheet holding only `A1` and `XFD1048576`, throws
   `DocumentFormatException` instead of exhausting memory.
+- `XlsxCsvConverter.WriteCsv` and `ToCsv` take `maxCells` (100,000,000 by default): a used range holding more
+  cells, empty ones included, throws `DocumentFormatException` before anything is written.
 
 ### Changed
 
@@ -43,6 +45,14 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Fixed
 
+- `CsvReader.Open` and `OpenAsync`: a header that cannot be read no longer leaves the stream or text reader
+  the reader owns open (and its file locked); with `leaveOpen` it stays open as asked.
+- `TextValueParser.TryParseDuration` returns false instead of throwing for a duration past what `TimeSpan`
+  holds (`decimal.MaxValue` hours, `2147483647:00`).
+- Excel dates: the last day is 31 December 9999 in each date system (serial 2958465 from 1900, 2957003 from
+  1904); a date-formatted number past it shows `########` and is read as a number instead of throwing.
+- `PdfFlowLayout`: adding content or a page after `Finish` throws `InvalidOperationException`, as documented,
+  instead of giving a page without its footer.
 - EMF pictures: the isotropic (7) and anisotropic (8) map modes were swapped; isotropic keeps the aspect ratio
   with the smaller scale, anisotropic scales each axis on its own.
 - CFF glyphs: a first stem operator with an even number of operands no longer loses its first operand as a

@@ -58,9 +58,7 @@ public sealed class CsvReader : IDisposable, IAsyncDisposable
         ArgumentNullException.ThrowIfNull(stream);
         options ??= new CsvReaderOptions();
         var (textReader, encoding) = OpenText(stream, options, leaveOpen, sample => PrefixedReadStream.ReadAtMost(stream, sample, sample.Length));
-        var reader = new CsvReader(textReader, options, leaveOpen: false, encoding);
-        reader.Initialize();
-        return reader;
+        return Initialized(new CsvReader(textReader, options, leaveOpen: false, encoding));
     }
 
     /// <summary>Asynchronous <see cref="Open(Stream, CsvReaderOptions?, bool)"/>.</summary>
@@ -81,27 +79,21 @@ public sealed class CsvReader : IDisposable, IAsyncDisposable
             sample!.AsSpan(0, sampleLength).CopyTo(buffer);
             return sampleLength;
         });
-        var reader = new CsvReader(textReader, options, leaveOpen: false, encoding);
-        await reader.InitializeAsync(cancellationToken).ConfigureAwait(false);
-        return reader;
+        return await InitializedAsync(new CsvReader(textReader, options, leaveOpen: false, encoding), cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Opens a reader on text that is already decoded.</summary>
     public static CsvReader Open(TextReader reader, CsvReaderOptions? options = null, bool leaveOpen = false)
     {
         ArgumentNullException.ThrowIfNull(reader);
-        var csv = new CsvReader(reader, options ?? new CsvReaderOptions(), leaveOpen, encoding: null);
-        csv.Initialize();
-        return csv;
+        return Initialized(new CsvReader(reader, options ?? new CsvReaderOptions(), leaveOpen, encoding: null));
     }
 
     /// <summary>Asynchronous <see cref="Open(TextReader, CsvReaderOptions?, bool)"/>.</summary>
     public static async Task<CsvReader> OpenAsync(TextReader reader, CsvReaderOptions? options = null, bool leaveOpen = false, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(reader);
-        var csv = new CsvReader(reader, options ?? new CsvReaderOptions(), leaveOpen, encoding: null);
-        await csv.InitializeAsync(cancellationToken).ConfigureAwait(false);
-        return csv;
+        return await InitializedAsync(new CsvReader(reader, options ?? new CsvReaderOptions(), leaveOpen, encoding: null), cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Reads every data record of <paramref name="text"/>. Convenient for small inputs.</summary>
@@ -229,6 +221,36 @@ public sealed class CsvReader : IDisposable, IAsyncDisposable
     {
         Dispose();
         return ValueTask.CompletedTask;
+    }
+
+    // A reader whose header cannot be read is disposed before the error goes up: the caller never gets it, so
+    // it would otherwise keep the stream it owns (and its file) open.
+    private static CsvReader Initialized(CsvReader reader)
+    {
+        try
+        {
+            reader.Initialize();
+            return reader;
+        }
+        catch
+        {
+            reader.Dispose();
+            throw;
+        }
+    }
+
+    private static async Task<CsvReader> InitializedAsync(CsvReader reader, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await reader.InitializeAsync(cancellationToken).ConfigureAwait(false);
+            return reader;
+        }
+        catch
+        {
+            reader.Dispose();
+            throw;
+        }
     }
 
     private static (TextReader Reader, Encoding Encoding) OpenText(Stream stream, CsvReaderOptions options, bool leaveOpen, Func<byte[], int> readSample)

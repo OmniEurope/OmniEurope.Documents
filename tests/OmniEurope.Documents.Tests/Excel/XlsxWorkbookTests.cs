@@ -177,6 +177,26 @@ public sealed class XlsxWorkbookTests
     }
 
     [Fact]
+    public void A_sparse_giant_sheet_is_refused_before_any_csv_is_written()
+    {
+        var workbook = new XlsxWorkbook();
+        var sheet = workbook.AddWorksheet("Creuse");
+        sheet.Cell("A1").Value = "début";
+        sheet.Cell("XFD1048576").Value = "fin";
+        var small = workbook.AddWorksheet("Petite");
+        small.Cell("A1").Value = "a";
+        small.Cell("C2").Value = "b";
+        using var output = new StringWriter();
+
+        var error = Assert.Throws<DocumentFormatException>(() => XlsxCsvConverter.WriteCsv(sheet, output));
+
+        Assert.Contains("17,179,869,184 cells", error.Message, StringComparison.Ordinal);
+        Assert.Empty(output.ToString());
+        Assert.Equal("a,,\r\n,,b\r\n", XlsxCsvConverter.ToCsv(small, maxCells: 6));
+        Assert.Throws<DocumentFormatException>(() => XlsxCsvConverter.ToCsv(small, maxCells: 5));
+    }
+
+    [Fact]
     public void Validates_names_and_values()
     {
         var workbook = new XlsxWorkbook();

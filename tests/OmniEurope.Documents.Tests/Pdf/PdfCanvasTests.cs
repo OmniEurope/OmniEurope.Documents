@@ -131,6 +131,25 @@ public sealed class PdfCanvasTests
     }
 
     [Fact]
+    public void A_finished_flow_refuses_more_content()
+    {
+        // A page added after Finish would never get its footer.
+        var document = new PdfDocumentBuilder();
+        var footers = 0;
+        var flow = new PdfFlowLayout(document, new PdfFlowOptions { Footer = (_, _, _) => footers++ });
+        flow.AddParagraph("Fin", PdfFont.Sans, 10);
+        flow.Finish();
+
+        Assert.Throws<InvalidOperationException>(() => flow.AddParagraph("Après", PdfFont.Sans, 10));
+        Assert.Throws<InvalidOperationException>(() => flow.NewPage());
+        Assert.Throws<InvalidOperationException>(() => flow.EnsureSpace(1));
+        Assert.Throws<InvalidOperationException>(() => flow.AddSpace(1));
+        Assert.Throws<InvalidOperationException>(() => flow.AddRule(Red));
+        Assert.Throws<InvalidOperationException>(() => flow.AddTable(new PdfTable(1)));
+        Assert.Equal((1, 1), (footers, PdfDocument.Open(document.ToArray()).PageCount));
+    }
+
+    [Fact]
     public void Flow_rules_alignment_and_page_breaks()
     {
         var document = new PdfDocumentBuilder();

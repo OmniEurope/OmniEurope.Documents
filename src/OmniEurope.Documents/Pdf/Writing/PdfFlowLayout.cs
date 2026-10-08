@@ -67,6 +67,7 @@ public sealed class PdfFlowLayout
     /// <summary>Starts a new page.</summary>
     public PdfCanvas NewPage()
     {
+        ThrowIfFinished();
         Page = _document.AddPage(_options.PageWidth, _options.PageHeight);
         _pages.Add(Page);
         Y = _options.Margins.Top;
@@ -77,6 +78,7 @@ public sealed class PdfFlowLayout
     /// <summary>Starts a new page unless <paramref name="height"/> points still fit on this one.</summary>
     public void EnsureSpace(double height)
     {
+        ThrowIfFinished();
         if (Y + height > Bottom && Y > _options.Margins.Top)
         {
             NewPage();
@@ -84,13 +86,18 @@ public sealed class PdfFlowLayout
     }
 
     /// <summary>Moves down by <paramref name="height"/> points (never across a page).</summary>
-    public void AddSpace(double height) => Y = Math.Min(Y + height, Bottom);
+    public void AddSpace(double height)
+    {
+        ThrowIfFinished();
+        Y = Math.Min(Y + height, Bottom);
+    }
 
     /// <summary>Adds a wrapped paragraph; lines that do not fit continue on the next page.</summary>
     public void AddParagraph(string text, PdfFont font, double size, PdfColor? color = null, PdfTextAlignment alignment = PdfTextAlignment.Left,
         double spaceBefore = 0, double spaceAfter = 0, double lineSpacing = 1.0, double indent = 0)
     {
         ArgumentNullException.ThrowIfNull(text);
+        ThrowIfFinished();
         var metrics = _document.Metrics(font, size);
         var lineHeight = metrics.LineHeight * lineSpacing;
         var width = ContentWidth - indent;
@@ -108,6 +115,7 @@ public sealed class PdfFlowLayout
     /// <summary>Adds a horizontal rule across the content width.</summary>
     public void AddRule(PdfColor color, double thickness = 0.5, double spaceAround = 6)
     {
+        ThrowIfFinished();
         EnsureSpace((spaceAround * 2) + thickness);
         Y += spaceAround;
         Page.FillRectangle(Left, Y, ContentWidth, thickness, color);
@@ -118,6 +126,7 @@ public sealed class PdfFlowLayout
     public void AddImage(PdfImage image, double width, double height, PdfTextAlignment alignment = PdfTextAlignment.Left)
     {
         ArgumentNullException.ThrowIfNull(image);
+        ThrowIfFinished();
         if (width > ContentWidth)
         {
             height *= ContentWidth / width;
@@ -139,10 +148,12 @@ public sealed class PdfFlowLayout
     public void AddTable(PdfTable table)
     {
         ArgumentNullException.ThrowIfNull(table);
+        ThrowIfFinished();
         new PdfTablePainter(this, table).Paint();
     }
 
-    /// <summary>Draws the footers. Further content cannot be added.</summary>
+    /// <summary>Draws the footers. Adding content or a page afterwards throws <see cref="InvalidOperationException"/>,
+    /// since a later page would have no footer.</summary>
     public void Finish()
     {
         if (_finished)
@@ -154,6 +165,14 @@ public sealed class PdfFlowLayout
         for (var i = 0; i < _pages.Count; i++)
         {
             _options.Footer?.Invoke(_pages[i], i + 1, _pages.Count);
+        }
+    }
+
+    private void ThrowIfFinished()
+    {
+        if (_finished)
+        {
+            throw new InvalidOperationException("The layout is finished: its footers are drawn and nothing can be added.");
         }
     }
 }
