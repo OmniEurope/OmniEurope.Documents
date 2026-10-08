@@ -38,6 +38,14 @@ jobs:
         # aborted test is a failure, never a silent pass.
         shell: pwsh
         run: ./.github/scripts/verify-trx.ps1 -Directory artifacts/tests -Name tests.trx
+      - name: Pack
+        run: >-
+          dotnet pack src/OmniEurope.Documents/OmniEurope.Documents.csproj
+          --configuration Release --no-build --output artifacts/package
+      - name: Verify package
+        # No dependency declared, every bundled font embedded, every font licence shipped.
+        shell: pwsh
+        run: ./.github/scripts/verify-package.ps1 -Directory artifacts/package -Fonts src/OmniEurope.Documents/Fonts/Bundled
 
   integration:
     # Thousands of damaged files, large documents and parallel conversions, kept out of the fast suite.
