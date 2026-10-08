@@ -47,6 +47,8 @@ Notable changes to this project are documented here, following the Keep a Change
   the Windows ascent and descent) above its text; the extra space of a multiple line spacing goes below the text;
   after a page or column break the paragraph mark starts a line of its own; a paragraph opening with a page or
   column break keeps its first-line indent for what follows the break, and its space before on the page it opens.
+- Word to PDF: between two paragraphs the larger of the space after and the space before is kept, not their sum, as
+  Word does; the full space before stays at the top of a page or column a hard break opens.
 - Reading a Word: section properties without a page size or margins mean US Letter with one inch margins, and a
   styles part without document defaults (or no styles part) sets paragraphs 8 pt apart at 1.15 lines, as Word does.
 - Word to PDF: footnote numbers restart at each page or each section as the document settings or the

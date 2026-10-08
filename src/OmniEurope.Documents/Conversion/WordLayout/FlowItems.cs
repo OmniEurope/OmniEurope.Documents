@@ -15,6 +15,10 @@ internal abstract class FlowItem
 
     public double SpaceBefore { get; set; }
 
+    /// <summary>The space before at the top of a column a hard break opened, when <see cref="SpaceBefore"/> was
+    /// reduced by the space after of the item above it; null when they are the same.</summary>
+    public double? FullSpaceBefore { get; set; }
+
     public double SpaceAfter { get; set; }
 
     public bool CanBreakBefore { get; set; } = true;

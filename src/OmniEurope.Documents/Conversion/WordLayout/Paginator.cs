@@ -103,7 +103,7 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
             return i;
         }
 
-        var before = AtColumnTop() && _natural ? 0 : item.SpaceBefore;
+        var before = AtColumnTop() ? (_natural ? 0 : item.FullSpaceBefore ?? item.SpaceBefore) : item.SpaceBefore;
         var bottom = Bottom(item);
         if (_y + before + item.Height <= bottom + Epsilon)
         {

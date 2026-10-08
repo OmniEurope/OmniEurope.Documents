@@ -295,6 +295,26 @@ public sealed class WordLayoutTests
         Assert.InRange(top, before + 5, before + 15);
     }
 
+    [Theory]
+    [InlineData(0, 12)]
+    [InlineData(6, 12)]
+    [InlineData(18, 18)]
+    public void Between_two_paragraphs_the_larger_of_space_after_and_space_before_is_kept(double before, double gap)
+    {
+        var document = new WordDocument(language: null);
+        document.Body.Add(new WordParagraph { Properties = new WordParagraphProperties { SpacingAfter = 12 } }.AddText("One"));
+        document.Body.Add(new WordParagraph { Properties = new WordParagraphProperties { SpacingBefore = before, SpacingAfter = 0 } }.AddText("Two"));
+        document.Body.Add(new WordParagraph { Properties = new WordParagraphProperties { SpacingBefore = 0 } }.AddText("Three"));
+
+        var page = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1);
+        var one = page.Letters.First(l => l.Value == "O").Y;
+        var two = page.Letters.First(l => l.Value == "T").Y;
+        var three = page.Letters.Last(l => l.Value == "T").Y;
+        var line = two - three;
+
+        Assert.Equal(gap, one - two - line, 1);
+    }
+
     private static (PdfPage Page, RasterImage Image) Render(WordDocument document)
     {
         var page = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1);

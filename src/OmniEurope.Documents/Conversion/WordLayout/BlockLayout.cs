@@ -35,6 +35,7 @@ internal sealed class BlockLayout
                 resolved = Resolve(paragraph, cell);
                 blockItems = Paragraph(paragraph, resolved, width, cell, numbering);
                 ContextualSpacing(previous, previousItems, resolved, blockItems);
+                CollapseSpacing(previous, previousItems, blockItems);
             }
             else
             {
@@ -62,6 +63,20 @@ internal sealed class BlockLayout
     }
 
     private WordParagraphProperties Resolve(WordParagraph paragraph, CellStyle? cell) => WordResolution.Paragraph(_context.Document, paragraph, cell);
+
+    // Between two paragraphs Word keeps the larger of the space after and the space before, not their sum (measured
+    // against Word); the full space before stays for the top of a column a hard break opens.
+    private static void CollapseSpacing(WordParagraphProperties? previous, List<FlowItem>? previousItems, List<FlowItem> items)
+    {
+        if (previous is null || previousItems is not { Count: > 0 } || items.Count == 0 || previousItems[^1].SpaceAfter <= 0)
+        {
+            return;
+        }
+
+        var first = items[0];
+        first.FullSpaceBefore = first.SpaceBefore;
+        first.SpaceBefore = Math.Max(0, first.SpaceBefore - previousItems[^1].SpaceAfter);
+    }
 
     // Space between two paragraphs of the same style is dropped on the side that asks for it.
     private static void ContextualSpacing(WordParagraphProperties? previous, List<FlowItem>? previousItems, WordParagraphProperties current, List<FlowItem> items)
