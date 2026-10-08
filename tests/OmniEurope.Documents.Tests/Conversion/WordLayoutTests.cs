@@ -315,6 +315,23 @@ public sealed class WordLayoutTests
         Assert.Equal(gap, one - two - line, 1);
     }
 
+    [Fact]
+    public void A_word_breaks_after_its_hyphen_when_the_line_is_full()
+    {
+        var builder = new Documents.Pdf.Writing.PdfDocumentBuilder();
+        var room = builder.MeasureText("aaaa bbbbbbbbbb-c", new Documents.Pdf.Writing.PdfFont("Liberation Serif"), 12);
+        var document = new WordDocument(language: null);
+        var text = Page.Width - Page.MarginLeft - Page.MarginRight;
+        document.Body.Add(new WordParagraph { Properties = new WordParagraphProperties { IndentRight = text - room } }
+            .AddText("aaaa bbbbbbbbbb-cccccccccc", new WordRunProperties { Font = "Liberation Serif", FontSize = 12 }));
+
+        var page = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1);
+        var lines = page.Letters.Where(l => l.Value.Trim().Length > 0).GroupBy(l => Math.Round(l.Y)).OrderByDescending(g => g.Key)
+            .Select(g => string.Concat(g.OrderBy(l => l.X).Select(l => l.Value))).ToList();
+
+        Assert.Equal(["aaaabbbbbbbbbb-", "cccccccccc"], lines);
+    }
+
     private static (PdfPage Page, RasterImage Image) Render(WordDocument document)
     {
         var page = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1);
