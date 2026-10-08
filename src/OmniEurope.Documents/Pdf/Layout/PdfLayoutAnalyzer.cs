@@ -48,6 +48,16 @@ public static class PdfLayoutAnalyzer
     }
 
     /// <summary>
+    /// The line segments of a page, each text direction read along its own baselines: lines top to bottom, segments
+    /// left to right, in the frame of their direction (a table turned on the page is read row after row).
+    /// </summary>
+    public static IReadOnlyList<PdfTextLine> Lines(PdfPage page)
+    {
+        ArgumentNullException.ThrowIfNull(page);
+        return Lines(page.Letters);
+    }
+
+    /// <summary>
     /// A page is treated as scanned when it carries almost no text (fewer than 20 letters other than spaces)
     /// and an image covers at least half of it.
     /// </summary>

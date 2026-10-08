@@ -267,6 +267,23 @@ public sealed class PdfLayoutWordTests
         Assert.Equal(["L", "12/2", "EN", "Official", "Journal", "of", "the", "Union"], page.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries));
     }
 
+    [Fact]
+    public void A_space_whose_end_lies_under_the_next_cell_still_ends_its_word()
+    {
+        var page = Page(canvas =>
+        {
+            // Table cells: each one starts before the advance of the space ending the cell before it is over.
+            var space = canvas.MeasureText(" ", PdfFont.Serif, 12);
+            var sites = canvas.DrawText("Sites ", 72, 60, PdfFont.Serif, 12);
+            canvas.DrawText("Ports", 72 + sites - (space * 0.7), 60, PdfFont.Serif, 12);
+            var period = canvas.DrawText("period ", 72, 90, PdfFont.Serif, 12);
+            canvas.DrawText("4", 72 + period - (space * 0.6), 90, PdfFont.Serif, 12);
+        });
+
+        Assert.Equal(["Sites", "Ports", "period", "4"], PdfLayoutAnalyzer.Words(page).Select(w => w.Text));
+        Assert.Equal("Sites Ports\nperiod 4", page.Text);
+    }
+
     // Draws text letter by letter, each letter followed by its advance and the tracking; spaces are drawn as glyphs
     // or only skipped.
     private static void Spaced(PdfCanvas canvas, string text, double x, double baseline, double size, double tracking, bool spaceGlyphs)

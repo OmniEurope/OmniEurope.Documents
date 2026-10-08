@@ -71,6 +71,19 @@ public sealed class PdfLayoutDirectionTests
         }
     }
 
+    [Fact]
+    public void The_lines_of_a_turned_page_are_read_along_its_text_row_after_row()
+    {
+        var page = Document(canvas => TurnedPage(canvas, numbered: false)).GetPage(1);
+
+        var lines = PdfLayoutAnalyzer.Lines(page);
+
+        Assert.Equal(
+            ["ANNEX I", "First line of the paragraph", "second line of the paragraph", "third line of it", "1", "Headlamps", "3", "Mirrors"],
+            lines.Where(l => l.Text != "Journal of tests").Select(l => l.Text));
+        Assert.Contains(lines, l => l.Text == "Journal of tests");
+    }
+
     // A page whose content is turned by 90 degrees (read from the bottom to the top, its first line along the left
     // edge), under a horizontal running head and over a horizontal page number; the first column of its table
     // stands along the bottom edge.

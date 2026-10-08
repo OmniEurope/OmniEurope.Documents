@@ -28,7 +28,9 @@ internal readonly record struct PlacedLetter(PdfLetter Letter, double X, double 
 /// main baseline. A word ends at a blank, at a gap wider than a fifth of the smaller of the two letters' sizes, or
 /// where the baseline shifts by more than 15 % of the larger size (5 % when the size changes too); a line segment
 /// ends at a gap wider than 1.6 times the smaller size. A blank lying for more than half its advance over visible
-/// letters (a row of spaces printed under the text) is no word break and is left out. Letters spaced out (tracked)
+/// letters and touching another blank (a row of spaces printed under the text) is no word break and is left out; a
+/// blank on its own whose advance runs under the next letters (a space ending a table cell, the next cell starting
+/// before its advance is over) still ends its word. Letters spaced out (tracked)
 /// are measured against their own spacing: in a run of the line (between gutters and baseline shifts) with at
 /// least three gaps between visible letters, when the median gap is wider than a word gap but at most three
 /// quarters of the size, and at least two thirds of the gaps lie within a tenth of the size of it, that gap is the
@@ -56,6 +58,9 @@ internal static class LineGrouping
 
     // A blank covering visible letters over more than this fraction of its advance is printed under the text.
     private const double Underlay = 0.5;
+
+    // Blanks this close (fraction of the size) touch: one row of blanks.
+    private const double Touching = 0.1;
 
     // Tracking: at least this many gaps, at most this wide (fraction of the size), this even (fraction of the size).
     private const int TrackedGaps = 3;
@@ -89,7 +94,8 @@ internal static class LineGrouping
     {
         var sorted = line.OrderBy(l => l.X).ToList();
         var visible = sorted.Where(l => !l.IsBlank).ToList();
-        var kept = sorted.Where(l => !l.IsBlank || !IsUnderlay(l, visible)).ToList();
+        var blanks = sorted.Where(l => l.IsBlank).ToList();
+        var kept = sorted.Where(l => !l.IsBlank || !IsUnderlay(l, visible, blanks)).ToList();
         var tracking = new double[kept.Count];
         var start = 0;
         for (var i = 1; i <= kept.Count; i++)
@@ -129,8 +135,9 @@ internal static class LineGrouping
         return Math.Abs(current.Y - previous.Y) > larger * (resized ? ResizedShift : BaselineShift);
     }
 
-    // A blank whose advance lies for more than half over visible letters: printed under the text, not between words.
-    private static bool IsUnderlay(PlacedLetter blank, List<PlacedLetter> visible)
+    // A blank whose advance lies for more than half over visible letters and that touches another blank: one of a
+    // row printed under the text, not between words. A lone blank overlapped by what follows it ends its word.
+    private static bool IsUnderlay(PlacedLetter blank, List<PlacedLetter> visible, List<PlacedLetter> blanks)
     {
         var covered = 0.0;
         for (var i = Math.Max(FirstAtOrAfter(visible, blank.X) - 1, 0); i < visible.Count && visible[i].X < blank.Right; i++)
@@ -138,7 +145,23 @@ internal static class LineGrouping
             covered += Math.Max(0, Math.Min(blank.Right, visible[i].Right) - Math.Max(blank.X, visible[i].X));
         }
 
-        return covered > blank.Letter.Width * Underlay;
+        return covered > blank.Letter.Width * Underlay && TouchesBlank(blank, blanks);
+    }
+
+    // Another blank ends where this one starts or starts where this one ends (within a tenth of the size).
+    private static bool TouchesBlank(PlacedLetter blank, List<PlacedLetter> blanks)
+    {
+        var tolerance = blank.Size * Touching;
+        for (var i = FirstAtOrAfter(blanks, blank.X - (blank.Size * 2)); i < blanks.Count && blanks[i].X <= blank.Right + tolerance; i++)
+        {
+            var other = blanks[i];
+            if (other != blank && (Math.Abs(other.Right - blank.X) <= tolerance || Math.Abs(other.X - blank.Right) <= tolerance))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // The letters [start, end) of a run: when the gaps between its visible letters are mostly one even width,

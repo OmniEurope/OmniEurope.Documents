@@ -6,6 +6,8 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- `PdfLayoutAnalyzer.Lines(PdfPage)`: the line segments of a page, each text direction read along its own baselines
+  (lines top to bottom, segments left to right), so a table turned on the page is read row after row.
 - `PdfCanvas.DrawRotatedText`: one line of text turned by any angle counter-clockwise around the start of its
   baseline (90 reads from bottom to top, 270 from top to bottom), with colour and character spacing.
 - Word, Excel, PDF, Markdown, CSV and HTML reading, writing and conversion, with the .NET base class
@@ -38,6 +40,9 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Fixed
 
+- PDF word extraction: a space alone whose advance runs under the next letters (a space ending a table cell, the
+  next cell starting before its advance is over) ends its word again (`Sites Ports`, not `SitesPorts`); only a
+  blank lying over visible letters and touching another blank (a row of spaces printed under the text) is left out.
 - PDF word extraction (`PdfLayoutAnalyzer.Words`, `Lines`, `AnalyzePage`, `PdfPage.Text`): a row of spaces printed
   under the text (a blank lying for more than half its advance over visible letters) no longer splits every
   letter into a word of its own (`Official Journal`, not `O f f i c i a l J o u r n a l`). Letter-spaced
