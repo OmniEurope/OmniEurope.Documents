@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 # PLAN-004 : Fonctionnalités suivantes
 
-> Statut : **en cours** (2026-10-07 : lot 5 Word vers HTML fait). Feuille de route proposée au
+> Statut : **en cours** (2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
 > propriétaire ; l'ordre des lots est celui de la valeur attendue. Un lot ne commence qu'après accord du
 > propriétaire.
 
@@ -23,11 +23,16 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
 
 ## Lot 1 : modifier un classeur sans perte
 
-- [ ] Éditeur XLSX qui ne réécrit que les feuilles et cellules modifiées : graphiques, images, mises en
+- [x] Éditeur XLSX qui ne réécrit que les feuilles et cellules modifiées : graphiques, images, mises en
   forme conditionnelles, validations, commentaires et tableaux croisés restent intacts (aujourd'hui,
   enregistrer un classeur chargé les supprime).
 - Contrôle : un classeur riche ouvert, modifié puis enregistré garde toutes ses parties non touchées
   identiques à l'octet ; les cellules modifiées se relisent.
+  Fait (2026-10-08) : `XlsxEditor` et `XlsxEditableSheet`, 8 tests sur un classeur écrit à la main (graphique,
+  image, mises en forme conditionnelles, validations, commentaires, tableau, cache de tableau croisé, chaîne
+  de calcul). Une modification de cellule ne réécrit que sa feuille et `xl/workbook.xml` (recalcul demandé à
+  l'ouverture) ; la chaîne de calcul est retirée quand une formule change. Refusés : tête de formule partagée,
+  cellule de formule matricielle, en-tête de tableau.
 
 ## Lot 2 : calcul des formules
 

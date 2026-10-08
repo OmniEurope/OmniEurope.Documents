@@ -148,6 +148,40 @@ internal sealed class OpcPackage
         }
     }
 
+    /// <summary>
+    /// Removes a part with its own relationships, its content type override and every relationship of the package
+    /// that targets it.
+    /// </summary>
+    public void RemovePart(string name)
+    {
+        name = Normalize(name);
+        if (!_raw.ContainsKey(name))
+        {
+            return;
+        }
+
+        foreach (var part in new[] { name, OpcRelationships.RelationshipsPath(name) })
+        {
+            _order.Remove(part);
+            _raw.Remove(part);
+            _xml.Remove(part);
+            _changed.Remove(part);
+        }
+
+        GetXml(ContentTypesPart)!.Root!.Elements(Ct + "Override")
+            .Where(e => string.Equals(Normalize((string?)e.Attribute("PartName") ?? string.Empty), name, StringComparison.OrdinalIgnoreCase))
+            .Remove();
+        foreach (var source in _order.Where(p => p.EndsWith(".rels", StringComparison.OrdinalIgnoreCase)).ToList())
+        {
+            var owner = OpcRelationships.OwnerOf(source);
+            var targets = Relationships(owner).Where(r => !r.External && string.Equals(r.Target, name, StringComparison.OrdinalIgnoreCase)).Select(r => r.Id).ToHashSet(StringComparer.Ordinal);
+            if (targets.Count > 0)
+            {
+                GetXml(source)!.Root!.Elements(Rel + "Relationship").Where(e => targets.Contains((string?)e.Attribute("Id") ?? string.Empty)).Remove();
+            }
+        }
+    }
+
     /// <summary>The content type of a part: its override, else the default of its extension.</summary>
     public string? ContentTypeOf(string name)
     {

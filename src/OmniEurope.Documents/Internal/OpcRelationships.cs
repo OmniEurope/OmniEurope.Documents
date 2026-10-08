@@ -45,6 +45,15 @@ internal static class OpcRelationships
         return (directory.Length == 0 ? string.Empty : directory + "/") + "_rels/" + name + ".rels";
     }
 
+    /// <summary>The part a relationships part belongs to (<c>""</c> for the package's own <c>_rels/.rels</c>).</summary>
+    public static string OwnerOf(string relationshipsPath)
+    {
+        var directory = DirectoryOf(relationshipsPath);
+        var owner = DirectoryOf(directory);
+        var name = relationshipsPath[(relationshipsPath.LastIndexOf('/') + 1)..^".rels".Length];
+        return name.Length == 0 ? string.Empty : (owner.Length == 0 ? name : owner + "/" + name);
+    }
+
     /// <summary>Resolves a relative target against a directory; a leading slash means the package root.</summary>
     public static string Resolve(string directory, string target)
     {

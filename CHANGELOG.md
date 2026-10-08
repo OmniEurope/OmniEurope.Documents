@@ -6,6 +6,13 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- `XlsxEditor` (`OmniEurope.Documents.Excel.Editing`): opens an `.xlsx` and edits cells in place.
+  `XlsxEditableSheet.SetValue` (number, text, boolean, date, empty) and `SetFormula` change one cell of the
+  worksheet part; every other part (charts, pictures, conditional formats, validations, comments, tables, pivot
+  caches) is saved byte for byte. A new cell takes the format of its row or column; text is written inline;
+  Excel recalculates on opening (`fullCalcOnLoad`), and the calculation chain is dropped when a formula cell
+  changes. `GetValue` and `GetFormula` read what the file holds. Cells heading a shared formula, inside an
+  array formula or in a table header are refused with `NotSupportedException`.
 - `WordEditableParagraph.Location` (`WordParagraphLocation`, `WordPathStep`, `WordPartKind`): where a paragraph of
   `WordEditor.Paragraphs()` sits: its part and kind, the relationship id of a header or footer, the id of a note or
   comment (separator and continuation notes flagged), and the block path down to it (blocks, table rows and cells,

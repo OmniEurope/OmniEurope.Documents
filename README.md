@@ -11,7 +11,7 @@ NuGet package, no user interface, no dependency, licensed under EUPL-1.2.
 | Format | Create | Edit | Read | Convert |
 |---|---|---|---|---|
 | Word (`.docx`) | yes | yes | text and structure | to PDF, to HTML |
-| Excel (`.xlsx`) | yes | yes | cells and sheets | to PDF, to CSV |
+| Excel (`.xlsx`) | yes | yes, in place without loss | cells and sheets | to PDF, to CSV |
 | PDF | yes | merge, split, compress, reorder, rotate, stamp | text, **no OCR** | from Word, Excel, Markdown, HTML, images; to PNG |
 | Markdown | yes | yes | yes | to PDF, to Word, to HTML |
 | CSV | yes | yes | yes | to Excel |
@@ -31,8 +31,9 @@ Companion tools: HTML parsing and sanitising, text diff (lines and words).
 - **No OCR**: a scanned PDF (images only) gives no text.
 - **No user interface**: components that display or edit documents belong to a separate UI library, which
   can use this package.
-- **No lossless workbook editing yet**: saving a loaded `.xlsx` keeps cells, styles, merges, panes and
-  filters, but drops charts, pictures, conditional formats, data validation, comments and pivot tables.
+- **Saving a loaded `XlsxWorkbook` is not lossless**: it keeps cells, styles, merges, panes and filters only.
+  `XlsxEditor` edits cells in place and keeps everything else the file holds (charts, pictures, conditional
+  formats, validations, comments, pivot tables).
 - **No formula evaluation**: formulas are kept with their last computed result, never recalculated.
 - **No Word to Markdown yet**; Word to HTML leaves line and page breaks to the browser and lists what it
   approximates in its gaps.
@@ -44,6 +45,7 @@ One package, one namespace per format, conversions on their own:
 - `OmniEurope.Documents.Pdf`
 - `OmniEurope.Documents.Word`
 - `OmniEurope.Documents.Excel`
+- `OmniEurope.Documents.Excel.Editing` (`XlsxEditor`: in-place cell edits)
 - `OmniEurope.Documents.Markdown`
 - `OmniEurope.Documents.Csv`
 - `OmniEurope.Documents.Html`
