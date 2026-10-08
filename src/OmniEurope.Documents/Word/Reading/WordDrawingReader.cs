@@ -70,34 +70,28 @@ internal sealed class WordDrawingReader(WordContentReader owner)
             return null;
         }
 
-        var wrap = (string?)container.Descendants(W10 + "wrap").FirstOrDefault()?.Attribute("type") switch
-        {
-            "square" => WordWrap.Square,
-            "tight" => WordWrap.Tight,
-            "through" => WordWrap.Through,
-            "topAndBottom" => WordWrap.TopAndBottom,
-            _ => WordWrap.None,
-        };
+        var wrap = (string?)container.Descendants(W10 + "wrap").FirstOrDefault()?.Attribute("type") ?? string.Empty;
         return new WordFloatingPosition(
             CssLength(style.GetValueOrDefault("margin-left", "0")),
-            style.GetValueOrDefault("mso-position-horizontal-relative") switch
-            {
-                "margin" => "margin",
-                "page" => "page",
-                "char" => "character",
-                _ => "column",
-            },
+            VmlHorizontal.GetValueOrDefault(style.GetValueOrDefault("mso-position-horizontal-relative", string.Empty), "column"),
             CssLength(style.GetValueOrDefault("margin-top", "0")),
-            style.GetValueOrDefault("mso-position-vertical-relative") switch
-            {
-                "margin" => "margin",
-                "page" => "page",
-                "line" => "line",
-                _ => "paragraph",
-            },
-            wrap,
+            VmlVertical.GetValueOrDefault(style.GetValueOrDefault("mso-position-vertical-relative", string.Empty), "paragraph"),
+            VmlWraps.GetValueOrDefault(wrap, WordWrap.None),
             int.TryParse(style.GetValueOrDefault("z-index"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var z) && z < 0);
     }
+
+    // What VML positions from and how it wraps, as the anchored drawing's names say it.
+    private static readonly Dictionary<string, string> VmlHorizontal = new(StringComparer.Ordinal) { ["margin"] = "margin", ["page"] = "page", ["char"] = "character" };
+
+    private static readonly Dictionary<string, string> VmlVertical = new(StringComparer.Ordinal) { ["margin"] = "margin", ["page"] = "page", ["line"] = "line" };
+
+    private static readonly Dictionary<string, WordWrap> VmlWraps = new(StringComparer.Ordinal)
+    {
+        ["square"] = WordWrap.Square,
+        ["tight"] = WordWrap.Tight,
+        ["through"] = WordWrap.Through,
+        ["topAndBottom"] = WordWrap.TopAndBottom,
+    };
 
     // The declarations of a CSS style attribute ("width:120pt;height:3cm"), by property name.
     private static Dictionary<string, string> Css(string? style)
