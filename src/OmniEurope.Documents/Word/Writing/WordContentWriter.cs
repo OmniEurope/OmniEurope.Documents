@@ -114,7 +114,7 @@ internal sealed class WordContentWriter(WordWriteContext context, PartRelationsh
         {
             var revision = inline.Revision ?? inherited;
             var deleted = revision?.Kind == WordRevisionKind.Deleted;
-            var elements = inline is WordHyperlink link ? [Hyperlink(link, revision)] : Inline(inline, deleted).ToList();
+            var elements = inline is WordHyperlink link ? [Hyperlink(link, revision)] : Inline(inline, deleted, wrapped: revision is not null).ToList();
             if (revision is null || inline is WordHyperlink)
             {
                 foreach (var element in elements)
@@ -149,7 +149,8 @@ internal sealed class WordContentWriter(WordWriteContext context, PartRelationsh
         return element;
     }
 
-    private IEnumerable<XElement> Inline(WordInline inline, bool deleted)
+    // Wrapped: the caller puts the runs in a revision element (w:ins, w:del), which may hold runs only.
+    private IEnumerable<XElement> Inline(WordInline inline, bool deleted, bool wrapped)
     {
         var p = inline.Properties;
         switch (inline)
@@ -167,7 +168,7 @@ internal sealed class WordContentWriter(WordWriteContext context, PartRelationsh
                 yield return Run(p, new XElement(W + "sym", new XAttribute(W + "font", symbol.Font), new XAttribute(W + "char", ((int)symbol.Character).ToString("X4", CultureInfo.InvariantCulture))));
                 break;
             case WordField field:
-                foreach (var element in Field(field, deleted))
+                foreach (var element in Field(field, deleted, wrapped))
                 {
                     yield return element;
                 }
@@ -208,7 +209,9 @@ internal sealed class WordContentWriter(WordWriteContext context, PartRelationsh
             new XAttribute(W + "leader", WordPropertyWriter.TabLeader(tab.Leader)));
     }
 
-    private IEnumerable<XElement> Field(WordField field, bool deleted)
+    // A hyperlink in the result is written as one (a paragraph-level sibling of the field runs), or as its runs
+    // when the field sits in a revision element, which cannot hold a hyperlink.
+    private IEnumerable<XElement> Field(WordField field, bool deleted, bool wrapped)
     {
         var p = field.Properties;
         yield return Run(p, new XElement(W + "fldChar", new XAttribute(W + "fldCharType", "begin")));
@@ -216,15 +219,29 @@ internal sealed class WordContentWriter(WordWriteContext context, PartRelationsh
         instruction.Add(new XAttribute(XNamespace.Xml + "space", "preserve"));
         yield return Run(p, instruction);
         yield return Run(p, new XElement(W + "fldChar", new XAttribute(W + "fldCharType", "separate")));
-        foreach (var inline in field.Result)
+        foreach (var element in Result(field.Result, deleted, wrapped))
         {
-            foreach (var element in Inline(inline, deleted))
+            yield return element;
+        }
+
+        yield return Run(p, new XElement(W + "fldChar", new XAttribute(W + "fldCharType", "end")));
+    }
+
+    private IEnumerable<XElement> Result(IEnumerable<WordInline> inlines, bool deleted, bool wrapped)
+    {
+        foreach (var inline in inlines)
+        {
+            var elements = inline switch
+            {
+                WordHyperlink link when !wrapped => [Hyperlink(link, link.Revision)],
+                WordHyperlink link => Result(link.Inlines, deleted, wrapped),
+                _ => Inline(inline, deleted, wrapped),
+            };
+            foreach (var element in elements)
             {
                 yield return element;
             }
         }
-
-        yield return Run(p, new XElement(W + "fldChar", new XAttribute(W + "fldCharType", "end")));
     }
 
     private static XElement Run(WordRunProperties properties, XElement content)

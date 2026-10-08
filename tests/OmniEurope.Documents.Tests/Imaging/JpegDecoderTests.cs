@@ -97,4 +97,18 @@ public sealed class JpegDecoderTests
     {
         Assert.Throws<InvalidDataException>(() => JpegDecoder.Decode([0xFF, 0xD8, 0xFF, 0xDB, 0x10, 0x00, 1, 2]));
     }
+
+    [Fact]
+    public void A_component_sampled_two_for_three_takes_the_sample_covering_each_pixel()
+    {
+        // R and B sampled 3 across, G 2 across (ITU-T T.81 A.1.1): six pixels hold four G samples, pixel x
+        // taking G sample floor(2x / 3). R, G, B identifiers keep the samples as they are.
+        var frame = new JpegFrame(6, 1, progressive: false, [new JpegComponent('R', 3, 1, 0), new JpegComponent('G', 2, 1, 0), new JpegComponent('B', 3, 1, 0)]);
+        var flat = new JpegPlane(6, 1, 3, 1, [9, 9, 9, 9, 9, 9]);
+        var green = new JpegPlane(4, 1, 2, 1, [0, 100, 200, 250]);
+
+        var image = JpegColor.Convert(frame, [flat, green, flat], adobeTransform: -1);
+
+        Assert.Equal([0, 0, 100, 200, 200, 250], Enumerable.Range(0, 6).Select(x => (int)image.GetRgba(x, 0).G));
+    }
 }

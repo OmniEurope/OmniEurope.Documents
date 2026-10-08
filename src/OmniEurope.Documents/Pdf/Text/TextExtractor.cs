@@ -177,7 +177,8 @@ internal sealed class TextExtractor
         var width = Math.Max(glyph.Advance, 0);
         var corners = new[] { trm.Transform(0, font.Descent), trm.Transform(width, font.Descent), trm.Transform(0, font.Ascent), trm.Transform(width, font.Ascent) };
         var box = new PdfRectangle(corners.Min(c => c.X), corners.Min(c => c.Y), corners.Max(c => c.X), corners.Max(c => c.Y));
-        var (endX, endY) = new Matrix(state.HorizontalScale, 0, 0, 1, 0, 0).Multiply(state.Tm).Multiply(state.Ctm).Transform(advance, 0);
+        // The advance already holds the horizontal scale (ISO 32000-1 §9.4.4): it moves along the text matrix.
+        var (endX, endY) = state.Tm.Multiply(state.Ctm).Transform(advance, 0);
         var (originX, originY) = state.Tm.Multiply(state.Ctm).Transform(0, 0);
         var length = Math.Sqrt(((endX - originX) * (endX - originX)) + ((endY - originY) * (endY - originY)));
         var size = state.FontSize * Math.Sqrt((trm.C * trm.C) + (trm.D * trm.D)) / Math.Max(Math.Abs(state.FontSize), 1e-9);

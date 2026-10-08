@@ -46,6 +46,23 @@ public sealed class WordEditorTests
         Assert.Contains("MERGEFIELD {{prenom}}", DocxFactory.Part(editor.ToArray(), "word/document.xml"), StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("<w:r><w:t>a</w:t><w:tab/><w:t>b</w:t></w:r>")]
+    [InlineData("<w:r><w:t>a</w:t><w:br/><w:t>b</w:t></w:r>")]
+    [InlineData("<w:r><w:t>a</w:t></w:r><w:r><w:footnoteReference w:id=\"1\"/></w:r><w:r><w:t>b</w:t></w:r>")]
+    [InlineData("<w:r><w:t>a</w:t></w:r><w:r><w:fldChar w:fldCharType=\"begin\"/></w:r><w:r><w:instrText>PAGE</w:instrText></w:r><w:r><w:fldChar w:fldCharType=\"end\"/></w:r><w:r><w:t>b</w:t></w:r>")]
+    public void A_search_does_not_span_what_separates_the_text(string runs)
+    {
+        // The visible text holds a tab, a break, a note or a field between a and b: "ab" is not in it.
+        var editor = WordEditor.Open(DocxFactory.Build($"<w:p>{runs}</w:p><w:p><w:r><w:t>a</w:t></w:r><w:r><w:rPr><w:b/></w:rPr><w:t>b</w:t></w:r></w:p>"));
+
+        Assert.Equal(1, editor.ReplaceText("ab", "X"));
+
+        var paragraphs = editor.ToDocument().Blocks.OfType<WordParagraph>().ToList();
+        Assert.DoesNotContain("X", paragraphs[0].Text, StringComparison.Ordinal);
+        Assert.Equal("X", paragraphs[1].Text);
+    }
+
     [Fact]
     public void Replacement_reaches_headers_footers_and_notes()
     {

@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 # PLAN-005 : Robustesse et fidélité
 
-> Statut : **en cours** (2026-10-08 : lot 1 fait). Demande du propriétaire : corriger les défauts relevés
+> Statut : **en cours** (2026-10-08 : lots 1 et 2 faits). Demande du propriétaire : corriger les défauts relevés
 > par la revue complète du code, en trois lots, un commit par lot.
 
 ## Objectif
@@ -40,16 +40,19 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites (`.\ylau
 
 ## Lot 2 : rendu et données
 
-- [ ] EMF : modes isotrope (7) et anisotrope (8) remis à leur place.
-- [ ] CFF : la largeur n'est retirée des opérandes de stems que pour un nombre impair.
-- [ ] Extraction PDF : l'échelle horizontale (`Tz`) n'est appliquée qu'une fois à la largeur des lettres.
-- [ ] JPEG : sur-échantillonnage selon le rapport exact des facteurs (par exemple 2 sur 3).
-- [ ] Marquage PDF : un `Contents` indirect qui désigne un tableau est résolu avant d'être aplati.
-- [ ] Fusion Word : styles et listes des en-têtes et pieds copiés sont migrés.
-- [ ] Remplacement Word : une recherche ne franchit pas une tabulation, un saut ni un champ.
-- [ ] Écriture Word : une même instance en en-tête et en pied donne deux parties distinctes ; un lien
+- [x] EMF : modes isotrope (7) et anisotrope (8) remis à leur place.
+- [x] CFF : la largeur n'est retirée des opérandes de stems que pour un nombre impair.
+- [x] Extraction PDF : l'échelle horizontale (`Tz`) n'est appliquée qu'une fois à la largeur des lettres.
+- [x] JPEG : sur-échantillonnage selon le rapport exact des facteurs (par exemple 2 sur 3).
+- [x] Marquage PDF : un `Contents` indirect qui désigne un tableau est résolu avant d'être aplati.
+- [x] Fusion Word : styles et listes des en-têtes et pieds copiés sont migrés.
+- [x] Remplacement Word : une recherche ne franchit pas une tabulation, un saut ni un champ.
+- [x] Écriture Word : une même instance en en-tête et en pied donne deux parties distinctes ; un lien
   hypertexte dans le résultat d'un champ s'écrit.
 - Contrôle : un test par défaut dont l'attendu vient de la spécification ; deux suites vertes.
+  Fait : 9 tests ajoutés (16 cas) ; chacun échoue sur le code d'avant, hors deux cas témoins qui y passaient
+  déjà (`Tz` à 100 %, stems avec largeur). Un champ suivi (w:ins, w:del) ne peut contenir de lien hypertexte :
+  son résultat est alors écrit en simples runs.
 
 ## Lot 3 : contrats
 

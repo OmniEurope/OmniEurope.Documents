@@ -33,6 +33,21 @@ public sealed class EmfPlaybackTests
     }
 
     [Theory]
+    [InlineData(8, 100, 50)]
+    [InlineData(7, 50, 50)]
+    public void Anisotropic_mode_scales_each_axis_and_isotropic_mode_keeps_the_aspect(int mode, int width, int height)
+    {
+        // Window extents 100 x 100 onto a viewport of 200 x 100 (MS-EMF: MM_ISOTROPIC is 7, MM_ANISOTROPIC 8):
+        // a 50-unit square becomes 100 x 50 when each axis has its own scale, 50 x 50 with the smaller one.
+        var scaled = Draw(Filled().Ints(17, mode).Ints(9, 100, 100).Ints(11, 200, 100).Ints(43, 0, 0, 50, 50));
+
+        var expected = Draw(Filled().Ints(43, 0, 0, width, height));
+
+        Assert.True(Differences(expected, scaled) == 0, $"{Differences(expected, scaled)} pixels differ");
+        Assert.True(Ink(expected) > 500);
+    }
+
+    [Theory]
     [InlineData(36, 4)]
     [InlineData(35, 0)]
     public void Setting_the_world_transform_scales_what_follows(uint record, int mode)

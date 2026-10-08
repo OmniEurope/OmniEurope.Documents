@@ -133,15 +133,14 @@ internal static class JpegColor
     }
 
     // Full-resolution sample of a component. Halved directions are interpolated with the 3/4-1/4 triangle
-    // filter between the two nearest samples (edges replicated), other ratios repeat samples.
+    // filter between the two nearest samples (edges replicated); other ratios, whole or not (2 samples for 3,
+    // ITU-T T.81 A.1.1), take the sample covering the position.
     private static byte Upsample(JpegPlane plane, JpegFrame frame, int x, int y)
     {
-        var factorX = frame.MaxH / plane.H;
-        var factorY = frame.MaxV / plane.V;
         var usedWidth = ((frame.Width * plane.H) + frame.MaxH - 1) / frame.MaxH;
         var usedHeight = ((frame.Height * plane.V) + frame.MaxV - 1) / frame.MaxV;
-        var (x0, x1, wx) = Neighbours(x, factorX, usedWidth);
-        var (y0, y1, wy) = Neighbours(y, factorY, usedHeight);
+        var (x0, x1, wx) = Neighbours(x, plane.H, frame.MaxH, usedWidth);
+        var (y0, y1, wy) = Neighbours(y, plane.V, frame.MaxV, usedHeight);
         var s = plane.Samples;
         var w = plane.Width;
         var top = (s[((long)y0 * w) + x0] * (4 - wx)) + (s[((long)y0 * w) + x1] * wx);
@@ -150,11 +149,11 @@ internal static class JpegColor
     }
 
     // The two source samples around an output position and the weight (out of 4) of the second one.
-    private static (int First, int Second, int Weight) Neighbours(int position, int factor, int used)
+    private static (int First, int Second, int Weight) Neighbours(int position, int samples, int max, int used)
     {
-        if (factor != 2)
+        if (max != 2 * samples)
         {
-            var only = Math.Min(position / factor, used - 1);
+            var only = Math.Min((int)((long)position * samples / max), used - 1);
             return (only, only, 0);
         }
 

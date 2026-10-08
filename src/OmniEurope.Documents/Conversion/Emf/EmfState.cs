@@ -71,7 +71,7 @@ internal sealed record EmfState
             6 => (pixelsPerMm.X * 25.4 / 1440, -pixelsPerMm.Y * 25.4 / 1440),
             _ => (1.0, 1.0),
         };
-        if (MapMode == 8)
+        if (MapMode == 7)
         {
             // Isotropic: the same scale on both axes, the smaller one.
             var scale = Math.Min(Math.Abs(sx), Math.Abs(sy));

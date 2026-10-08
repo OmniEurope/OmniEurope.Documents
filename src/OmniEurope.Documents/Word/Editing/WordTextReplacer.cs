@@ -8,13 +8,46 @@ namespace OmniEurope.Documents.Word.Editing;
 /// Replaces text inside a paragraph even when Word split it across several runs (as it does after spell
 /// checking or partial formatting). The replacement takes the formatting of the run where the match
 /// starts; the matched characters are removed from the following runs. Field instructions and results
-/// are not searched.
+/// are not searched, and a match never spans a tab, a break, a hyphen character or a run that is not text
+/// (a field, a note reference, a picture): the text is searched in the stretches between them.
 /// </summary>
 internal static class WordTextReplacer
 {
     public static int Replace(XElement paragraph, string search, string replacement, StringComparison comparison)
     {
-        var texts = WordRunScanner.Runs(paragraph).Where(r => r.IsText).SelectMany(r => r.Element.Elements(W + "t")).ToList();
+        var count = 0;
+        foreach (var stretch in Stretches(paragraph))
+        {
+            count += Replace(stretch, search, replacement, comparison);
+        }
+
+        return count;
+    }
+
+    // The w:t elements that read as one piece of text: across run boundaries, not across anything else.
+    private static List<List<XElement>> Stretches(XElement paragraph)
+    {
+        var stretches = new List<List<XElement>> { new() };
+        foreach (var run in WordRunScanner.Runs(paragraph))
+        {
+            foreach (var child in run.IsText ? run.Element.Elements() : [run.Element])
+            {
+                if (child.Name == W + "t")
+                {
+                    stretches[^1].Add(child);
+                }
+                else if (child.Name != W + "rPr" && child.Name != W + "lastRenderedPageBreak" && stretches[^1].Count > 0)
+                {
+                    stretches.Add([]);
+                }
+            }
+        }
+
+        return stretches;
+    }
+
+    private static int Replace(List<XElement> texts, string search, string replacement, StringComparison comparison)
+    {
         if (texts.Count == 0)
         {
             return 0;

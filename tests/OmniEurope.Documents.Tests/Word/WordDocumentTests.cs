@@ -209,6 +209,46 @@ public sealed class WordDocumentTests
     }
 
     [Fact]
+    public void One_instance_as_header_and_footer_gives_a_part_of_each_kind()
+    {
+        var document = new WordDocument();
+        var shared = new WordHeaderFooter(new WordParagraph("Commun"));
+        document.Sections[0].Headers[WordHeaderFooterKind.Default] = shared;
+        document.Sections[0].Footers[WordHeaderFooterKind.Default] = shared;
+        document.AddParagraph("Corps");
+
+        var bytes = document.ToArray();
+
+        var parts = DocxFactory.Entries(bytes).Keys.Where(k => k.StartsWith("word/header", StringComparison.Ordinal) || k.StartsWith("word/footer", StringComparison.Ordinal)).Order().ToList();
+        Assert.Equal(["word/footer1.xml", "word/header1.xml"], parts);
+        Assert.Equal("ftr", System.Xml.Linq.XDocument.Parse(DocxFactory.Part(bytes, "word/footer1.xml")).Root!.Name.LocalName);
+        Assert.Equal("hdr", System.Xml.Linq.XDocument.Parse(DocxFactory.Part(bytes, "word/header1.xml")).Root!.Name.LocalName);
+        var reread = WordDocument.Load(bytes).Sections[0];
+        Assert.Equal("Commun", reread.Headers[WordHeaderFooterKind.Default].Text.Trim());
+        Assert.Equal("Commun", reread.Footers[WordHeaderFooterKind.Default].Text.Trim());
+    }
+
+    [Fact]
+    public void A_hyperlink_in_a_field_result_is_written()
+    {
+        var document = new WordDocument();
+        var field = new WordField("HYPERLINK \"https://example.org\"");
+        field.Result.Add(new WordHyperlink("https://example.org", "lien"));
+        document.AddParagraph("Voir ").Add(field);
+        var tracked = new WordField("HYPERLINK \"https://example.org\"") { Revision = new WordRevision(WordRevisionKind.Inserted, "A") };
+        tracked.Result.Add(new WordHyperlink("https://example.org", "ajouté"));
+        document.AddParagraph("Puis ").Add(tracked);
+
+        var reread = WordDocument.Load(document.ToArray());
+
+        var paragraphs = reread.Blocks.OfType<WordParagraph>().ToList();
+        var link = Assert.Single(Assert.Single(paragraphs[0].Inlines.OfType<WordField>()).Result.OfType<WordHyperlink>());
+        Assert.Equal("https://example.org", link.Target);
+        Assert.Equal("Voir lien", paragraphs[0].Text);
+        Assert.Equal("Puis ajouté", paragraphs[1].Text);
+    }
+
+    [Fact]
     public void Unsupported_content_is_reported_as_gaps()
     {
         var body = """<w:p><w:r><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><wp:extent cx="100" cy="100"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart"/></a:graphic></wp:inline></w:drawing></w:r></w:p><w:altChunk r:id="rId9"/>""";

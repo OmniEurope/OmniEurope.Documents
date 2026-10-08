@@ -43,6 +43,20 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Fixed
 
+- EMF pictures: the isotropic (7) and anisotropic (8) map modes were swapped; isotropic keeps the aspect ratio
+  with the smaller scale, anisotropic scales each axis on its own.
+- CFF glyphs: a first stem operator with an even number of operands no longer loses its first operand as a
+  width, so the hint mask that follows skips the right number of bytes.
+- PDF text extraction: the horizontal scale (`Tz`) is applied once to `PdfLetter.Width`, which is again the
+  distance to the next letter.
+- JPEG: a component whose sampling factor does not divide the largest one (2 for 3) takes, for each pixel, the
+  sample covering it instead of a repeated edge.
+- `PdfStamper`: a page whose `Contents` refers to an array of streams keeps its content after stamping.
+- `WordEditor.Append`: styles and lists used only by a copied header or footer move with it.
+- `WordEditor.ReplaceText`: a match no longer spans a tab, a break, a hyphen character, a field or a note
+  reference.
+- Word writing: one `WordHeaderFooter` used as both header and footer gives a header part and a footer part,
+  and a `WordHyperlink` in a field result is written (as its runs when the field is a tracked change).
 - Forged files no longer hang, exhaust memory or overflow the stack; each is read for what it really holds or
   refused with a documented exception. EMF point and polygon counts and bitmap offsets are bounded by their
   record. `CsvReaderOptions.MaxRecordLength` counts delimiters, so a record of delimiters alone is bounded too.

@@ -125,11 +125,13 @@ public static class PdfStamper
         var box = page.CropBox;
         var content = Encoding.ASCII.GetBytes($"Q\nq 1 0 0 1 {PdfFormat.Real(box.Left)} {PdfFormat.Real(box.Bottom)} cm\n");
         var after = table.Add(EmbeddedFont.Stream([.. content, .. canvas.FinishContent(), .. "\nQ\n"u8]));
-        var original = page.Dictionary["Contents"] switch
+        // Contents may refer to an array of streams: its streams are listed, not the reference to the array.
+        var contents = page.Dictionary["Contents"];
+        var original = store.Resolve(contents) switch
         {
             PdfArray array => array.Items,
-            { } single => [single],
-            _ => new List<PdfObject>(),
+            null => new List<PdfObject>(),
+            _ => [contents!],
         };
         var updated = new PdfDictionary();
         foreach (var (key, value) in page.Dictionary.Entries)

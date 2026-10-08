@@ -44,7 +44,7 @@ internal static class WordDocumentWriter
     private static XElement Body(WordDocument document, WordContentWriter writer, PartRelationships relationships, WordWriteContext context, List<(string, XElement, string)> parts)
     {
         var body = new XElement(W + "body");
-        var headerParts = new Dictionary<WordHeaderFooter, string>(ReferenceEqualityComparer.Instance);
+        var headerParts = new Dictionary<(WordHeaderFooter Content, string Kind), string>();
         for (var i = 0; i < document.Sections.Count; i++)
         {
             var section = document.Sections[i];
@@ -72,7 +72,7 @@ internal static class WordDocumentWriter
         return body;
     }
 
-    private static List<XElement> References(WordSection section, PartRelationships relationships, WordWriteContext context, Dictionary<WordHeaderFooter, string> headerParts, List<(string, XElement, string)> parts)
+    private static List<XElement> References(WordSection section, PartRelationships relationships, WordWriteContext context, Dictionary<(WordHeaderFooter Content, string Kind), string> headerParts, List<(string, XElement, string)> parts)
     {
         var references = new List<XElement>();
         foreach (var (kind, content) in section.Headers.OrderBy(h => h.Key))
@@ -98,9 +98,9 @@ internal static class WordDocumentWriter
         }),
         new XAttribute(R + "id", relationshipId));
 
-    private static string HeaderFooterPart(WordHeaderFooter content, string kind, PartRelationships relationships, WordWriteContext context, Dictionary<WordHeaderFooter, string> headerParts, List<(string Name, XElement Root, string ContentType)> parts)
+    private static string HeaderFooterPart(WordHeaderFooter content, string kind, PartRelationships relationships, WordWriteContext context, Dictionary<(WordHeaderFooter Content, string Kind), string> headerParts, List<(string Name, XElement Root, string ContentType)> parts)
     {
-        if (!headerParts.TryGetValue(content, out var name))
+        if (!headerParts.TryGetValue((content, kind), out var name))
         {
             name = "word/" + kind + (parts.Count(p => p.Name.StartsWith("word/" + kind, StringComparison.Ordinal)) + 1).ToString(CultureInfo.InvariantCulture) + ".xml";
             var partRelationships = new PartRelationships(name);
@@ -108,7 +108,7 @@ internal static class WordDocumentWriter
             var root = new XElement(W + (kind == "header" ? "hdr" : "ftr"), WordPartsWriter.Namespaces(), writer.Container(content.Blocks));
             parts.Add((name, root, kind == "header" ? HeaderContentType : FooterContentType));
             AddRelationshipsPart(parts, partRelationships);
-            headerParts[content] = name;
+            headerParts[(content, kind)] = name;
         }
 
         return relationships.Add(kind == "header" ? HeaderType : FooterType, name["word/".Length..]);

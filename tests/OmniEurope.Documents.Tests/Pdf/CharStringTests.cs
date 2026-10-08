@@ -59,6 +59,9 @@ public sealed class CharStringTests
     [InlineData("100 0 10 hstem 10 20 rmoveto endchar", "M10,20 Z")]
     [InlineData("100 10 hmoveto -10 20 rmoveto endchar", "M10,0 Z M0,20 Z")]
     [InlineData("100 20 vmoveto 10 0 rmoveto endchar", "M0,20 Z M10,20 Z")]
+    // Nine stem pairs without a width: the hint mask that follows takes two bytes.
+    [InlineData("0 10 20 10 40 10 60 10 80 10 100 10 120 10 140 10 160 10 hstem hintmask #FF #80 10 20 rmoveto endchar", "M10,20 Z")]
+    [InlineData("100 0 10 20 10 40 10 60 10 80 10 100 10 120 10 140 10 160 10 hstem hintmask #FF #80 10 20 rmoveto endchar", "M10,20 Z")]
     public void Type2_odd_first_operands_carry_the_advance_width(string program, string expected)
     {
         var data = CharStringAssembler.Type2(program);

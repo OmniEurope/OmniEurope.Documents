@@ -2,6 +2,7 @@
 using System.Text;
 using OmniEurope.Documents.Pdf;
 using OmniEurope.Documents.Pdf.Editing;
+using OmniEurope.Documents.Pdf.Objects;
 using OmniEurope.Documents.Pdf.Writing;
 
 namespace OmniEurope.Documents.Tests.Pdf;
@@ -112,6 +113,20 @@ public sealed class PdfEditingTests
         Assert.Contains("Premier", text);
         Assert.Contains("Second", text);
         Assert.Contains("Corps", text);
+    }
+
+    [Fact]
+    public void Stamping_lists_the_streams_of_an_indirect_contents_array()
+    {
+        // The page's Contents is 6 0 R, an array holding the content stream 4 0 R (ISO 32000-1 §7.7.3.3).
+        var original = RawPdf.Page("BT /F1 10 Tf 10 10 Td (Hi) Tj ET", "/Font << /F1 5 0 R >>", "/Contents 6 0 R", "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>", "[4 0 R]");
+
+        var page = PdfDocument.Open(PdfStamper.StampText(original, "Tampon")).GetPage(1);
+
+        var contents = Assert.IsType<PdfArray>(page.Dictionary["Contents"]);
+        Assert.All(contents.Items, item => Assert.IsType<PdfStream>(page.Store.Resolve(item)));
+        Assert.Contains("Hi", page.Text);
+        Assert.Contains("Tampon", page.Text);
     }
 
     [Fact]

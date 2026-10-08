@@ -123,4 +123,38 @@ public sealed class WordMergeTests
                 ["word/footnotes.xml"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml",
             });
     }
+
+    [Fact]
+    public void A_copied_header_brings_its_own_styles_and_lists()
+    {
+        // The header alone uses style "Exclusif" and list 1; the target has a list 1 of its own and no such style.
+        const string type = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/";
+        const string stylesType = "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml";
+        const string numberingType = "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml";
+        var styles = $"<w:styles xmlns:w=\"{W}\"><w:style w:type=\"paragraph\" w:styleId=\"Normal\"><w:name w:val=\"Normal\"/></w:style></w:styles>";
+        var sourceStyles = $"<w:styles xmlns:w=\"{W}\"><w:style w:type=\"paragraph\" w:styleId=\"Exclusif\"><w:name w:val=\"Exclusif\"/><w:rPr><w:b/></w:rPr></w:style></w:styles>";
+        var numbering = $"<w:numbering xmlns:w=\"{W}\"><w:abstractNum w:abstractNumId=\"0\"><w:lvl w:ilvl=\"0\"><w:numFmt w:val=\"decimal\"/><w:lvlText w:val=\"%1.\"/></w:lvl></w:abstractNum><w:num w:numId=\"1\"><w:abstractNumId w:val=\"0\"/></w:num></w:numbering>";
+        var target = Build(
+            "<w:p><w:r><w:t>cible</w:t></w:r></w:p><w:sectPr/>",
+            extraParts: new Dictionary<string, string> { ["word/styles.xml"] = styles, ["word/numbering.xml"] = numbering },
+            documentRelationships: $"<Relationship Id=\"rId1\" Type=\"{type}styles\" Target=\"styles.xml\"/><Relationship Id=\"rId2\" Type=\"{type}numbering\" Target=\"numbering.xml\"/>",
+            contentTypes: new Dictionary<string, string> { ["word/styles.xml"] = stylesType, ["word/numbering.xml"] = numberingType });
+        var header = $"<w:hdr xmlns:w=\"{W}\"><w:p><w:pPr><w:pStyle w:val=\"Exclusif\"/><w:numPr><w:ilvl w:val=\"0\"/><w:numId w:val=\"1\"/></w:numPr></w:pPr><w:r><w:t>En-tête</w:t></w:r></w:p></w:hdr>";
+        var source = Build(
+            "<w:p><w:r><w:t>ajout</w:t></w:r></w:p><w:sectPr><w:headerReference w:type=\"default\" r:id=\"rId3\"/></w:sectPr>",
+            extraParts: new Dictionary<string, string> { ["word/styles.xml"] = sourceStyles, ["word/numbering.xml"] = numbering, ["word/header1.xml"] = header },
+            documentRelationships: $"<Relationship Id=\"rId1\" Type=\"{type}styles\" Target=\"styles.xml\"/><Relationship Id=\"rId2\" Type=\"{type}numbering\" Target=\"numbering.xml\"/><Relationship Id=\"rId3\" Type=\"{type}header\" Target=\"header1.xml\"/>",
+            contentTypes: new Dictionary<string, string> { ["word/styles.xml"] = stylesType, ["word/numbering.xml"] = numberingType, ["word/header1.xml"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml" });
+
+        var merged = Merge(target, source, startOnNewPage: true);
+        var w = (XNamespace)W;
+
+        var copied = XDocument.Parse(Part(merged, Entries(merged).Keys.Single(k => k.StartsWith("word/header", StringComparison.Ordinal) && k.EndsWith(".xml", StringComparison.Ordinal))));
+        var mergedStyles = XDocument.Parse(Part(merged, "word/styles.xml"));
+        var mergedNumbering = XDocument.Parse(Part(merged, "word/numbering.xml"));
+        Assert.Contains(mergedStyles.Root!.Elements(w + "style"), s => (string?)s.Attribute(w + "styleId") == "Exclusif");
+        var numId = (string)copied.Descendants(w + "numId").Single().Attribute(w + "val")!;
+        Assert.NotEqual("1", numId);
+        Assert.Contains(mergedNumbering.Root!.Elements(w + "num"), n => (string?)n.Attribute(w + "numId") == numId);
+    }
 }

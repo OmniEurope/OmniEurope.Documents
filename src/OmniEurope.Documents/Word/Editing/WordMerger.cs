@@ -19,6 +19,9 @@ internal sealed class WordMerger(WordEditor target, WordEditor source)
     private readonly OpcPackage _source = source.Package;
     private readonly Dictionary<string, string> _copied = new(StringComparer.OrdinalIgnoreCase);
 
+    // The XML parts copied with the content (headers, footers): their styles and lists move with them.
+    private readonly List<XElement> _copiedXml = [];
+
     public void Append(bool startOnNewPage)
     {
         var body = source.Body;
@@ -30,8 +33,8 @@ internal sealed class WordMerger(WordEditor target, WordEditor source)
         Remap(elements, source.MainPart, target.MainPart);
         var notes = CopyNotes(elements, "footnote", FootnotesType, FootnotesContentType);
         notes.AddRange(CopyNotes(elements, "endnote", EndnotesType, EndnotesContentType));
-        var styles = CopyStyles(elements.Concat(notes).ToList());
-        RemapNumbering(elements.Concat(notes).Concat(styles).ToList());
+        var styles = CopyStyles([.. elements, .. notes, .. _copiedXml]);
+        RemapNumbering([.. elements, .. notes, .. styles, .. _copiedXml]);
         RenumberBookmarks(elements);
         SetStart(elements.SelectMany(e => e.DescendantsAndSelf(W + "sectPr")).First(), startOnNewPage);
 
@@ -105,6 +108,7 @@ internal sealed class WordMerger(WordEditor target, WordEditor source)
         var copy = new XDocument(xml);
         _target.SetXml(name, copy, contentType);
         Remap([copy.Root!], sourcePart, name);
+        _copiedXml.Add(copy.Root!);
         return name;
     }
 

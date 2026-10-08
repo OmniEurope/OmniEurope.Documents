@@ -36,6 +36,20 @@ public sealed class PdfTextExtractionTests
         Assert.Equal(8.22, Math.Round(letters[3].X - letters[2].X, 2));
     }
 
+    [Theory]
+    [InlineData(50, 3.335)]
+    [InlineData(100, 6.67)]
+    [InlineData(200, 13.34)]
+    public void The_horizontal_scale_applies_once_to_the_letter_width(int scale, double width)
+    {
+        // At 10 points A advances 6.67 at 100 %: Tz scales the advance (ISO 32000-1 §9.4.4), and each letter is
+        // as wide as the distance to the next one.
+        var letters = Letters($"BT /F1 10 Tf {scale} Tz 0 0 Td (AB) Tj ET", Helvetica);
+
+        Assert.Equal(width, Math.Round(letters[1].X - letters[0].X, 3));
+        Assert.Equal(width, Math.Round(letters[0].Width, 3));
+    }
+
     [Fact]
     public void Text_without_a_known_font_is_not_extracted()
     {

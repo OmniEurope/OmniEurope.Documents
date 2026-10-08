@@ -178,9 +178,10 @@ internal sealed class Type2CharString(byte[] data, List<(int Start, int End)> gl
         }
     }
 
+    // Stem operands come in pairs: only an odd count carries the advance width first.
     private void Stems()
     {
-        Width(_stack.Count % 2);
+        Width(_stack.Count - (_stack.Count % 2));
         _stems += _stack.Count / 2;
         _stack.Clear();
     }
