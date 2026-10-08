@@ -39,6 +39,21 @@ public sealed class PdfCMapTests
     }
 
     [Theory]
+    [InlineData("1 begincodespacerange <> <> endcodespacerange", 1)]
+    [InlineData("2 begincodespacerange <> <> <0000> <FFFF> endcodespacerange", 2)]
+    [InlineData("1 begincodespacerange <0000000000> <FFFFFFFFFF> endcodespacerange", 1)]
+    public void Code_spaces_outside_one_to_four_bytes_are_ignored(string ranges, int length)
+    {
+        // An empty range would match codes of no byte, and splitting the text would never advance.
+        var cmap = PdfCMap.Parse(Encoding.ASCII.GetBytes(ranges));
+
+        var codes = cmap.Codes([0x00, 0x41, 0x00, 0x42]).Take(10).ToList();
+
+        Assert.Equal(4 / length, codes.Count);
+        Assert.All(codes, c => Assert.Equal(length, c.Length));
+    }
+
+    [Theory]
     [InlineData("A", "A")]
     [InlineData("uni00410042", "AB")]
     [InlineData("uni004", null)]

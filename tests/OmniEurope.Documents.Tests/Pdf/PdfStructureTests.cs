@@ -88,6 +88,34 @@ public sealed class PdfStructureTests
         Assert.Equal("Hi", PdfDocument.Open(pdf).GetPage(1).Text);
     }
 
+    [Fact]
+    public void An_object_stream_count_beyond_its_header_reads_only_the_pairs_present()
+    {
+        var objects = PageObjects();
+        objects.Add("0");
+        objects.Add("0");
+        objects.Add(RawPdf.Stream("/Type /ObjStm /N 2147483647 /First 4", RawPdf.Ascii("9 0 (in a stream)")));
+        var rows = new Dictionary<int, (int, int, int)> { [9] = (2, 8, 0) };
+
+        var store = PdfDocument.Open(XrefStreamFile(objects, hybrid: false, rows)).Store;
+
+        Assert.Equal("in a stream", Encoding.ASCII.GetString(((PdfString)store.Resolve(new PdfReference(9, 0))!).Bytes));
+    }
+
+    [Theory]
+    [InlineData("/W [0 0 0] /Index [0 2147483647]")]
+    [InlineData("/W [1 4]")]
+    [InlineData("/W [1 9 1]")]
+    public void Cross_reference_streams_with_forged_widths_are_rebuilt(string widths)
+    {
+        var text = Encoding.Latin1.GetString(XrefStreamFile(PageObjects(), hybrid: false));
+
+        var document = PdfDocument.Open(Encoding.Latin1.GetBytes(text.Replace("/W [1 4 1]", widths, StringComparison.Ordinal)));
+
+        Assert.True(document.WasRepaired);
+        Assert.Equal("Hi", document.GetPage(1).Text);
+    }
+
     // Catalog, pages, page, contents, font.
     private static List<object> PageObjects() =>
     [

@@ -26,6 +26,16 @@ public sealed class GifDecoderTests
     }
 
     [Fact]
+    public void A_frame_larger_than_allowed_is_refused_before_its_pixels_are_allocated()
+    {
+        // A 1 x 1 screen whose frame claims 32767 x 65535 pixels with empty LZW data (2 GB of indices).
+        byte[] frame = [0x2C, 0, 0, 0, 0, 0xFF, 0x7F, 0xFF, 0xFF, 0, 2, 0, 0x3B];
+
+        var error = Assert.Throws<InvalidDataException>(() => GifDecoder.Decode([.. Screen, .. frame]));
+        Assert.Contains("32767x65535", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Interlaced_rows_are_stored_in_four_passes()
     {
         // Height 4: pass 1 holds row 0, pass 3 row 2, pass 4 rows 1 and 3.

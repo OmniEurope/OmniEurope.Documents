@@ -14,6 +14,7 @@ internal sealed class Type1Font
 {
     private const ushort EexecKey = 55665;
     private const ushort CharStringKey = 4330;
+    private const int MaxSubroutine = 0xFFFF;
     private static readonly Regex MatrixPattern = new(@"/FontMatrix\s*\[([^\]]*)\]", RegexOptions.CultureInvariant);
     private static readonly Regex EncodingPattern = new(@"dup\s+(\d+)\s*/([^\s/\[\]{}()<>%]+)\s+put", RegexOptions.CultureInvariant);
 
@@ -125,7 +126,13 @@ internal sealed class Type1Font
         {
             ReadBinaries(plain, text, subrStart, charStart < 0 ? text.Length : charStart, @"dup\s+(\d+)\s+(\d+)\s+(RD|-\|)\s", (key, data) =>
             {
-                var index = int.Parse(key, CultureInfo.InvariantCulture);
+                // Subroutine numbers past 65,535 are not real programs: such an entry would grow the table by
+                // billions of slots, so it is skipped.
+                if (!int.TryParse(key, NumberStyles.None, CultureInfo.InvariantCulture, out var index) || index > MaxSubroutine)
+                {
+                    return;
+                }
+
                 while (subrs.Count <= index)
                 {
                     subrs.Add([]);

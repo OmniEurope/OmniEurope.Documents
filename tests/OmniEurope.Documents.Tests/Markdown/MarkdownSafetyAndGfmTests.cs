@@ -124,4 +124,15 @@ public sealed class MarkdownSafetyAndGfmTests
 
         Assert.Contains("deep", html);
     }
+
+    [Fact]
+    public void Block_quotes_nest_no_deeper_than_the_limit()
+    {
+        // A hundred thousand markers: past the limit they are text, so neither parsing nor rendering recurses
+        // that deep.
+        var html = MarkdownRenderer.ToHtml(new string('>', 100_000) + " deep");
+
+        Assert.Equal(128, html.Split("<blockquote>").Length - 1);
+        Assert.Contains(new string('>', 10) + " deep", System.Net.WebUtility.HtmlDecode(html), StringComparison.Ordinal);
+    }
 }

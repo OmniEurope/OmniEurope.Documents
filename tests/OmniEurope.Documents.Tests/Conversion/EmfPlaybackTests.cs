@@ -182,6 +182,22 @@ public sealed class EmfPlaybackTests
         Assert.Contains("unreadable bitmap in a picture skipped", Convert(emf).Gaps);
     }
 
+    [Fact]
+    public void Forged_counts_and_offsets_draw_only_what_the_record_holds()
+    {
+        // Counts of points and polygons far beyond the record, and bitmap offsets whose sum overflows.
+        var emf = Filled().Ints(43, 100, 50, 300, 150)
+            .Ints(86, 0, 0, 400, 200, int.MaxValue)
+            .Ints(3, 0, 0, 400, 200, int.MaxValue, 1, 2)
+            .Ints(91, 0, 0, 400, 200, int.MaxValue, int.MaxValue)
+            .Ints(8, 0, 0, 400, 200, 1, 1, int.MaxValue, 5, 5)
+            .Ints(81, 0, 0, 400, 200, 10, 10, 0, 0, 2, 2, int.MaxValue - 8, 40, int.MaxValue - 8, 16, 0, 0x00CC0020, 50, 50);
+
+        var image = Draw(emf);
+
+        Assert.True(Ink(image) > 500);
+    }
+
     // A blue brush (COLORREF 0x00BBGGRR) and a null pen, so that shapes are compared by their fill alone.
     private static EmfFixture Filled() => new EmfFixture().Brush(1, 0xFF0000).Select(1).Pen(2, 1, 0xFF0000, style: 5).Select(2);
 

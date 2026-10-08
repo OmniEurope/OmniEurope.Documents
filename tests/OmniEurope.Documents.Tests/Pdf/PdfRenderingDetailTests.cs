@@ -159,6 +159,22 @@ public sealed class PdfRenderingDetailTests
     }
 
     [Fact]
+    public void A_sampled_function_larger_than_its_stream_is_not_read()
+    {
+        // /Size [2147483647] over twelve bytes would allocate two billion sample rows before reading them.
+        var rendering = PdfRenderer.Render(
+            PdfDocument.Open(RawPdf.Page(
+                "/Sh1 sh",
+                "/Shading << /Sh1 << /ShadingType 2 /ColorSpace /DeviceRGB /Coords [0 0 200 0] /Function 6 0 R >> >>",
+                string.Empty,
+                "0",
+                RawPdf.Stream("/FunctionType 0 /Domain [0 1] /Range [0 1 0 1 0 1] /Size [2147483647] /BitsPerSample 8", new byte[12]))).GetPage(1),
+            new PdfRenderOptions { Dpi = 72 });
+
+        Assert.Contains("shadings of this kind are not drawn", rendering.Gaps);
+    }
+
+    [Fact]
     public void Annotation_appearances_follow_their_state_and_skip_empty_boxes()
     {
         // /AS /On picks the blue appearance; the second annotation's form has an empty box.

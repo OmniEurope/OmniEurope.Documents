@@ -17,6 +17,10 @@ internal sealed class OpcPackage
     private static readonly XNamespace Rel = "http://schemas.openxmlformats.org/package/2006/relationships";
     private const string RelationshipsContentType = "application/vnd.openxmlformats-package.relationships+xml";
 
+    // Deepest element nesting accepted in a part. Readers walk the XML recursively (wrappers, tables in
+    // tables), so a part nesting thousands of elements is refused instead of overflowing the stack.
+    private const int MaxXmlDepth = 256;
+
     private readonly List<string> _order = [];
     private readonly Dictionary<string, byte[]> _raw = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, XDocument> _xml = new(StringComparer.OrdinalIgnoreCase);
@@ -85,9 +89,22 @@ internal sealed class OpcPackage
         }
 
         XDocument document;
+        var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null };
         try
         {
-            using var reader = XmlReader.Create(new MemoryStream(bytes), new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null });
+            // Building the tree costs more with each level, so the depth is checked by a plain read first.
+            using (var scan = XmlReader.Create(new MemoryStream(bytes), settings))
+            {
+                while (scan.Read())
+                {
+                    if (scan.NodeType == XmlNodeType.Element && scan.Depth >= MaxXmlDepth)
+                    {
+                        throw new DocumentFormatException($"Part '{name}' nests elements deeper than {MaxXmlDepth} levels.");
+                    }
+                }
+            }
+
+            using var reader = XmlReader.Create(new MemoryStream(bytes), settings);
             document = XDocument.Load(reader, LoadOptions.PreserveWhitespace);
         }
         catch (XmlException exception)

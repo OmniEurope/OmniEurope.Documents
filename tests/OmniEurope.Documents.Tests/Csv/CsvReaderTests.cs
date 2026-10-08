@@ -119,6 +119,21 @@ public sealed class CsvReaderTests
     }
 
     [Fact]
+    public void Delimiters_count_towards_the_record_limit()
+    {
+        var options = new CsvReaderOptions { MaxRecordLength = 100, Delimiter = ',' };
+
+        // Empty fields copy no character: only the delimiters make the record long.
+        Assert.Throws<CsvFormatException>(() => CsvReader.ReadAll("h\n" + new string(',', 500) + "\n", options));
+        Assert.Equal(101, CsvReader.ReadAll("h\n" + new string(',', 100) + "\n", options)[0].Length);
+        Assert.Throws<CsvFormatException>(() => CsvReader.ReadAll("h\n" + new string(',', 101) + "\n", options));
+
+        var short3 = new CsvReaderOptions { MaxRecordLength = 3, Delimiter = ',' };
+        Assert.Equal(["a", "b"], CsvReader.ReadAll("h\na,b\n", short3)[0]);
+        Assert.Throws<CsvFormatException>(() => CsvReader.ReadAll("h\na,bc\n", short3));
+    }
+
+    [Fact]
     public void Chunk_boundaries_inside_crlf_and_quotes_do_not_change_the_result()
     {
         // A reader returning one character at a time forces every state across a chunk boundary.

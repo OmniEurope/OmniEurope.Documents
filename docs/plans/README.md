@@ -15,6 +15,7 @@ un plan décrit un travail, pas l'état du produit.
 | Plan | Travail | ADR |
 |---|---|---|
 | [PLAN-004](PLAN-004-fonctionnalites-suivantes.md) | Fonctionnalités suivantes : édition Excel sans perte, formules, formulaires PDF, PDF/A, conversions, fidélité du rendu | Aucun |
+| [PLAN-005](PLAN-005-robustesse-et-fidelite.md) | Robustesse et fidélité : fichiers forgés refusés, rendus conformes, contrats tenus | Aucun |
 
 ## Plans archivés
 

@@ -116,7 +116,14 @@ internal sealed class PdfCMap
         switch (keyword)
         {
             case "begincodespacerange":
-                ReadPairs(lexer, "endcodespacerange", (low, high, _) => _codeSpaces.Add((low.Length, Code(low), Code(high))), 2);
+                // A code is one to four bytes (ISO 32000-1 §9.7.6.2): an empty range would never advance along the text.
+                ReadPairs(lexer, "endcodespacerange", (low, high, _) =>
+                {
+                    if (low.Length is >= 1 and <= 4)
+                    {
+                        _codeSpaces.Add((low.Length, Code(low), Code(high)));
+                    }
+                }, 2);
                 break;
             case "beginbfchar":
                 ReadPairs(lexer, "endbfchar", (source, target, _) => _unicode[Code(source)] = Utf16(target), 2);

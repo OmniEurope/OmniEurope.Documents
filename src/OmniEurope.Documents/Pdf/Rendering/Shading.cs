@@ -82,8 +82,15 @@ internal abstract class ShadingFunction
 
             var data = store.DecodeBytes(stream);
             var outputs = range.Length / 2;
-            var count = (int)size[0];
             var bytes = bits / 8;
+
+            // The samples must be in the stream: a forged /Size allocates no more than the data holds.
+            if (size[0] < 1 || size[0] * outputs * bytes > data.Length)
+            {
+                return null;
+            }
+
+            var count = (int)size[0];
             var samples = new double[count][];
             for (var i = 0; i < count; i++)
             {

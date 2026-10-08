@@ -115,6 +115,35 @@ public sealed class ConvertersTests
     }
 
     [Fact]
+    public void A_sparse_giant_sheet_is_refused_before_any_layout()
+    {
+        var workbook = new XlsxWorkbook();
+        var sheet = workbook.AddWorksheet("Creuse");
+        sheet.Cell("A1").Value = "début";
+        sheet.Cell("XFD1048576").Value = "fin";
+        var xlsx = workbook.ToArray();
+
+        var error = Assert.Throws<DocumentFormatException>(() => ExcelToPdf.Convert(xlsx));
+        Assert.Contains("17,179,869,184 cells", error.Message, StringComparison.Ordinal);
+        Assert.Contains(nameof(ExcelPdfOptions.MaxCells), error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void The_cell_limit_counts_every_sheet_with_its_empty_cells()
+    {
+        var workbook = new XlsxWorkbook();
+        foreach (var name in new[] { "Un", "Deux" })
+        {
+            var sheet = workbook.AddWorksheet(name);
+            sheet.Cell("B2").Value = 1;
+            sheet.Cell("K11").Value = 2;
+        }
+
+        Assert.Throws<DocumentFormatException>(() => ExcelToPdf.ToWord(workbook, new ExcelPdfOptions { MaxCells = 199 }));
+        Assert.Equal(2, ExcelToPdf.ToWord(workbook, new ExcelPdfOptions { MaxCells = 200 }).Blocks.OfType<WordTable>().Count());
+    }
+
+    [Fact]
     public void Images_become_pages()
     {
         var jpeg = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Images", "baseline.jpg"));

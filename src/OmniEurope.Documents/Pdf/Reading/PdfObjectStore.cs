@@ -196,7 +196,7 @@ internal sealed class PdfObjectStore
             }
 
             var data = DecodeBytes(stream);
-            var count = (int)Number(stream, "N");
+            var count = PairCount(stream, data);
             var first = (int)Number(stream, "First");
             var lexer = new PdfLexer(data);
             var numbers = new int[count];
@@ -277,8 +277,9 @@ internal sealed class PdfObjectStore
     // The header of an object stream: N pairs of object number and offset; each object is entry i of the stream.
     private void IndexObjectStream(int number, PdfStream stream)
     {
-        var lexer = new PdfLexer(DecodeBytes(stream));
-        var count = (int)Number(stream, "N");
+        var data = DecodeBytes(stream);
+        var lexer = new PdfLexer(data);
+        var count = PairCount(stream, data);
         for (var i = 0; i < count; i++)
         {
             if (lexer.Next().Value is PdfNumber inner && lexer.Next().Value is PdfNumber)
@@ -287,6 +288,10 @@ internal sealed class PdfObjectStore
             }
         }
     }
+
+    // /N of an object stream, bounded by the pairs its header can hold: each pair is two numbers and their
+    // separators, at least three bytes, so a forged count allocates and loops no further than the data.
+    private int PairCount(PdfStream stream, byte[] data) => (int)Math.Clamp(Number(stream, "N"), 0, data.Length / 3);
 
     private PdfDictionary? FindCatalog()
     {

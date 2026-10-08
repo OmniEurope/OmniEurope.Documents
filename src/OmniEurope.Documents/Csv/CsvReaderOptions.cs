@@ -50,7 +50,7 @@ public sealed class CsvReaderOptions
     /// <summary>True to trim white space around each unquoted field. Default false.</summary>
     public bool TrimFields { get; init; }
 
-    /// <summary>Largest record accepted, in characters; a longer one throws <see cref="CsvFormatException"/>
+    /// <summary>Largest record accepted, in characters, delimiters included; a longer one throws <see cref="CsvFormatException"/>
     /// instead of exhausting memory. Default 64 Mi characters.</summary>
     public int MaxRecordLength { get; init; } = 64 << 20;
 }

@@ -117,14 +117,27 @@ internal static class PdfFilters
         var colors = parms!["Colors"] is PdfNumber c ? Math.Max(1, c.IntValue) : 1;
         var bits = parms["BitsPerComponent"] is PdfNumber b ? b.IntValue : 8;
         var columns = parms["Columns"] is PdfNumber w ? Math.Max(1, w.IntValue) : 1;
+        // Computed in 64 bits, so that forged dimensions cannot wrap to an empty row that never advances; a row
+        // longer than the data holds no complete row and leaves nothing to predict.
+        var rowBytes = (((long)colors * bits * columns) + 7) / 8;
+        if (bits is not (1 or 2 or 4 or 8 or 16) || colors > 32 || rowBytes >= Array.MaxLength)
+        {
+            throw new InvalidDataException($"Unsupported predictor parameters: {colors} colours of {bits} bits, {columns} columns.");
+        }
+
         var bytesPerPixel = Math.Max(1, (colors * bits) + 7 >> 3);
-        var rowLength = ((colors * bits * columns) + 7) / 8;
+        var rowLength = (int)rowBytes;
         return predictor == 2 ? TiffPredictor(data, rowLength, bytesPerPixel, bits) : PngPredictor(data, rowLength, bytesPerPixel);
     }
 
     private static byte[] PngPredictor(byte[] data, int rowLength, int bpp)
     {
         var rows = data.Length / (rowLength + 1);
+        if (rows == 0)
+        {
+            return [];
+        }
+
         var output = new byte[rows * rowLength];
         var previous = new byte[rowLength];
         for (var r = 0; r < rows; r++)

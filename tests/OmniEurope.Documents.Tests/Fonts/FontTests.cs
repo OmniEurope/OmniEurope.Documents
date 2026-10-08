@@ -200,6 +200,53 @@ public sealed class FontTests
         Assert.False(cmap.IsSymbol);
     }
 
+    [Fact]
+    public void Overlapping_segments_stop_once_the_code_space_is_covered()
+    {
+        // Format 4 with 32,767 identical segments 0-65534 (delta 1): the first one maps every code, the others
+        // would walk the same codes again, two billion steps in all.
+        const int segments = 32767;
+        var table = new byte[12 + 16 + (segments * 8)];
+        WriteCmapHeader(table, platform: 3, encoding: 1);
+        var span = table.AsSpan(12);
+        BinaryPrimitives.WriteUInt16BigEndian(span, 4);
+        BinaryPrimitives.WriteUInt16BigEndian(span[6..], segments * 2);
+        for (var s = 0; s < segments; s++)
+        {
+            BinaryPrimitives.WriteUInt16BigEndian(span[(14 + (s * 2))..], 0xFFFE);
+            BinaryPrimitives.WriteUInt16BigEndian(span[(16 + (segments * 2) + (s * 2))..], 0);
+            BinaryPrimitives.WriteInt16BigEndian(span[(16 + (segments * 4) + (s * 2))..], 1);
+        }
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var cmap = new TrueTypeCmap(new FontReader(table), new FontTable(0, table.Length));
+
+        Assert.Equal((0x42, 0xFFFE), (cmap.Lookup('A'), cmap.Lookup(0xFFFD)));
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(1), watch.Elapsed.ToString());
+    }
+
+    [Fact]
+    public void Overlapping_groups_stop_once_every_code_point_is_covered()
+    {
+        // Format 12 with 1,000 groups 0-0xFFFFF from glyph 1: a billion steps without the bound.
+        const int groups = 1000;
+        var table = new byte[12 + 16 + (groups * 12)];
+        WriteCmapHeader(table, platform: 3, encoding: 10);
+        BinaryPrimitives.WriteUInt16BigEndian(table.AsSpan(12), 12);
+        BinaryPrimitives.WriteUInt32BigEndian(table.AsSpan(24), groups);
+        for (var g = 0; g < groups; g++)
+        {
+            BinaryPrimitives.WriteUInt32BigEndian(table.AsSpan(28 + (g * 12) + 4), 0xFFFFE);
+            BinaryPrimitives.WriteUInt32BigEndian(table.AsSpan(28 + (g * 12) + 8), 1);
+        }
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var cmap = new TrueTypeCmap(new FontReader(table), new FontTable(0, table.Length));
+
+        Assert.Equal((0x42, 0x1F601), (cmap.Lookup('A'), cmap.Lookup(0x1F600)));
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(1), watch.Elapsed.ToString());
+    }
+
     private static void WriteCmapHeader(byte[] table, int platform, int encoding)
     {
         BinaryPrimitives.WriteUInt16BigEndian(table.AsSpan(2), 1);

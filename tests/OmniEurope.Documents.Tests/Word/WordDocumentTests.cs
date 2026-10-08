@@ -196,6 +196,19 @@ public sealed class WordDocumentTests
     }
 
     [Fact]
+    public void Refuses_parts_nesting_deeper_than_the_readers_walk()
+    {
+        // 100,000 nested content controls: a few kilobytes zipped, a stack overflow for a recursive reader.
+        const int depth = 100_000;
+        var deep = DocxFactory.Build(string.Concat(Enumerable.Repeat("<w:sdt><w:sdtContent>", depth)) + "<w:p/>" + string.Concat(Enumerable.Repeat("</w:sdtContent></w:sdt>", depth)));
+        var nested = DocxFactory.Build(string.Concat(Enumerable.Repeat("<w:sdt><w:sdtContent>", 100)) + "<w:p><w:r><w:t>ici</w:t></w:r></w:p>" + string.Concat(Enumerable.Repeat("</w:sdtContent></w:sdt>", 100)));
+
+        var error = Assert.Throws<DocumentFormatException>(() => WordDocument.Load(deep));
+        Assert.Contains("deeper than 256 levels", error.Message, StringComparison.Ordinal);
+        Assert.Equal("ici", WordDocument.Load(nested).Text.Trim());
+    }
+
+    [Fact]
     public void Unsupported_content_is_reported_as_gaps()
     {
         var body = """<w:p><w:r><w:drawing><wp:inline xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><wp:extent cx="100" cy="100"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart"/></a:graphic></wp:inline></w:drawing></w:r></w:p><w:altChunk r:id="rId9"/>""";

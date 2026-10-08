@@ -256,6 +256,7 @@ internal sealed class CsvRecordParser(char delimiter, bool quoting, char quote, 
     private void EndField()
     {
         _fields.Add((_fieldStart, _length, _fieldQuoted));
+        Bound((long)_length + _fields.Count - 1);
         _fieldStart = _length;
         _fieldQuoted = false;
     }
@@ -273,14 +274,20 @@ internal sealed class CsvRecordParser(char delimiter, bool quoting, char quote, 
         _length += chars.Length;
     }
 
-    private void EnsureCapacity(int extra)
+    // The characters of the record: the field text and one delimiter between two fields, so that a record
+    // made of delimiters alone is bounded too.
+    private void Bound(long characters)
     {
-        var needed = _length + extra;
-        if (needed > maxRecordLength)
+        if (characters > maxRecordLength)
         {
             throw new CsvFormatException($"Record longer than {maxRecordLength} characters", RecordLine);
         }
+    }
 
+    private void EnsureCapacity(int extra)
+    {
+        Bound((long)_length + extra + _fields.Count);
+        var needed = _length + extra;
         if (needed > _record.Length)
         {
             var size = Math.Max(needed, (int)Math.Min((long)_record.Length * 2, int.MaxValue));

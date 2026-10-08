@@ -137,6 +137,24 @@ public sealed class CharStringTests
         Assert.Equal([M(100, 0), L(600, 0), L(600, 600), Z], new Type1CharString(font).Run(font.CharStrings["A"]));
     }
 
+    [Fact]
+    public void Subroutine_numbers_past_the_supported_range_are_skipped()
+    {
+        // "dup 2147483647 1 RD" would grow the table to two billion entries before anything is drawn.
+        var ret = CharStringAssembler.Type1("return");
+        var (program, length1, length2) = FontPrograms.Type1(
+            [ret, ret, ret, ret],
+            [(".notdef", CharStringAssembler.Type1("0 500 hsbw endchar"))],
+            lenIV: -1,
+            numbers: [0, 2147483647, 99999999999, 65535]);
+
+        var font = Type1Font.Parse(program, length1, length2);
+
+        Assert.Equal(65536, font.Subrs.Count);
+        Assert.Equal(ret, font.Subrs[0]);
+        Assert.Equal(ret, font.Subrs[65535]);
+    }
+
     // A font holding the glyph under test, the square "A", an "acute" stroke, and subroutines 0 to 3 (1 draws a line).
     private static Type1Font Font(byte[] glyph)
     {

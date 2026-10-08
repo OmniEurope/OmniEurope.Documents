@@ -44,6 +44,37 @@ public sealed class PdfFilterTests
     }
 
     [Fact]
+    public void Rows_longer_than_the_data_leave_nothing_to_predict()
+    {
+        // 1 x 8 x 536870912 bits wraps to an empty row in 32 bits, which would never advance along the data.
+        byte[] data = [1, 2, 3, 4, 5];
+
+        Assert.Equal(data, PdfFilters.Predict(data, Predictor(2, 8, 1, 536870912)));
+        Assert.Empty(PdfFilters.Predict([], Predictor(2, 8, 1, 536870912)));
+        Assert.Empty(PdfFilters.Predict(data, Predictor(12, 8, 1, 536870912)));
+    }
+
+    [Theory]
+    [InlineData(2, 16, 32, int.MaxValue)]
+    [InlineData(2, 0, 1, 4)]
+    [InlineData(12, 3, 1, 4)]
+    [InlineData(2, 8, 33, 4)]
+    public void Forged_predictor_parameters_are_refused(int predictor, int bits, int colors, int columns)
+    {
+        Assert.Throws<InvalidDataException>(() => PdfFilters.Predict([1, 2, 3, 4, 5], Predictor(predictor, bits, colors, columns)));
+    }
+
+    private static PdfDictionary Predictor(int predictor, int bits, int colors, int columns)
+    {
+        var parameters = new PdfDictionary();
+        parameters.SetNumber("Predictor", predictor);
+        parameters.SetNumber("BitsPerComponent", bits);
+        parameters.SetNumber("Colors", colors);
+        parameters.SetNumber("Columns", columns);
+        return parameters;
+    }
+
+    [Fact]
     public void Lzw_decodes_the_strips_the_windows_tiff_encoder_wrote()
     {
         // TIFF LZW is PDF LZW with EarlyChange 1; the uncompressed TIFF of the same image gives the expected bytes.

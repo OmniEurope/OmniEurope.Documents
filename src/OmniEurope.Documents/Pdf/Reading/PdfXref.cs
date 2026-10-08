@@ -139,6 +139,12 @@ internal static class PdfXref
             ? found
             : throw new InvalidDataException("No cross-reference stream at the expected offset.");
         var widths = (stream["W"] as PdfArray)?.Items.Select(i => ((PdfNumber)i).IntValue).ToArray() ?? throw new InvalidDataException("XRef stream without W.");
+        // Three field widths of at most eight bytes, at least one non-zero: an empty row would never advance.
+        if (widths.Length != 3 || widths.Any(w => w is < 0 or > 8) || widths.Sum() == 0)
+        {
+            throw new InvalidDataException("Bad cross-reference stream widths.");
+        }
+
         var size = stream["Size"] is PdfNumber s ? s.IntValue : 0;
         var index = (stream["Index"] as PdfArray)?.Items.Select(i => ((PdfNumber)i).IntValue).ToArray() ?? [0, size];
         var (decoded, _, _) = PdfFilters.Decode(stream.Data, PdfStreams.FilterNames(stream), PdfStreams.FilterParameters(stream));

@@ -17,6 +17,12 @@ public sealed record ExcelPdfOptions
     /// <summary>Light grid lines between cells, as on screen.</summary>
     public bool Gridlines { get; init; } = true;
 
+    /// <summary>Most cells the printed ranges of all sheets may hold together, empty cells included (each sheet
+    /// prints the rows times the columns of its used range). A larger workbook, such as a sheet with values in
+    /// <c>A1</c> and <c>XFD1048576</c> only, throws <see cref="DocumentFormatException"/> instead of exhausting
+    /// memory (a printed cell holds about 4 KB while the PDF is laid out). Default 250,000.</summary>
+    public long MaxCells { get; init; } = 250_000;
+
     /// <summary>Options of the PDF rendering.</summary>
     public WordPdfOptions? Pdf { get; init; }
 }
@@ -43,12 +49,19 @@ public static class ExcelToPdf
     {
         ArgumentNullException.ThrowIfNull(workbook);
         options ??= new ExcelPdfOptions();
+        var ranges = workbook.Worksheets.Select(s => s.UsedRange).ToList();
+        var cells = ranges.Sum(r => r is { } used ? (long)(used.LastRow - used.FirstRow + 1) * (used.LastColumn - used.FirstColumn + 1) : 0);
+        if (cells > options.MaxCells)
+        {
+            throw new DocumentFormatException(string.Create(CultureInfo.InvariantCulture, $"The printed ranges hold {cells:N0} cells, more than the {options.MaxCells:N0} allowed by {nameof(ExcelPdfOptions.MaxCells)}."));
+        }
+
         var document = new WordDocument { Information = new WordInformation { Title = workbook.Title, Author = workbook.Author } };
         document.Styles.DefaultParagraphProperties = new WordParagraphProperties { SpacingAfter = 0, LineSpacing = 1, LineSpacingRule = WordLineSpacingRule.Multiple };
         for (var i = 0; i < workbook.Worksheets.Count; i++)
         {
             var sheet = workbook.Worksheets[i];
-            var table = sheet.UsedRange is { } range ? new ExcelSheetTable(sheet, range, options).Build() : null;
+            var table = ranges[i] is { } range ? new ExcelSheetTable(sheet, range, options).Build() : null;
             var width = table?.Columns.Sum() ?? 0;
             var page = width > WordPageSetup.A4.ContentWidth ? WordPageSetup.A4.ToLandscape() : WordPageSetup.A4;
             if (i == 0)

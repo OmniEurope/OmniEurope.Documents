@@ -91,6 +91,12 @@ public static class GifDecoder
 
         width = width > 0 ? width : frameWidth;
         height = height > 0 ? height : frameHeight;
+        // The frame is checked before its pixels are allocated: a frame of a few bytes may claim 65535 x 65535.
+        if ((long)frameWidth * frameHeight > RasterImage.MaxPixels)
+        {
+            throw new InvalidDataException($"A GIF frame of {frameWidth}x{frameHeight} pixels is larger than allowed.");
+        }
+
         var minimumCodeSize = data[position];
         var compressed = ReadSubBlocks(data, position + 1);
         var indices = GifLzw.Decode(compressed, minimumCodeSize, frameWidth * frameHeight);

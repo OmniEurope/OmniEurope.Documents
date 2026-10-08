@@ -22,6 +22,9 @@ Notable changes to this project are documented here, following the Keep a Change
 - `WordParagraph.SourceAddress`: the `WordEditor` address of a paragraph read from a package.
 - `WordPageSetup.FootnoteNumbering` (`WordNoteNumbering`): a section's own footnote number style, first
   number and restart rule (`w:sectPr/w:footnotePr`), read and written.
+- `ExcelPdfOptions.MaxCells`: the most cells Excel to PDF prints, empty cells of the used ranges included
+  (250,000 by default); a larger workbook, such as a sheet holding only `A1` and `XFD1048576`, throws
+  `DocumentFormatException` instead of exhausting memory.
 
 ### Changed
 
@@ -40,6 +43,16 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Fixed
 
+- Forged files no longer hang, exhaust memory or overflow the stack; each is read for what it really holds or
+  refused with a documented exception. EMF point and polygon counts and bitmap offsets are bounded by their
+  record. `CsvReaderOptions.MaxRecordLength` counts delimiters, so a record of delimiters alone is bounded too.
+  PDF: predictor rows are computed in 64 bits (1, 2, 4, 8 or 16 bits, at most 32 colours), an object stream's
+  `/N` is bounded by its header, a cross-reference stream with empty or oversized `/W` widths is rebuilt from the
+  objects, a sampled function larger than its stream is not read, Type 1 subroutine numbers past 65,535 are
+  skipped, and CMap code spaces outside one to four bytes are ignored. TrueType `cmap` segments and groups stop
+  once the code space is covered. Markdown containers nest at most 128 deep (deeper markers are text). A Word
+  part nesting elements deeper than 256 levels throws `DocumentFormatException`. A GIF frame larger than
+  `RasterImage.MaxPixels` is refused before its pixels are allocated.
 - PDF word extraction: a space alone whose advance runs under the next letters (a space ending a table cell, the
   next cell starting before its advance is over) ends its word again (`Sites Ports`, not `SitesPorts`); only a
   blank lying over visible letters and touching another blank (a row of spaces printed under the text) is left out.

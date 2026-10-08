@@ -10,6 +10,10 @@ namespace OmniEurope.Documents.Markdown;
 /// </summary>
 internal sealed class BlockParser
 {
+    // Deepest nesting of containers (block quotes, lists, list items): past it, markers are read as text, so
+    // that a line of thousands of ">" cannot overflow the stack of the recursive inline parse and rendering.
+    internal const int MaxDepth = 128;
+
     internal enum Continuation
     {
         Matched,
@@ -271,7 +275,7 @@ internal sealed class BlockParser
         while (!matchedLeaf)
         {
             FindNextNonspace();
-            if (!Indented && !BlockStarts.MaybeSpecial(Peek(NextNonspace)))
+            if ((!Indented && !BlockStarts.MaybeSpecial(Peek(NextNonspace))) || Depth(container) >= MaxDepth)
             {
                 AdvanceNextNonspace();
                 break;
@@ -289,6 +293,17 @@ internal sealed class BlockParser
         }
 
         return container;
+    }
+
+    private static int Depth(MarkdownBlock block)
+    {
+        var depth = 0;
+        for (var above = block.Parent; above is not null; above = above.Parent)
+        {
+            depth++;
+        }
+
+        return depth;
     }
 
     // A blank line in a block quote, a fenced code block or a list item's first line does not make the list loose.

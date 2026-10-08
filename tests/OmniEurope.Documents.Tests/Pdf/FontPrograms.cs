@@ -119,7 +119,8 @@ internal static class FontPrograms
     /// <param name="glyphs">The charstrings, by glyph name.</param>
     /// <param name="lenIV">4, or -1 for charstrings stored without encryption.</param>
     /// <param name="packaging">"binary" (lengths given), "hex" (hexadecimal eexec part, no lengths) or "pfb" (segment headers).</param>
-    public static (byte[] Program, int Length1, int Length2) Type1(byte[][] subrs, (string Name, byte[] Program)[] glyphs, int lenIV = 4, string packaging = "binary")
+    /// <param name="numbers">The number written before each subroutine, its index when null.</param>
+    public static (byte[] Program, int Length1, int Length2) Type1(byte[][] subrs, (string Name, byte[] Program)[] glyphs, int lenIV = 4, string packaging = "binary", IReadOnlyList<long>? numbers = null)
     {
         var clear = Encoding.ASCII.GetBytes("%!PS-AdobeFont-1.0: Test 001\n/FontMatrix [0.001 0 0 0.001 0 0] readonly def\n/Encoding StandardEncoding def\ncurrentfile eexec\n");
         byte[] Protect(byte[] program) => lenIV < 0 ? program : Encrypt(program, 4330);
@@ -128,7 +129,7 @@ internal static class FontPrograms
         for (var i = 0; i < subrs.Length; i++)
         {
             var subr = Protect(subrs[i]);
-            text.AddRange(Encoding.ASCII.GetBytes("dup " + i + " " + subr.Length + " RD "));
+            text.AddRange(Encoding.ASCII.GetBytes("dup " + (numbers?[i] ?? i) + " " + subr.Length + " RD "));
             text.AddRange(subr);
             text.AddRange(Encoding.ASCII.GetBytes(" NP\n"));
         }

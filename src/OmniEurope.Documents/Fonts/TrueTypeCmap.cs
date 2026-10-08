@@ -113,13 +113,16 @@ internal sealed class TrueTypeCmap
         var starts = ends + (segments * 2) + 2;
         var deltas = starts + (segments * 2);
         var ranges = deltas + (segments * 2);
-        for (var s = 0; s < segments; s++)
+        // Valid segments are disjoint, so together they hold at most the 65,536 16-bit codes; overlapping
+        // segments of a forged table stop there instead of walking the code space once per segment.
+        var budget = 0x10000;
+        for (var s = 0; s < segments && budget > 0; s++)
         {
             var end = font.U16(ends + (s * 2));
             var start = font.U16(starts + (s * 2));
             var delta = font.S16(deltas + (s * 2));
             var rangeOffset = font.U16(ranges + (s * 2));
-            for (var code = start; code <= end && code != 0xFFFF; code++)
+            for (var code = start; code <= end && code != 0xFFFF && budget-- > 0; code++)
             {
                 int glyph;
                 if (rangeOffset == 0)
@@ -141,13 +144,15 @@ internal sealed class TrueTypeCmap
     private void ReadFormat12(FontReader font, int offset)
     {
         var groups = font.U32(offset + 12);
-        for (var g = 0; g < groups && g < 1 << 20; g++)
+        // Disjoint groups hold at most every Unicode code point; overlapping ones stop there.
+        long budget = 0x110000;
+        for (var g = 0; g < groups && g < 1 << 20 && budget > 0; g++)
         {
             var group = offset + 16 + (g * 12);
             var start = font.U32(group);
             var end = Math.Min(font.U32(group + 4), 0x10FFFF);
             var glyph = font.U32(group + 8);
-            for (var code = start; code <= end && end - start < 1 << 20; code++)
+            for (var code = start; code <= end && end - start < 1 << 20 && budget-- > 0; code++)
             {
                 Add((int)code, (int)(glyph + (code - start)));
             }

@@ -230,9 +230,10 @@ internal sealed class EmfPlayer(PaintContext paint, EmfTransform output, (double
 
     private static List<(double X, double Y)> Points(ReadOnlySpan<byte> r, int countAt, bool small)
     {
-        var count = Math.Max(0, EmfRenderer.Int(r, countAt));
-        var points = new List<(double, double)>(count);
+        // The count is bounded by the points the record really holds, so a forged count allocates nothing.
         var at = countAt + 4;
+        var count = Math.Clamp(EmfRenderer.Int(r, countAt), 0, Math.Max(0, r.Length - at) / (small ? 4 : 8));
+        var points = new List<(double, double)>(count);
         for (var i = 0; i < count; i++)
         {
             if (small)
@@ -250,12 +251,13 @@ internal sealed class EmfPlayer(PaintContext paint, EmfTransform output, (double
 
     private static List<List<(double X, double Y)>> PolyPoints(ReadOnlySpan<byte> r, bool small)
     {
-        var polygons = Math.Max(0, EmfRenderer.Int(r, 24));
+        // Counts are bounded by the bytes of the record: one polygon takes at least its 4-byte count.
+        var polygons = Math.Clamp(EmfRenderer.Int(r, 24), 0, Math.Max(0, r.Length - 32) / 4);
         var at = 32 + (polygons * 4);
         var result = new List<List<(double, double)>>();
         for (var p = 0; p < polygons; p++)
         {
-            var count = EmfRenderer.Int(r, 32 + (p * 4));
+            var count = Math.Clamp(EmfRenderer.Int(r, 32 + (p * 4)), 0, Math.Max(0, r.Length - at) / (small ? 4 : 8));
             var polygon = new List<(double, double)>(count);
             for (var i = 0; i < count && at + (small ? 4 : 8) <= r.Length; i++, at += small ? 4 : 8)
             {
@@ -411,7 +413,7 @@ internal sealed class EmfPlayer(PaintContext paint, EmfTransform output, (double
     private void Bitmap(ReadOnlySpan<byte> r, int x, int y, int width, int height, int bmiAt)
     {
         var (offBmi, cbBmi, offBits, cbBits) = (EmfRenderer.Int(r, bmiAt), EmfRenderer.Int(r, bmiAt + 4), EmfRenderer.Int(r, bmiAt + 8), EmfRenderer.Int(r, bmiAt + 12));
-        if (cbBmi <= 0 || cbBits <= 0 || offBmi + cbBmi > r.Length || offBits + cbBits > r.Length)
+        if (cbBmi <= 0 || cbBits <= 0 || offBmi < 0 || offBits < 0 || (long)offBmi + cbBmi > r.Length || (long)offBits + cbBits > r.Length)
         {
             return;
         }
