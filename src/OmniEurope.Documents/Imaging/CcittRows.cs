@@ -27,9 +27,10 @@ internal static class CcittRows
         var changes = new List<int>();
         var a0 = -1;
         var white = true;
+        var resume = 0;
         while (a0 < columns)
         {
-            var (b1, b2) = FindB(reference, a0, white, columns);
+            var (b1, b2) = FindB(reference, a0, white, columns, ref resume);
             switch (ReadMode(reader))
             {
                 case Mode.Pass:
@@ -110,12 +111,19 @@ internal static class CcittRows
 
     // b1: first changing element of the reference row right of a0 whose colour is the opposite of the
     // current colour; b2: the next changing element after b1. A reference row always ends with the row width
-    // twice (see Finish), so the search stops at its last element at the latest.
-    private static (int B1, int B2) FindB(int[] reference, int a0, bool white, int columns)
+    // twice (see Finish), so the search stops at its last element at the latest. a0 never moves back, so the search
+    // resumes at <paramref name="start"/>, the first element right of the previous a0, which keeps a row linear.
+    private static (int B1, int B2) FindB(int[] reference, int a0, bool white, int columns, ref int start)
     {
         var wanted = white ? 0 : 1;
-        var i = 0;
-        while (i < reference.Length - 1 && (reference[i] <= a0 || (i & 1) != wanted))
+        var i = start;
+        while (i < reference.Length - 1 && reference[i] <= a0)
+        {
+            i++;
+        }
+
+        start = i;
+        if (i < reference.Length - 1 && (i & 1) != wanted)
         {
             i++;
         }

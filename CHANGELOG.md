@@ -74,6 +74,8 @@ Notable changes to this project are documented here, following the Keep a Change
 - Word to PDF: table rows paint every cell fill first, then the contents, then the borders, so content
   running over a neighbouring cell stays visible and borders are never covered by a fill.
 - CI: a test run now fails when it executes no test, or when a test errors, times out or is aborted.
+- CCITT Group 4 (and two-dimensional Group 3) decoding finds the reference changes in one pass per row: very wide
+  rows no longer take a time growing with the square of their changes.
 
 ### Fixed
 
