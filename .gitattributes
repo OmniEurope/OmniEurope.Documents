@@ -11,3 +11,5 @@ docs/third-party-licenses/** -text
 *.pdf binary
 *.docx binary
 *.xlsx binary
+*.jbig2 binary
+*.pbm binary
