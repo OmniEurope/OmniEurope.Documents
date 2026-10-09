@@ -161,6 +161,9 @@ internal sealed class CcittBitReader(byte[] data)
 
     public bool AtEnd => _bit >= (long)data.Length * 8;
 
+    /// <summary>The number of bits read or skipped so far.</summary>
+    public long BitPosition => _bit;
+
     public int ReadBit()
     {
         if (AtEnd)
