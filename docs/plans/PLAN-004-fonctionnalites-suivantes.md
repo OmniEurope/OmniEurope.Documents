@@ -106,6 +106,8 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
 ## Lot 11 : fidélité du rendu PDF
 
 - [ ] Motifs en mosaïque, masques doux, modes de fusion, images JPEG 2000 et JBIG2.
+  - JBIG2 fait (2026-10-09) : toutes les régions et tous les dictionnaires, segments globaux, filtre `JBIG2Decode`
+    (modèles génériques étendus non pris en charge).
 - Contrôle : pixels attendus calculés d'après la spécification sur des pages écrites à la main.
 
 ## Lot 12 : fractions Excel

@@ -42,7 +42,7 @@ public sealed class PdfPageImage
     public bool IsInline => _inlineData is not null;
 
     /// <summary>The decoded pixels (with the soft mask as alpha), or null for an encoding that cannot be
-    /// decoded here (JBIG2, JPEG 2000) or broken data.</summary>
+    /// decoded here (JPEG 2000) or broken data.</summary>
     public RasterImage? Decode() => PdfImageDecoder.TryDecode(_store, _dictionary, _inlineData, _resources);
 
     /// <summary>The image as PNG bytes, or null when it cannot be decoded.</summary>

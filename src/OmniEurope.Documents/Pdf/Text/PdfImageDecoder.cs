@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: EUPL-1.2
 using OmniEurope.Documents.Imaging;
+using OmniEurope.Documents.Imaging.Jbig2;
 using OmniEurope.Documents.Pdf.Objects;
 using OmniEurope.Documents.Pdf.Reading;
 
@@ -8,7 +9,7 @@ namespace OmniEurope.Documents.Pdf.Text;
 /// <summary>
 /// Decodes PDF image XObjects and inline images to pixels: 1 to 16 bits per component, DeviceGray, RGB and
 /// CMYK, ICC-based (by component count), Indexed, CalGray/CalRGB, Lab (approximate), Separation and DeviceN
-/// (as ink coverage), image masks, Decode arrays, DCT and CCITT data, and the soft mask as alpha.
+/// (as ink coverage), image masks, Decode arrays, DCT, CCITT and JBIG2 data, and the soft mask as alpha.
 /// </summary>
 internal static class PdfImageDecoder
 {
@@ -45,8 +46,9 @@ internal static class PdfImageDecoder
         {
             "DCTDecode" or "DCT" => JpegDecoder.Decode(data),
 
-            // JBIG2 and JPEG 2000 have no decoder here.
-            "JBIG2Decode" or "JPXDecode" => null,
+            // JPEG 2000 has no decoder here.
+            "JPXDecode" => null,
+            "JBIG2Decode" => Samples(store, image, resources, Jbig2(store, data, parameters, width, height), width, height, ccitt: true),
             "CCITTFaxDecode" or "CCF" => Samples(store, image, resources, Ccitt(store, data, parameters, width, height), width, height, ccitt: true),
             _ => Samples(store, image, resources, data, width, height, ccitt: false),
         };
@@ -104,6 +106,29 @@ internal static class PdfImageDecoder
             BlackIs1 = store.Get(parameters, "BlackIs1") is PdfBoolean { Value: true },
         };
         return CcittFaxDecoder.Decode(data, options, out _, out _);
+    }
+
+    // JBIG2 data: the page bitmap, read after the JBIG2Globals segments, as 1-bit rows where 0 is black (1 is black
+    // in JBIG2), cut or padded to the image size.
+    private static byte[] Jbig2(PdfObjectStore store, byte[] data, PdfDictionary? parameters, int width, int height)
+    {
+        var globals = store.Get(parameters, "JBIG2Globals") is PdfStream stream ? store.Decode(stream).Data : null;
+        var bitmap = Jbig2Decoder.Decode(data, globals);
+        var stride = (width + 7) / 8;
+        var rows = new byte[(long)stride * height];
+        Array.Fill(rows, (byte)0xFF);
+        for (var y = 0; y < Math.Min(height, bitmap.Height); y++)
+        {
+            for (var x = 0; x < Math.Min(width, bitmap.Width); x++)
+            {
+                if (bitmap.Pixels[(y * bitmap.Width) + x] != 0)
+                {
+                    rows[(y * stride) + (x >> 3)] &= (byte)~(0x80 >> (x & 7));
+                }
+            }
+        }
+
+        return rows;
     }
 
     private static RasterImage Unpack(byte[] data, int width, int height, int bits, PdfColorSpace space, double[]? decode)

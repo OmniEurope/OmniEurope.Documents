@@ -8,7 +8,7 @@ namespace OmniEurope.Documents.Pdf.Rendering;
 /// <summary>
 /// Draws image XObjects and inline images: the unit square mapped by the current matrix, each device pixel
 /// sampled bilinearly from the image (its alpha and soft mask included); stencil masks paint the fill colour.
-/// JPEG 2000 and JBIG2 images are not decoded and are reported.
+/// JPEG 2000 images are not decoded and are reported.
 /// </summary>
 internal sealed class ImagePainter(PageRenderer page)
 {

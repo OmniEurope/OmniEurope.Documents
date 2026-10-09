@@ -6,6 +6,14 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- PDF images with the `JBIG2Decode` filter (scanned pages) are decoded, read and rendered: the JBIG2 page their data
+  holds, after the segments of their `JBIG2Globals`. Generic regions (arithmetic with typical prediction and adaptive
+  pixels, or MMR), refinement regions (with typical prediction), text regions (arithmetic or Huffman, every reference
+  corner, transposed, with refined instances), symbol dictionaries (generic, refined and aggregate symbols, Huffman
+  collective bitmaps, retained contexts), pattern dictionaries and halftone regions, the fifteen standard Huffman
+  tables and table segments, page information with its default pixel, combination operators, end of stripe on a page
+  of unknown height. Not decoded: extended generic templates (the image is reported as not drawn); colour extensions
+  and profiles are ignored.
 - `XlsxEditor` (`OmniEurope.Documents.Excel.Editing`): opens an `.xlsx` and edits cells in place.
   `XlsxEditableSheet.SetValue` (number, text, boolean, date, empty) and `SetFormula` change one cell of the
   worksheet part; every other part (charts, pictures, conditional formats, validations, comments, tables, pivot
