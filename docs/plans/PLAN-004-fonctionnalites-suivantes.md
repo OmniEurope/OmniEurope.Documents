@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 # PLAN-004 : Fonctionnalités suivantes
 
-> Statut : **en cours** (2026-10-10 : lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
+> Statut : **en cours** (2026-10-10 : lot 5 Word vers Markdown, lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
 > propriétaire ; l'ordre des lots est celui de la valeur attendue. Un lot ne commence qu'après accord du
 > propriétaire.
 
@@ -74,10 +74,24 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
   liens `http`, `https` et `mailto` seulement, révisions acceptées ou marquées. Chaque paragraphe lu
   d'un paquet porte `data-address`, l'adresse que lui donne `WordEditor` (`WordParagraph.SourceAddress`),
   et `HighlightAddress` le met en évidence. Ce qui n'est qu'approché est listé dans `Gaps`.
-- [ ] Word vers Markdown : reste à faire.
+- [x] Word vers Markdown (2026-10-10) : `WordToMarkdown.Convert` donne du Markdown GitHub : titres (niveaux de plan
+  1 à 6, libellé des titres numérotés gardé, gras ou italique du style non marqués), paragraphes, retours à la ligne
+  forcés, gras, italique et barré (espaces hors des marqueurs), listes à puces et numérotées imbriquées (chaque
+  élément indenté sous le contenu de son parent, numéros comptés depuis le départ du niveau), tableaux GFM
+  (première ligne en en-tête, fusions étalées en cellules vides), liens `http`, `https` et `mailto`, notes de bas de
+  page et de fin en notes `[^1]` et `[^e1]` définies à la fin, images en références (`![alt][image1]`, octets et
+  chemins rendus dans `Images`), zones de texte après leur paragraphe ; révisions acceptées, texte masqué omis, texte
+  échappé. 12 tests dans `WordToMarkdownTests`, dont un aller-retour Word, Markdown, Word par la conversion Markdown
+  du paquet (mêmes textes, niveaux de titre, profondeurs de liste, cellules et passages en emphase) et un relu
+  littéral des textes qui ressemblent à de la syntaxe. Non pris en charge, listé dans `Gaps` : souligné, exposant,
+  indice et autres mises en forme, en-têtes, pieds de page, commentaires, sauts de page et de colonne, paragraphes
+  vides, signets et autres schémas de lien, numéros en lettres ou en chiffres romains (écrits en nombres), plusieurs
+  paragraphes, listes ou tableaux imbriqués dans une cellule ou une note (joints sur une ligne). Limite connue : un
+  marqueur d'emphase placé entre une ponctuation et une lettre peut ne pas être lu comme emphase.
 - Contrôle : aller-retour Word, HTML, Word sans perte de texte ni de structure (fait pour le HTML :
   `WordToHtmlTests`, adresses vérifiées contre `WordEditor` dans le corps, les cellules, les en-têtes, les
-  pieds de page, les notes et les zones de texte, document d'un autre producteur compris).
+  pieds de page, les notes et les zones de texte, document d'un autre producteur compris ; pour le Markdown :
+  aller-retour Word, Markdown, Word dans `WordToMarkdownTests`).
 
 ## Lot 6 : révisions, table des matières et champs Word
 

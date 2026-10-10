@@ -45,6 +45,24 @@ public sealed class MarkdownWriter
         return builder.ToString();
     }
 
+    /// <summary>Escapes text that does not start a line: the characters with a meaning anywhere are escaped and
+    /// line breaks become spaces; spaces are kept.</summary>
+    internal static string EscapeInline(string text)
+    {
+        var builder = new StringBuilder(text.Length + 8);
+        foreach (var c in text)
+        {
+            if (NeedsEscape(c))
+            {
+                builder.Append(Backslash);
+            }
+
+            builder.Append(c is '\r' or '\n' ? ' ' : c);
+        }
+
+        return builder.ToString();
+    }
+
     // "1. text" would start an ordered list: the delimiter is escaped ("1\. text").
     private static bool TryEscapeOrderedMarker(string text, StringBuilder builder, ref int i)
     {

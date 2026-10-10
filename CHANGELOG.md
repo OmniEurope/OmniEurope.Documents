@@ -6,6 +6,17 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- `WordToMarkdown.Convert` (`WordMarkdownOptions`, `WordMarkdownResult`, `WordMarkdownImage`): a Word document to
+  GitHub-flavoured Markdown. Headings from outline levels 1 to 6 (a numbered heading keeps its label, the bold or
+  italic of its style is not marked), paragraphs, hard line breaks, bold, italic and strike (`**`, `*`, `~~`, spaces
+  kept outside the markers), nested bulleted and numbered lists (each item indented under its parent's content,
+  numbers counted from the level's start), pipe tables (first row as header, merged cells spread as empty cells),
+  `http`, `https` and `mailto` links, footnotes and endnotes as `[^1]` and `[^e1]` defined at the end, pictures as
+  reference images whose bytes are returned with their paths, text boxes after their paragraph; tracked changes
+  accepted, hidden text left out, text escaped so it reads back literally. What Markdown cannot carry is listed in
+  `Gaps`: underline, superscript, subscript and other formatting, headers, footers, comments, page and column
+  breaks, empty paragraphs, bookmarks and other link schemes, letter or roman list numbers (written as numbers),
+  several paragraphs, lists or nested tables in a cell or a note (joined on one line).
 - `ExcelToHtml.Convert` (`ExcelHtmlOptions`): a workbook to one standalone HTML page, each sheet's used range a table
   of the values as Excel displays them (the texts of the CSV export), with column widths (`7w + 5` pixels), merged
   cells as `colspan` and `rowspan` (clipped to the used range, an overlapping range from a damaged file ignored),

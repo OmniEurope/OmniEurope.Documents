@@ -10,7 +10,7 @@ NuGet package, no user interface, no dependency, licensed under EUPL-1.2.
 
 | Format | Create | Edit | Read | Convert |
 |---|---|---|---|---|
-| Word (`.docx`) | yes | yes | text and structure | to PDF, to HTML |
+| Word (`.docx`) | yes | yes | text and structure | to PDF, to HTML, to Markdown |
 | Excel (`.xlsx`) | yes | yes, in place without loss | cells and sheets | to PDF, to CSV, to HTML |
 | PDF | yes | merge, split, compress, reorder, rotate, stamp | text, **no OCR** | from Word, Excel, Markdown, HTML, images; to PNG |
 | Markdown | yes | yes | yes | to PDF, to Word, to HTML |
@@ -37,8 +37,8 @@ Companion tools: HTML parsing and sanitising, text diff (lines and words).
 - **Formulas are recalculated only on request** (`XlsxWorkbook.Recalculate`) and only with the operators and
   common functions the engine computes; defined names, table and multi-sheet references, INDIRECT and OFFSET
   keep their last computed result and are reported.
-- **No Word to Markdown yet**; Word to HTML leaves line and page breaks to the browser and lists what it
-  approximates in its gaps.
+- Word to HTML leaves line and page breaks to the browser and lists what it approximates in its gaps; Word to
+  Markdown lists what Markdown cannot carry (underline, headers and footers, comments, merged cells...).
 
 ## Layout
 
@@ -52,8 +52,8 @@ One package, one namespace per format, conversions on their own:
 - `OmniEurope.Documents.Csv`
 - `OmniEurope.Documents.Html`
 - `OmniEurope.Documents.Diff`
-- `OmniEurope.Documents.Conversion` (Word to PDF, Word to HTML, Excel to PDF, Excel to HTML, HTML and
-  Markdown to Word or PDF, images to PDF)
+- `OmniEurope.Documents.Conversion` (Word to PDF, Word to HTML, Word to Markdown, Excel to PDF, Excel to HTML,
+  HTML and Markdown to Word or PDF, images to PDF)
 
 ## Dependencies
 
