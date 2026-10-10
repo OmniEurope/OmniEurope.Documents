@@ -21,6 +21,9 @@ internal static class RawPdf
         return Build(objects);
     }
 
+    /// <summary>A document of the given objects, numbered from 1 in order, object 1 being the catalog.</summary>
+    public static byte[] Objects(params object[] objects) => Build(objects.Select(o => o is byte[] bytes ? bytes : Ascii((string)o)).ToList());
+
     public static byte[] Stream(string dictionary, byte[] data) => [.. Ascii($"<< /Length {data.Length} {dictionary} >>\nstream\n"), .. data, .. Ascii("\nendstream")];
 
     public static byte[] Ascii(string text) => Encoding.Latin1.GetBytes(text);

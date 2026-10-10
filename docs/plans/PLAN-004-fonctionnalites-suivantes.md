@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 # PLAN-004 : Fonctionnalités suivantes
 
-> Statut : **en cours** (2026-10-10 : lot 8 caviardage PDF, lot 7 chiffrement PDF AES-256, lot 6 révisions, table des matières et champs Word, lot 5 Word vers Markdown, lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
+> Statut : **en cours** (2026-10-10 : lot 3 formulaires PDF, lot 8 caviardage PDF, lot 7 chiffrement PDF AES-256, lot 6 révisions, table des matières et champs Word, lot 5 Word vers Markdown, lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
 > propriétaire ; l'ordre des lots est celui de la valeur attendue. Un lot ne commence qu'après accord du
 > propriétaire.
 
@@ -52,8 +52,26 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
 
 ## Lot 3 : formulaires PDF
 
-- [ ] Lecture des champs (texte, cases, boutons radio, listes), remplissage, génération des apparences et
+- [x] Lecture des champs (texte, cases, boutons radio, listes), remplissage, génération des apparences et
   aplatissement.
+  - Fait (2026-10-10) : `PdfForm.Read`, `PdfForm.Fill`, `PdfForm.Flatten` (ISO 32000-1 §12.7). Arbre des champs avec
+    attributs hérités, nom complet, sorte, valeur, options, états, drapeaux, longueur maximale, widgets (page,
+    rectangle, état actif, texte de l'apparence courante). Remplissage en mise à jour incrémentale (octets d'origine
+    gardés) : `V`, `AS`, `I`, apparence normale neuve par widget (fond et bordure `MK`, valeur entre `/Tx BMC` et
+    `EMC`, police, taille automatique et couleur de `DA`, sous-ensembles de polices embarqués : un visualiseur qui ne
+    régénère pas les apparences montre la valeur Unicode) ; une ligne alignée par `Q`, plusieurs lignes coupées et
+    réduites, cases de peigne, mot de passe masqué, liste depuis `TI` avec sélection surlignée, coche ou point dessinés
+    pour un bouton sans apparence. Valeurs contrôlées (champ inconnu, bouton poussoir, signature, état ou choix absent,
+    trop de choix, texte plus long que `MaxLen`), `XFA` retiré. Aplatissement : apparence de chaque widget non masqué
+    dessinée sur la page, widgets et formulaire retirés. 16 tests sur un formulaire écrit à la main (neuf champs, noms
+    hiérarchiques, widgets fusionnés ou enfants) : valeurs relues, texte des apparences extrait égal à la valeur
+    (accents et `€`, plusieurs lignes, peigne), rendu par `PdfRenderer` (texte bleu dans la zone du champ, case cochée,
+    coche dessinée), après aplatissement texte sur la page, aucun widget ni `AcroForm`. Suite rapide 1977 tests,
+    couverture des lignes 97,14 %.
+  - Limites : rotation de widget (`MK R`), styles de bordure (biseau, incrusté, tirets) et défilement d'un texte plus
+    long que sa zone (coupé) non rendus ; `NeedAppearances` laissé tel quel ; seuls les champs remplis reçoivent une
+    apparence neuve ; l'aplatissement est une mise à jour incrémentale (la révision précédente garde le formulaire dans
+    les octets) ; fichiers chiffrés ou endommagés et objets directs refusés ; actions et calculs JavaScript ignorés.
 - Contrôle : un formulaire rempli se relit avec ses valeurs ; après aplatissement, le texte est sur la page
   et le formulaire a disparu.
 

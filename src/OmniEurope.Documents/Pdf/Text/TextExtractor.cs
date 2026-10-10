@@ -70,6 +70,14 @@ internal sealed class TextExtractor
         return extractor._letters;
     }
 
+    /// <summary>The letters a form XObject (an annotation appearance) draws, in its own space.</summary>
+    public static IReadOnlyList<PdfLetter> Extract(PdfObjectStore store, PdfStream form)
+    {
+        var extractor = new TextExtractor(store);
+        extractor.Run(store.DecodeBytes(form), store.Get<PdfDictionary>(form, "Resources"), Matrix.FromArray(store.Get<PdfArray>(form, "Matrix")), 0);
+        return extractor._letters;
+    }
+
     private void Run(byte[] content, PdfDictionary? resources, Matrix initial, int depth)
     {
         var context = new RunContext(new TextState { Ctm = initial }, resources, depth);

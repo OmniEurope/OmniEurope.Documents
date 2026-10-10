@@ -12,12 +12,14 @@ NuGet package, no user interface, no dependency, licensed under EUPL-1.2.
 |---|---|---|---|---|
 | Word (`.docx`) | yes | yes, tracked changes accepted or rejected, fields and contents updated | text and structure, schema validation | to PDF, to HTML, to Markdown |
 | Excel (`.xlsx`) | yes | yes, in place without loss | cells and sheets | to PDF, to CSV, to HTML |
-| PDF | yes, AES-256 encryption | merge, split, compress, reorder, rotate, stamp, encrypt, redact | text, **no OCR** | from Word, Excel, Markdown, HTML, images; to PNG |
+| PDF | yes, AES-256 encryption | merge, split, compress, reorder, rotate, stamp, encrypt, redact, fill and flatten forms | text, form fields, **no OCR** | from Word, Excel, Markdown, HTML, images; to PNG |
 | Markdown | yes | yes | yes | to PDF, to Word, to HTML |
 | CSV | yes | yes | yes | to Excel |
 
 PDF operations: merge several files, split a file (by pages or ranges), compress (images and streams),
-extract the text of a PDF that contains text, read the metadata, render a page to a PNG image.
+extract the text of a PDF that contains text, read the metadata, render a page to a PNG image. Forms
+(`PdfForm`) are read, filled with appearances drawn in embedded fonts and flattened, as incremental updates that
+keep the original bytes.
 
 Word to HTML gives one standalone page (styles embedded, pictures as `data:` URIs, nothing fetched) in which
 every paragraph carries `data-address`, the address `WordEditor` gives the same paragraph, so a viewer can
@@ -45,6 +47,7 @@ Companion tools: HTML parsing and sanitising, text diff (lines and words).
 One package, one namespace per format, conversions on their own:
 
 - `OmniEurope.Documents.Pdf`
+- `OmniEurope.Documents.Pdf.Forms` (`PdfForm`: read, fill and flatten interactive forms)
 - `OmniEurope.Documents.Word`
 - `OmniEurope.Documents.Word.Editing` (`WordEditor`: in-place edits, tracked changes accepted or rejected)
 - `OmniEurope.Documents.Word.Validation` (`WordSchemaValidator`: validation against the ECMA-376 schemas)

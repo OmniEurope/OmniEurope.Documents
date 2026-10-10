@@ -6,6 +6,25 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- `PdfForm.Read`, `PdfForm.Fill` and `PdfForm.Flatten` (`OmniEurope.Documents.Pdf.Forms`: `PdfFormField`, `PdfFormWidget`,
+  `PdfChoiceOption`, `PdfFieldValue`, `PdfFormFillOptions`): the interactive form of ISO 32000-1 §12.7. Reading walks
+  the field tree with its inherited attributes (`FT`, `Ff`, `V`, `DA`, `Q`) and gives each terminal field its full
+  dotted name, kind (text, check box, radio group, push button, list box, combo box, signature), value or selected
+  values, options (export value and displayed text), on states, flags, maximum length and widgets (page, rectangle,
+  on state, text of the current appearance). Filling, as an incremental update that keeps the original bytes, writes
+  `V`, the `AS` state of each button widget and the `I` indexes of a list box, and a new normal appearance for each
+  text and choice widget: a form XObject the size of the rectangle with the `MK` background and border, then the
+  value between `/Tx BMC` and `EMC`, clipped to the padded box, in the field's `DA` family, size (automatic when 0)
+  and colour, with the package's embedded font subsets so any Unicode value shows in viewers that do not regenerate
+  appearances; single line with `Q` alignment, multiline wrapped and shrunk to fit when the size is automatic, comb
+  cells, password masked, list boxes from their top index with selected rows highlighted. A check box or radio
+  widget without appearances gets a drawn check mark or dot and an empty `Off` state. Values are checked: unknown
+  fields, push buttons, signatures, missing states and choices (free text only in an editable combo box), several
+  values for a single choice and texts longer than `MaxLen` throw `ArgumentException`. A hybrid form's `XFA` entry
+  is dropped. Flattening draws the normal appearance of every widget that is not hidden into its page as a placed
+  form, removes the widgets from the pages and the form from the catalog. Encrypted and damaged files, and fields,
+  widgets or pages written as direct objects, are refused with `NotSupportedException`. Annotation appearances are
+  placed by one shared routine for rendering and flattening.
 - `PdfRedactor.Redact` (`PdfRedaction`, `PdfRedactionOptions`, `PdfRedactionResult`): true redaction into a new
   PDF. Each glyph whose box meets an area is taken out of its string, whole even when only partly inside (the
   text after it keeps its place through a `TJ` adjustment; `'` and `"` are rewritten with their line move and

@@ -150,7 +150,7 @@ public static class PdfStamper
         return updated;
     }
 
-    private static PdfDictionary MergeResources(Reading.PdfObjectStore store, PdfDictionary? original, PdfDictionary added)
+    internal static PdfDictionary MergeResources(Reading.PdfObjectStore store, PdfDictionary? original, PdfDictionary added)
     {
         var merged = new PdfDictionary();
         foreach (var (key, value) in original?.Entries ?? [])
