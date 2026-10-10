@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 # PLAN-004 : Fonctionnalités suivantes
 
-> Statut : **en cours** (2026-10-10 : lot 4 PDF/A-2b et A-2u, lot 3 formulaires PDF, lot 8 caviardage PDF, lot 7 chiffrement PDF AES-256, lot 6 révisions, table des matières et champs Word, lot 5 Word vers Markdown, lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
+> Statut : **en cours** (2026-10-10 : lot 13 signature PAdES B-B, lot 4 PDF/A-2b et A-2u, lot 3 formulaires PDF, lot 8 caviardage PDF, lot 7 chiffrement PDF AES-256, lot 6 révisions, table des matières et champs Word, lot 5 Word vers Markdown, lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
 > propriétaire ; l'ordre des lots est celui de la valeur attendue. Un lot ne commence qu'après accord du
 > propriétaire.
 
@@ -264,7 +264,29 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
 
 ## Lot 13 : signature électronique PDF
 
-- [ ] Signature et vérification (PAdES de base), certificats fournis par l'application.
+- [x] Signature et vérification (PAdES de base), certificats fournis par l'application.
+  - Fait (2026-10-10) : `PdfSigner.Sign`, `PdfSigner.Verify` (PAdES baseline B-B, ETSI EN 319 142-1). Contrôle préalable :
+    `System.Security.Cryptography.Pkcs` (`SignedCms`) n'est pas dans le framework partagé .NET 10 (paquet NuGet séparé,
+    absent de `Microsoft.NETCore.App` 10.0.12 et de son pack de référence), il n'est donc pas utilisé ;
+    `System.Formats.Asn1` en fait partie : le CMS est écrit et lu avec lui. Mise à jour incrémentale : champ de signature
+    invisible, imprimable et verrouillé sur la première page, `SigFlags` 3, dictionnaire `/Filter /Adobe.PPKLite
+    /SubFilter /ETSI.CAdES.detached` avec `M` ; `Contents` = CMS SignedData détaché (RFC 5652) sur le `ByteRange` :
+    signataire par émetteur et numéro de série, attributs signés content-type id-data, message-digest et
+    signing-certificate-v2 (RFC 5035), pas de signing-time, certificats du signataire et supplémentaires ; RSA PKCS #1
+    v1.5 ou ECDSA, SHA-256, SHA-384 ou SHA-512. Vérification : plage d'octets (début du fichier, trou égal à la chaîne
+    hexadécimale `Contents`), condensé de la plage contre message-digest, signature des attributs avec la clé publique,
+    signing-certificate-v2, SubFilter, contenu détaché, content-type, absence de signing-time, rien que des zéros après
+    le CMS ; plage jusqu'à la fin du fichier ou non. 8 tests avec des certificats auto-signés créés dans le test
+    (`CertificateRequest`, RSA 2048 et ECDSA P-256 avec SHA-384) : signature valide, CMS relu indépendamment avec
+    `AsnReader` (structure, attributs, condensés, signature RSA vérifiée par la clé publique), octet modifié dans la plage
+    (condensé faux), octet modifié hors plage dans le CMS (signature fausse) et dans le remplissage (signalé), mise à jour
+    après signature (signature valide, ne couvre plus le fichier), deuxième signature, SubFilter et CMS illisibles
+    signalés, refus sans clé privée, avec SHA-1, place réservée trop petite ou fichier chiffré. Suite rapide 1995 tests,
+    couverture des lignes 97,10 %.
+  - Limites : confiance dans le certificat, chaîne, révocation et horodatage non vérifiés (B-B n'a pas de données de
+    validation ; à la charge de l'application) ; pas de niveaux B-T, B-LT, B-LTA ni de DocMDP ; signature invisible
+    seulement (pas d'apparence) ; RSA-PSS non pris en charge ; fichiers chiffrés ou endommagés refusés ; aucun
+    validateur PAdES tiers disponible hors ligne.
 - Contrôle : une signature valide se vérifie ; toute modification après signature est détectée.
 
 ## Lot 14 : graphiques

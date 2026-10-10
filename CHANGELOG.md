@@ -6,6 +6,21 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- `PdfSigner.Sign` and `PdfSigner.Verify` (`OmniEurope.Documents.Pdf.Signing`: `PdfSignatureOptions`,
+  `PdfSignatureVerification`): PAdES baseline B-B signatures (ETSI EN 319 142-1) with a certificate the application
+  provides (RSA PKCS #1 v1.5 or ECDSA private key; SHA-256, SHA-384 or SHA-512). An incremental update adds an
+  invisible, printable and locked signature field on the first page, the form's `SigFlags` 3 and a signature
+  dictionary `/Filter /Adobe.PPKLite /SubFilter /ETSI.CAdES.detached` with `M`, optional `Name`, `Reason`, `Location`
+  and `ContactInfo`; its `Contents` holds a detached CMS SignedData (RFC 5652) over the `ByteRange` (the whole file but
+  the `Contents` string): issuer and serial number signer, signed attributes content-type id-data, message-digest and
+  signing-certificate-v2 (RFC 5035), no signing-time, the signer's and the extra certificates. The CMS is written and
+  read with `System.Formats.Asn1` and `X509Certificate2` from the shared framework: `System.Security.Cryptography.Pkcs`
+  is a separate package and is not used. Verification reads every signature field and checks the byte range (from the
+  start of the file, the gap exactly the hexadecimal `Contents`), the digest of the range against the message digest,
+  the signature of the signed attributes with the signer's public key, the signing-certificate-v2 hash, the
+  SubFilter, the detached content, the content type, the absence of signing-time and of anything but zero padding
+  after the CMS; it says whether the range runs to the end of the file. Certificate trust, chains and revocation are
+  not checked (B-B carries no validation data).
 - `PdfDocumentBuilder.Conformance` (`PdfConformance.PdfA2b`, `PdfConformance.PdfA2u`), `WordPdfOptions.Conformance` (Word,
   Excel, HTML and Markdown to PDF) and `ImagePdfOptions.Conformance`: PDF/A-2 output (ISO 19005-2). The catalog gets a
   `GTS_PDFA1` output intent whose destination profile is an ICC version 2.1 sRGB display profile computed in code from
