@@ -30,6 +30,9 @@ internal abstract class FlowItem
     /// <summary>Outline entry of a heading, set on its first line.</summary>
     public string? Bookmark { get; set; }
 
+    /// <summary>The <see cref="WordParagraph.SourceAddress"/> of the paragraph, set on its first line.</summary>
+    public string? Source { get; set; }
+
     public virtual IEnumerable<(WordNoteKind Kind, int Id)> Notes => [];
 
     /// <summary>Splits the item so its first part fits in <paramref name="available"/>; null when it cannot.</summary>

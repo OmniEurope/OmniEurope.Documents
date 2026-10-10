@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 # PLAN-004 : Fonctionnalités suivantes
 
-> Statut : **en cours** (2026-10-10 : lot 5 Word vers Markdown, lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
+> Statut : **en cours** (2026-10-10 : lot 6 révisions, table des matières et champs Word, lot 5 Word vers Markdown, lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
 > propriétaire ; l'ordre des lots est celui de la valeur attendue. Un lot ne commence qu'après accord du
 > propriétaire.
 
@@ -95,8 +95,27 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
 
 ## Lot 6 : révisions, table des matières et champs Word
 
-- [ ] Accepter ou refuser les révisions (toutes ou une par une), mettre à jour la table des matières et les
+- [x] Accepter ou refuser les révisions (toutes ou une par une), mettre à jour la table des matières et les
   champs simples (pages, dates, références) à partir de la mise en page.
+  - Fait (2026-10-10) : `WordEditor.TrackedChanges`, `AcceptAllChanges`, `RejectAllChanges`, `AcceptChange`,
+    `RejectChange` (ECMA-376 Part 1 §17.13.5) : insertions, suppressions, déplacements nommés (une seule révision
+    pour la source, la destination et les bornes), marques de paragraphe insérées ou supprimées (le paragraphe
+    rejoint le suivant), changements de mise en forme de caractère, de paragraphe, de section, de tableau, de
+    ligne, de cellule et de grille, lignes et cellules insérées ou supprimées, fusion de cellules, numérotation
+    suivie ; corps, en-têtes, pieds, notes, commentaires, styles et numérotation. `WordFieldUpdater.Update`
+    reconstruit les `TOC` (`\o`, `\u`, `\t`, `\h`, `\n`) avec signets `_Toc` et calcule `PAGE`, `NUMPAGES`,
+    `SECTIONPAGES`, `PAGEREF`, `REF`, `DATE`, `TIME`, `CREATEDATE`, `SAVEDATE` depuis la mise en page de
+    `WordToPdf`, refaite jusqu'à stabilité (quatre fois au plus). 15 tests : chaque type de révision accepté puis
+    refusé, texte relu attendu écrit à la main et paquet validé par `WordSchemaValidator` ; table des matières
+    dont chaque numéro de page est vérifié sur la page du PDF produit ; formats de numéros de section, images de
+    date en français, champs non gérés listés. Suite rapide 1930 tests, couverture des lignes 97,29 %.
+  - Limites : révisions des propriétés de contrôle mathématiques et plages XML personnalisées non traitées ;
+    retirer une cellule n'ajuste pas la grille ; une révision acceptée seule ne touche pas sa copie de repli
+    (`mc:Fallback`) ; l'étiquette de liste d'une entrée est suivie d'une espace (Word met une tabulation) ;
+    `TOC` avec `\a`, `\b`, `\c`, `\s`, `\d` laissé tel quel, entrées `TC` (`\f`, `\l`) non collectées, `\o` et `\u`
+    lisent tous deux le niveau hiérarchique résolu ; `REF \n \r \w`, `PAGEREF \p`, champs des zones de texte et
+    autres champs laissés tels quels et listés dans `Gaps` ; les champs de page des en-têtes et pieds gardent leur
+    résultat (chaque page dessine le sien) ; les numéros sont ceux de la mise en page du paquet.
 - Contrôle : après acceptation, le texte relu est celui attendu ; les numéros de page de la table des
   matières correspondent au PDF produit.
 

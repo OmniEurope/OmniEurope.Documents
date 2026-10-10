@@ -6,6 +6,28 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- `WordEditor.TrackedChanges`, `AcceptAllChanges`, `RejectAllChanges`, `AcceptChange`, `RejectChange`
+  (`WordTrackedChange`, `WordTrackedChangeKind`): the tracked changes of ECMA-376 Part 1 §17.13.5 in the text
+  parts, the styles and the list definitions, listed with their author, date and text and accepted or rejected
+  all together or one by one: insertions and deletions (rejected deleted text and field instructions come back as
+  text and instructions), moves (a named move is one change, both ends and range markers), inserted and deleted
+  paragraph marks (the paragraph that loses its mark joins the next one, which keeps its properties), run,
+  paragraph, section, table, table exception, row, cell and grid property changes (rejected, the former properties
+  replace the current ones), inserted and deleted rows and cells (a table left without rows goes, its cell keeps a
+  paragraph), cell merge changes, tracked list numbering and legacy numbering records. Accept and reject all also
+  apply to alternate-content fallbacks; one change applies to its listed copy only. Not handled: revision marks in
+  math control properties and custom XML range revisions; removing a cell does not adjust the grid.
+- `WordFieldUpdater.Update` (`WordFieldOptions`, `WordFieldUpdate`): updates the tables of contents and the simple
+  fields of an edited document from the pages `WordToPdf` lays it out on. `TOC` is rebuilt from the headings
+  (`\o` and `\u` by resolved outline level, `\t` by style name, `\h` links, `\n` without page numbers): one
+  paragraph per heading in the `TOC1` to `TOC9` styles (added when missing), list label and text, right tab with
+  dot leader at the column edge and a `PAGEREF` to a `_Toc` bookmark set on the heading (reused on the next
+  update). `PAGE`, `NUMPAGES` and `SECTIONPAGES` of the body and notes, `PAGEREF` (the displayed number, in the
+  section's format), `REF`, `DATE`, `TIME`, `CREATEDATE` and `SAVEDATE` (`\@` pictures, `\*` roman and letter
+  formats) are computed; the layout is redone until no number moves (four times at most). Left as they were and
+  listed in `Gaps`: other fields, `TOC` with `\a`, `\b`, `\c`, `\s` or `\d`, TC entries (`\f`, `\l`), `REF` with
+  `\n`, `\r` or `\w`, `PAGEREF` with `\p`, fields outside the laid-out body and notes; page fields of headers and
+  footers keep their stored result (each page draws its own).
 - `WordSchemaValidator.Validate` (`OmniEurope.Documents.Word.Validation`, `WordSchemaReport`, `WordSchemaError`):
   validates every XML part of a Word package against the Office Open XML schemas of ECMA-376 5th edition shipped
   in the package (transitional WordprocessingML of Part 4 with the DrawingML, VML, math, shared types, document

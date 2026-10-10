@@ -56,7 +56,7 @@ public static class WordToPdf
 
     // Footnotes restarting at each page are numbered after the pages of the previous layout, until the
     // numbers no longer move a footnote to another page.
-    private static List<PageFrame> Paginate(LayoutContext context)
+    internal static List<PageFrame> Paginate(LayoutContext context)
     {
         var pages = new Paginator(context, new BlockLayout(context)).Run();
         for (var pass = 1; context.Restart(pages); pass++)

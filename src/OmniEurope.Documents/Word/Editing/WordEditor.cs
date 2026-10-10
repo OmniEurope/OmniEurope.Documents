@@ -140,6 +140,31 @@ public sealed class WordEditor
         return replacements.Sum(pair => ReplaceText(pair.Key, pair.Value));
     }
 
+    /// <summary>
+    /// The tracked changes of the text parts (in <see cref="TextParts"/> order), then of the styles and list
+    /// definitions, each part in document order; changes inside alternate-content fallbacks are not listed.
+    /// </summary>
+    public IReadOnlyList<WordTrackedChange> TrackedChanges() => Revisions().List();
+
+    /// <summary>Accepts every tracked change, alternate-content fallbacks included; returns the number listed by
+    /// <see cref="TrackedChanges"/> before.</summary>
+    public int AcceptAllChanges() => Revisions().ApplyAll(accept: true);
+
+    /// <summary>Rejects every tracked change, alternate-content fallbacks included; returns the number listed by
+    /// <see cref="TrackedChanges"/> before.</summary>
+    public int RejectAllChanges() => Revisions().ApplyAll(accept: false);
+
+    /// <summary>Accepts one change of the current <see cref="TrackedChanges"/> list (its copy in an alternate-content
+    /// fallback, if any, is left as it is).</summary>
+    /// <exception cref="ArgumentException">The list has changed since <paramref name="change"/> was read.</exception>
+    public void AcceptChange(WordTrackedChange change) => Revisions().Apply(change, accept: true);
+
+    /// <summary>Rejects one change of the current <see cref="TrackedChanges"/> list.</summary>
+    /// <exception cref="ArgumentException">The list has changed since <paramref name="change"/> was read.</exception>
+    public void RejectChange(WordTrackedChange change) => Revisions().Apply(change, accept: false);
+
+    private WordRevisionEditor Revisions() => new(_package, _main, TextParts);
+
     /// <summary>The core properties; setting them rewrites only the elements that changed.</summary>
     public WordInformation Information
     {

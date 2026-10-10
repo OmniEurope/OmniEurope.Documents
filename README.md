@@ -10,7 +10,7 @@ NuGet package, no user interface, no dependency, licensed under EUPL-1.2.
 
 | Format | Create | Edit | Read | Convert |
 |---|---|---|---|---|
-| Word (`.docx`) | yes | yes | text and structure, schema validation | to PDF, to HTML, to Markdown |
+| Word (`.docx`) | yes | yes, tracked changes accepted or rejected, fields and contents updated | text and structure, schema validation | to PDF, to HTML, to Markdown |
 | Excel (`.xlsx`) | yes | yes, in place without loss | cells and sheets | to PDF, to CSV, to HTML |
 | PDF | yes | merge, split, compress, reorder, rotate, stamp | text, **no OCR** | from Word, Excel, Markdown, HTML, images; to PNG |
 | Markdown | yes | yes | yes | to PDF, to Word, to HTML |
@@ -46,6 +46,7 @@ One package, one namespace per format, conversions on their own:
 
 - `OmniEurope.Documents.Pdf`
 - `OmniEurope.Documents.Word`
+- `OmniEurope.Documents.Word.Editing` (`WordEditor`: in-place edits, tracked changes accepted or rejected)
 - `OmniEurope.Documents.Word.Validation` (`WordSchemaValidator`: validation against the ECMA-376 schemas)
 - `OmniEurope.Documents.Excel` (`XlsxWorkbook.Recalculate`: formula recalculation)
 - `OmniEurope.Documents.Excel.Editing` (`XlsxEditor`: in-place cell edits)
@@ -54,7 +55,8 @@ One package, one namespace per format, conversions on their own:
 - `OmniEurope.Documents.Html`
 - `OmniEurope.Documents.Diff`
 - `OmniEurope.Documents.Conversion` (Word to PDF, Word to HTML, Word to Markdown, Excel to PDF, Excel to HTML,
-  HTML and Markdown to Word or PDF, images to PDF)
+  HTML and Markdown to Word or PDF, images to PDF; `WordFieldUpdater`: tables of contents and fields updated from
+  the layout)
 
 ## Dependencies
 
