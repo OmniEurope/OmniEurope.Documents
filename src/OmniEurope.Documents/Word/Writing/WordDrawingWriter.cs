@@ -105,7 +105,7 @@ internal static class WordDrawingWriter
         {
             frame = new XElement(
                 Wp + "anchor",
-                Distances(),
+                Distances(floating),
                 new XAttribute("simplePos", "0"),
                 new XAttribute("relativeHeight", Format(id * 1024)),
                 new XAttribute("behindDoc", floating.BehindText ? "1" : "0"),
@@ -113,11 +113,11 @@ internal static class WordDrawingWriter
                 new XAttribute("layoutInCell", "1"),
                 new XAttribute("allowOverlap", "1"),
                 new XElement(Wp + "simplePos", new XAttribute("x", "0"), new XAttribute("y", "0")),
-                new XElement(Wp + "positionH", new XAttribute("relativeFrom", floating.HorizontalRelativeTo), new XElement(Wp + "posOffset", ToEmu(floating.HorizontalOffset))),
-                new XElement(Wp + "positionV", new XAttribute("relativeFrom", floating.VerticalRelativeTo), new XElement(Wp + "posOffset", ToEmu(floating.VerticalOffset))),
+                new XElement(Wp + "positionH", new XAttribute("relativeFrom", floating.HorizontalRelativeTo), Position(floating.HorizontalAlignment, floating.HorizontalOffset)),
+                new XElement(Wp + "positionV", new XAttribute("relativeFrom", floating.VerticalRelativeTo), Position(floating.VerticalAlignment, floating.VerticalOffset)),
                 extent,
                 effect,
-                Wrap(floating.Wrap),
+                Wrap(floating.Wrap, floating.WrapSide),
                 properties,
                 frameProperties,
                 graphic);
@@ -128,14 +128,36 @@ internal static class WordDrawingWriter
 
     private static XAttribute[] Distances() => [new("distT", "0"), new("distB", "0"), new("distL", "0"), new("distR", "0")];
 
-    private static XElement Wrap(WordWrap wrap) => wrap switch
+    private static XAttribute[] Distances(WordFloatingPosition floating) =>
+    [
+        new("distT", ToEmu(floating.DistanceTop)),
+        new("distB", ToEmu(floating.DistanceBottom)),
+        new("distL", ToEmu(floating.DistanceLeft)),
+        new("distR", ToEmu(floating.DistanceRight)),
+    ];
+
+    // An alignment in the reference, else an offset from it.
+    private static XElement Position(string? alignment, double offset) =>
+        alignment is not null ? new XElement(Wp + "align", alignment) : new XElement(Wp + "posOffset", ToEmu(offset));
+
+    private static XElement Wrap(WordWrap wrap, WordWrapSide side)
     {
-        WordWrap.None => new XElement(Wp + "wrapNone"),
-        WordWrap.TopAndBottom => new XElement(Wp + "wrapTopAndBottom"),
-        WordWrap.Tight => new XElement(Wp + "wrapTight", new XAttribute("wrapText", "bothSides"), Polygon()),
-        WordWrap.Through => new XElement(Wp + "wrapThrough", new XAttribute("wrapText", "bothSides"), Polygon()),
-        _ => new XElement(Wp + "wrapSquare", new XAttribute("wrapText", "bothSides")),
-    };
+        var text = new XAttribute("wrapText", side switch
+        {
+            WordWrapSide.Left => "left",
+            WordWrapSide.Right => "right",
+            WordWrapSide.Largest => "largest",
+            _ => "bothSides",
+        });
+        return wrap switch
+        {
+            WordWrap.None => new XElement(Wp + "wrapNone"),
+            WordWrap.TopAndBottom => new XElement(Wp + "wrapTopAndBottom"),
+            WordWrap.Tight => new XElement(Wp + "wrapTight", text, Polygon()),
+            WordWrap.Through => new XElement(Wp + "wrapThrough", text, Polygon()),
+            _ => new XElement(Wp + "wrapSquare", text),
+        };
+    }
 
     // Tight and through wrapping need an outline: the bounding square, in the 21600 unit space.
     private static XElement Polygon() => new(

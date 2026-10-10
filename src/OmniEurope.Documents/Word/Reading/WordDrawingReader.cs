@@ -70,15 +70,31 @@ internal sealed class WordDrawingReader(WordContentReader owner)
             return null;
         }
 
-        var wrap = (string?)container.Descendants(W10 + "wrap").FirstOrDefault()?.Attribute("type") ?? string.Empty;
+        var wrapElement = container.Descendants(W10 + "wrap").FirstOrDefault();
+        var wrap = (string?)wrapElement?.Attribute("type") ?? string.Empty;
         return new WordFloatingPosition(
             CssLength(style.GetValueOrDefault("margin-left", "0")),
             VmlHorizontal.GetValueOrDefault(style.GetValueOrDefault("mso-position-horizontal-relative", string.Empty), "column"),
             CssLength(style.GetValueOrDefault("margin-top", "0")),
             VmlVertical.GetValueOrDefault(style.GetValueOrDefault("mso-position-vertical-relative", string.Empty), "paragraph"),
             VmlWraps.GetValueOrDefault(wrap, WordWrap.None),
-            int.TryParse(style.GetValueOrDefault("z-index"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var z) && z < 0);
+            int.TryParse(style.GetValueOrDefault("z-index"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var z) && z < 0)
+        {
+            DistanceTop = CssLength(style.GetValueOrDefault("mso-wrap-distance-top", "0")),
+            DistanceBottom = CssLength(style.GetValueOrDefault("mso-wrap-distance-bottom", "0")),
+            DistanceLeft = CssLength(style.GetValueOrDefault("mso-wrap-distance-left", "0")),
+            DistanceRight = CssLength(style.GetValueOrDefault("mso-wrap-distance-right", "0")),
+            WrapSide = Side((string?)wrapElement?.Attribute("side")),
+        };
     }
+
+    private static WordWrapSide Side(string? value) => value switch
+    {
+        "left" => WordWrapSide.Left,
+        "right" => WordWrapSide.Right,
+        "largest" => WordWrapSide.Largest,
+        _ => WordWrapSide.BothSides,
+    };
 
     // What VML positions from and how it wraps, as the anchored drawing's names say it.
     private static readonly Dictionary<string, string> VmlHorizontal = new(StringComparer.Ordinal) { ["margin"] = "margin", ["page"] = "page", ["char"] = "character" };
@@ -149,39 +165,68 @@ internal sealed class WordDrawingReader(WordContentReader owner)
         return null;
     }
 
+    // The anchor's position (an offset or an alignment in its reference, or the simple position from the page corner),
+    // the room kept free around it and the sides text wraps on.
     private static WordFloatingPosition Floating(XElement anchor)
     {
         var horizontal = anchor.Element(Wp + "positionH");
         var vertical = anchor.Element(Wp + "positionV");
-        return new WordFloatingPosition(
+        var wrap = Wrap(anchor);
+        var position = new WordFloatingPosition(
             Measure(horizontal?.Element(Wp + "posOffset")?.Value, EmuPerPoint) ?? 0,
             (string?)horizontal?.Attribute("relativeFrom") ?? "column",
             Measure(vertical?.Element(Wp + "posOffset")?.Value, EmuPerPoint) ?? 0,
             (string?)vertical?.Attribute("relativeFrom") ?? "paragraph",
-            Wrap(anchor),
-            (string?)anchor.Attribute("behindDoc") is "1" or "true");
+            wrap.Wrap,
+            (string?)anchor.Attribute("behindDoc") is "1" or "true")
+        {
+            HorizontalAlignment = NonEmpty(horizontal?.Element(Wp + "align")?.Value),
+            VerticalAlignment = NonEmpty(vertical?.Element(Wp + "align")?.Value),
+            DistanceTop = Emu(anchor, "distT"),
+            DistanceBottom = Emu(anchor, "distB"),
+            DistanceLeft = Emu(anchor, "distL"),
+            DistanceRight = Emu(anchor, "distR"),
+            WrapSide = wrap.Side,
+        };
+        if ((string?)anchor.Attribute("simplePos") is "1" or "true" && anchor.Element(Wp + "simplePos") is { } simple)
+        {
+            position = position with
+            {
+                HorizontalOffset = Emu(simple, "x"),
+                HorizontalRelativeTo = "page",
+                VerticalOffset = Emu(simple, "y"),
+                VerticalRelativeTo = "page",
+                HorizontalAlignment = null,
+                VerticalAlignment = null,
+            };
+        }
+
+        return position;
     }
 
-    private static WordWrap Wrap(XElement anchor)
+    private static double Emu(XElement element, string attribute) => Measure((string?)element.Attribute(attribute), EmuPerPoint) ?? 0;
+
+    private static (WordWrap Wrap, WordWrapSide Side) Wrap(XElement anchor)
     {
         foreach (var element in anchor.Elements())
         {
+            var side = Side((string?)element.Attribute("wrapText"));
             switch (element.Name.LocalName)
             {
                 case "wrapNone":
-                    return WordWrap.None;
+                    return (WordWrap.None, side);
                 case "wrapSquare":
-                    return WordWrap.Square;
+                    return (WordWrap.Square, side);
                 case "wrapTight":
-                    return WordWrap.Tight;
+                    return (WordWrap.Tight, side);
                 case "wrapThrough":
-                    return WordWrap.Through;
+                    return (WordWrap.Through, side);
                 case "wrapTopAndBottom":
-                    return WordWrap.TopAndBottom;
+                    return (WordWrap.TopAndBottom, side);
             }
         }
 
-        return WordWrap.None;
+        return (WordWrap.None, WordWrapSide.BothSides);
     }
 
     private static double CssLength(string value)

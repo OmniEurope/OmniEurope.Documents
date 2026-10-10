@@ -249,6 +249,22 @@ public enum WordWrap
     TopAndBottom,
 }
 
+/// <summary>Which sides of a square, tight or through wrapped shape text flows on (<c>wrapText</c>).</summary>
+public enum WordWrapSide
+{
+    /// <summary>On both sides.</summary>
+    BothSides,
+
+    /// <summary>Only on the left of the shape.</summary>
+    Left,
+
+    /// <summary>Only on the right of the shape.</summary>
+    Right,
+
+    /// <summary>Only on the side with the more room.</summary>
+    Largest,
+}
+
 /// <summary>Position of a floating shape: offsets in points from the named reference (<c>column</c>,
 /// <c>page</c>, <c>margin</c>, <c>paragraph</c>...).</summary>
 public sealed record WordFloatingPosition(
@@ -257,7 +273,31 @@ public sealed record WordFloatingPosition(
     double VerticalOffset = 0,
     string VerticalRelativeTo = "paragraph",
     WordWrap Wrap = WordWrap.Square,
-    bool BehindText = false);
+    bool BehindText = false)
+{
+    /// <summary>Horizontal alignment in the reference (<c>left</c>, <c>center</c>, <c>right</c>, <c>inside</c>,
+    /// <c>outside</c>) used instead of <see cref="HorizontalOffset"/>; null when the offset applies.</summary>
+    public string? HorizontalAlignment { get; init; }
+
+    /// <summary>Vertical alignment in the reference (<c>top</c>, <c>center</c>, <c>bottom</c>, <c>inside</c>,
+    /// <c>outside</c>) used instead of <see cref="VerticalOffset"/>; null when the offset applies.</summary>
+    public string? VerticalAlignment { get; init; }
+
+    /// <summary>Room kept free of text above the shape (<c>distT</c>), in points.</summary>
+    public double DistanceTop { get; init; }
+
+    /// <summary>Room kept free of text below the shape (<c>distB</c>), in points.</summary>
+    public double DistanceBottom { get; init; }
+
+    /// <summary>Room kept free of text left of the shape (<c>distL</c>), in points.</summary>
+    public double DistanceLeft { get; init; }
+
+    /// <summary>Room kept free of text right of the shape (<c>distR</c>), in points.</summary>
+    public double DistanceRight { get; init; }
+
+    /// <summary>The sides text flows on around a square, tight or through wrapped shape.</summary>
+    public WordWrapSide WrapSide { get; init; }
+}
 
 /// <summary>A drawing object placed in the text: a picture or a text box.</summary>
 public abstract class WordShape : WordInline

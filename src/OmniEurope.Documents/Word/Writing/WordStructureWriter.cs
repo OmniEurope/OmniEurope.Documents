@@ -213,7 +213,7 @@ internal static class WordStructureWriter
         if (page.ColumnWidths is { Count: > 0 } widths)
         {
             element.Add(new XAttribute(W + "equalWidth", "0"));
-            element.Add(widths.Select(w => new XElement(W + "col", new XAttribute(W + "w", ToTwips(w)), new XAttribute(W + "space", ToTwips(page.ColumnSpacing)))));
+            element.Add(widths.Select((w, i) => new XElement(W + "col", new XAttribute(W + "w", ToTwips(w)), new XAttribute(W + "space", ToTwips(page.ColumnSpacings is { } spaces && i < spaces.Count ? spaces[i] : page.ColumnSpacing)))));
         }
 
         return element;

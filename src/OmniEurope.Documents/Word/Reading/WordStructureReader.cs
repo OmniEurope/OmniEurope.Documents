@@ -167,6 +167,7 @@ internal static class WordStructureReader
             ColumnSpacing = Twips(Attr(columns, "space")) ?? page.ColumnSpacing,
             ColumnSeparator = Attr(columns, "sep") is "1" or "true" or "on",
             ColumnWidths = ColumnWidths(columns),
+            ColumnSpacings = ColumnSpacings(columns, Twips(Attr(columns, "space")) ?? page.ColumnSpacing),
             TitlePage = OnOff(sectPr, "titlePg") ?? false,
             Start = SectionStart(Val(sectPr, "type")),
             PageNumberStart = Int(Attr(numbers, "start")),
@@ -209,6 +210,17 @@ internal static class WordStructureReader
 
         var widths = columns.Elements(W + "col").Select(c => Twips(Attr(c, "w")) ?? 0).ToList();
         return widths.Count > 0 ? widths : null;
+    }
+
+    // The space after each unequal column, when one of them gives its own.
+    private static List<double>? ColumnSpacings(XElement? columns, double spacing)
+    {
+        if (ColumnWidths(columns) is null || !columns!.Elements(W + "col").Any(c => Attr(c, "space") is not null))
+        {
+            return null;
+        }
+
+        return columns.Elements(W + "col").Select(c => Twips(Attr(c, "space")) ?? spacing).ToList();
     }
 
     private static WordSectionStart SectionStart(string? value) => value switch

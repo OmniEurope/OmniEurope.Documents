@@ -84,6 +84,10 @@ public sealed record WordPageSetup
     /// <summary>Widths of unequal columns (null when all columns are equal).</summary>
     public IReadOnlyList<double>? ColumnWidths { get; init; }
 
+    /// <summary>Space after each unequal column (<c>w:col/@w:space</c>), in the order of <see cref="ColumnWidths"/>;
+    /// null when every column is followed by <see cref="ColumnSpacing"/>.</summary>
+    public IReadOnlyList<double>? ColumnSpacings { get; init; }
+
     /// <summary>The first page has its own header and footer.</summary>
     public bool TitlePage { get; init; }
 
