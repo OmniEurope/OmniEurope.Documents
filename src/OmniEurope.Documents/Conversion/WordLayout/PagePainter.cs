@@ -20,6 +20,8 @@ internal sealed class PagePainter(LayoutContext context, bool bookmarks)
                 SectionPages = sectionPages[page.Section],
                 Margins = (page.BodyLeft, page.Setup.MarginTop, page.BodyWidth, page.Setup.Height - page.Setup.MarginTop - page.Setup.MarginBottom),
                 Column = (page.BodyLeft, page.BodyWidth),
+                PageSize = (page.Setup.Width, page.Setup.Height),
+                Floats = page.Floats.GroupBy(f => f.Token).ToDictionary(g => g.Key, g => (g.Last().X, g.Last().Y)),
             };
             Stack(paint, page.Header, page.BodyLeft, page.Setup.HeaderDistance, page.BodyWidth);
             Stack(paint, page.Footer, page.BodyLeft, page.Setup.Height - page.Setup.FooterDistance - page.FooterHeight, page.BodyWidth);
@@ -34,6 +36,22 @@ internal sealed class PagePainter(LayoutContext context, bool bookmarks)
             }
 
             PaintFootnotes(paint, page);
+            PaintSeparators(paint, page);
+        }
+    }
+
+    // The line between columns (w:sep) runs down the middle of each gap, from the top of the columns to the bottom of the
+    // longest one.
+    private static void PaintSeparators(PaintContext paint, PageFrame page)
+    {
+        foreach (var region in page.Regions.Where(r => r.Separator))
+        {
+            var bottom = region.Bottoms.Max();
+            for (var c = 0; c + 1 < region.Columns.Count && bottom > region.Top; c++)
+            {
+                var x = (region.Columns[c].Left + region.Columns[c].Width + region.Columns[c + 1].Left) / 2;
+                paint.Canvas.DrawLine(x, region.Top, x, bottom, Pdf.PdfColor.Black, 0.5);
+            }
         }
     }
 

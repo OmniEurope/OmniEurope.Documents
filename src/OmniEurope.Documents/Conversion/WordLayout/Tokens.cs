@@ -26,6 +26,12 @@ internal sealed class PaintContext(PdfCanvas canvas, LayoutContext layout)
     /// <summary>The page margins box (left, top, width, height) for floating shapes.</summary>
     public (double Left, double Top, double Width, double Height) Margins { get; init; }
 
+    /// <summary>The page size, for floating shapes.</summary>
+    public (double Width, double Height) PageSize { get; init; }
+
+    /// <summary>Where the floating shapes of the page body were placed, by anchor.</summary>
+    public IReadOnlyDictionary<AnchorToken, (double X, double Y)> Floats { get; init; } = new Dictionary<AnchorToken, (double X, double Y)>();
+
     public string FieldText(string kind) => kind switch
     {
         "NUMPAGES" => PageCount.ToString(CultureInfo.InvariantCulture),
@@ -44,6 +50,10 @@ internal abstract class Token(TextStyle style)
 
     /// <summary>A line may break before this token (after a space or a hyphen).</summary>
     public bool BreakBefore { get; set; }
+
+    /// <summary>The bidirectional embedding level of each character of a text token (one entry for other tokens);
+    /// null in a paragraph that is all left to right.</summary>
+    public byte[]? Levels { get; set; }
 
     /// <summary>Height above the baseline.</summary>
     public abstract double Ascent(LayoutContext context);
@@ -121,6 +131,9 @@ internal sealed class AnchorToken(TextStyle style, WordShape shape, Action<Paint
     public WordShape Shape { get; } = shape;
 
     public Action<PaintContext, double, double> Paint { get; } = paint;
+
+    /// <summary>The height the shape takes (a text box fitting its text may be taller than its stated height).</summary>
+    public double Height { get; init; } = shape.Height;
 
     public override double Ascent(LayoutContext context) => 0;
 

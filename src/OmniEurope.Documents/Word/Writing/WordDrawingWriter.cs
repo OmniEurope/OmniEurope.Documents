@@ -80,7 +80,7 @@ internal static class WordDrawingWriter
                     new XElement(Wps + "cNvSpPr", new XAttribute("txBox", "1")),
                     new XElement(Wps + "spPr", Transform(cx, cy), Rectangle(), new XElement(A + "noFill")),
                     new XElement(Wps + "txbx", new XElement(W + "txbxContent", writer.Container(box.Blocks))),
-                    new XElement(Wps + "bodyPr", new XAttribute("wrap", "square")))));
+                    new XElement(Wps + "bodyPr", new XAttribute("wrap", "square"), box.FitsText ? new XElement(A + "spAutoFit") : null))));
         var drawing = Frame(box, id, "Text Box", graphic, new XElement(Wp + "cNvGraphicFramePr"));
         return new XElement(Mc + "AlternateContent", new XElement(Mc + "Choice", new XAttribute("Requires", "wps"), drawing));
     }

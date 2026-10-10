@@ -51,18 +51,30 @@ internal sealed class BidiSequence
 
     private void Weak()
     {
+        Marks();
+        Numbers();
+        Separators();
+        Terminators();
+        Neutralised();
+    }
+
+    // W1: a non-spacing mark takes the type of what it follows, ON after an isolate initiator or PDI.
+    private void Marks()
+    {
         for (var k = 0; k < _t.Length; k++)
         {
-            // W1: a non-spacing mark takes the type of what it follows, ON after an isolate initiator or PDI.
             if (_t[k] == BidiClass.NSM)
             {
                 _t[k] = k == 0 ? _sos : _t[k - 1] is BidiClass.LRI or BidiClass.RLI or BidiClass.FSI or BidiClass.PDI ? BidiClass.ON : _t[k - 1];
             }
         }
+    }
 
+    // W2: a European number after Arabic letters is an Arabic number; W3: Arabic letters are R.
+    private void Numbers()
+    {
         for (var k = 0; k < _t.Length; k++)
         {
-            // W2: a European number after Arabic letters is an Arabic number.
             if (_t[k] == BidiClass.EN && PreviousStrong(k, withArabic: true) == BidiClass.AL)
             {
                 _t[k] = BidiClass.AN;
@@ -71,15 +83,15 @@ internal sealed class BidiSequence
 
         for (var k = 0; k < _t.Length; k++)
         {
-            // W3.
             _t[k] = _t[k] == BidiClass.AL ? BidiClass.R : _t[k];
         }
+    }
 
-        Separators();
-        Terminators();
+    // W6: separators and terminators left are neutral; W7: a European number after left-to-right text is L.
+    private void Neutralised()
+    {
         for (var k = 0; k < _t.Length; k++)
         {
-            // W6, then W7: a European number after left-to-right text is L.
             _t[k] = _t[k] is BidiClass.ES or BidiClass.ET or BidiClass.CS ? BidiClass.ON : _t[k];
             if (_t[k] == BidiClass.EN && PreviousStrong(k, withArabic: false) == BidiClass.L)
             {

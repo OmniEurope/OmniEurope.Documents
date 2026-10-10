@@ -35,6 +35,9 @@ internal abstract class FlowItem
 
     public virtual IEnumerable<(WordNoteKind Kind, int Id)> Notes => [];
 
+    /// <summary>Room left above the item to pass the floating shapes over it (added to its space before).</summary>
+    public virtual double Drop => 0;
+
     /// <summary>Splits the item so its first part fits in <paramref name="available"/>; null when it cannot.</summary>
     public virtual (FlowItem First, FlowItem Remainder)? Split(double available) => null;
 
@@ -48,6 +51,23 @@ internal sealed record ParagraphFrame(double Left, double Right, PdfColor? Shadi
 internal sealed class LineItem(Line line, ParagraphFrame frame, bool first, bool last) : FlowItem
 {
     public Line Line { get; } = line;
+
+    /// <summary>The paragraph the line belongs to, which can break it again.</summary>
+    public ParagraphFlow? Flow { get; init; }
+
+    /// <summary>The line's rank in its paragraph.</summary>
+    public int LineIndex { get; init; }
+
+    /// <summary>The column width the line was broken at.</summary>
+    public double LaidWidth { get; init; }
+
+    /// <summary>The line was broken next to floating shapes, for the place <see cref="LaidAt"/> says.</summary>
+    public bool Wrapped { get; init; }
+
+    /// <summary>Page, column and top the line was broken for; null when it was broken for no place in particular.</summary>
+    public (int Page, int Column, double Top)? LaidAt { get; set; }
+
+    public override double Drop => Line.Drop;
 
     public override IEnumerable<(WordNoteKind Kind, int Id)> Notes => Line.Notes;
 

@@ -43,6 +43,17 @@ internal sealed record TextStyle(PdfFont Font, double Size, PdfColor Color)
     /// <summary>The text is Symbol-font text drawn with look-alikes: its advances are the Symbol font's.</summary>
     public bool SymbolAdvances { get; init; }
 
+    /// <summary>The run is right to left (<c>w:rtl</c>): it is drawn with the complex script font and size, and its
+    /// neutral characters count as right to left in the bidirectional algorithm.</summary>
+    public bool RightToLeft { get; init; }
+
+    /// <summary>The style of complex script text (Hebrew, Arabic...) in this run when its complex script font or size
+    /// differs; null when it is this style.</summary>
+    public TextStyle? ComplexScript { get; init; }
+
+    /// <summary>The style to draw complex script characters with.</summary>
+    public TextStyle ForComplexScript() => ComplexScript ?? this;
+
     private static readonly Dictionary<string, PdfColor> Highlights = new(StringComparer.OrdinalIgnoreCase)
     {
         ["yellow"] = new(255, 255, 0),
@@ -66,11 +77,24 @@ internal sealed record TextStyle(PdfFont Font, double Size, PdfColor Color)
     /// <summary>
     /// The style of fully resolved run properties. Without a size the run is 10 pt and without a font
     /// Times New Roman, as in Word. Superscript and subscript text is drawn at two thirds of the size,
-    /// raised by a third of it or lowered by a tenth.
+    /// raised by a third of it or lowered by a tenth. A right-to-left run takes the complex script font and size.
     /// </summary>
     public static TextStyle From(WordRunProperties p, string? link = null)
     {
-        var size = p.FontSize ?? 10;
+        if (p.RightToLeft == true)
+        {
+            return Build(p, p.FontComplex ?? p.Font, p.FontSizeComplex ?? p.FontSize, link) with { RightToLeft = true };
+        }
+
+        var style = Build(p, p.Font, p.FontSize, link);
+        var complexFont = p.FontComplex ?? p.Font;
+        var complexSize = p.FontSizeComplex ?? p.FontSize;
+        return complexFont == p.Font && complexSize == p.FontSize ? style : style with { ComplexScript = Build(p, complexFont, complexSize, link) };
+    }
+
+    private static TextStyle Build(WordRunProperties p, string? family, double? fontSize, string? link)
+    {
+        var size = fontSize ?? 10;
         var shift = p.Position ?? 0;
         if (p.VerticalPosition is WordVerticalPosition.Superscript or WordVerticalPosition.Subscript)
         {
@@ -78,7 +102,7 @@ internal sealed record TextStyle(PdfFont Font, double Size, PdfColor Color)
             size *= 2.0 / 3;
         }
 
-        var font = new PdfFont(p.Font ?? "Times New Roman", p.Bold == true, p.Italic == true);
+        var font = new PdfFont(family ?? "Times New Roman", p.Bold == true, p.Italic == true);
         return new TextStyle(font, Math.Max(size, 1), ParseColor(p.Color) ?? PdfColor.Black)
         {
             Underline = p.Underline ?? WordUnderline.None,

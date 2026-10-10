@@ -337,6 +337,10 @@ public sealed class WordTextBox(double width, double height) : WordShape(width, 
 {
     /// <summary>Content of the box.</summary>
     public List<WordBlock> Blocks { get; } = [];
+
+    /// <summary>The box grows to fit its text (<c>a:spAutoFit</c>, VML <c>mso-fit-shape-to-text</c>): its height is
+    /// at least <see cref="WordShape.Height"/>, more when its content needs it.</summary>
+    public bool FitsText { get; set; }
 }
 
 /// <summary>Image data with its media type.</summary>

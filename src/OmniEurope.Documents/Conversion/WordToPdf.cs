@@ -27,7 +27,9 @@ public sealed record WordPdfResult(byte[] Pdf, int PageCount, IReadOnlyList<stri
 /// Lays a Word document out into pages and writes it as PDF: styles and numbering resolved, lines broken
 /// and justified, tabs, pagination with keep rules and widow control, sections and columns, tables,
 /// headers and footers with page fields, footnotes and endnotes, pictures (EMF included) and text boxes.
-/// What it renders approximately (substituted fonts, floating shapes without text wrapping...) is listed
+/// Text flows around floating shapes, right-to-left paragraphs and mixed text follow the Unicode Bidirectional
+/// Algorithm, columns may have unequal widths. What it renders approximately (substituted fonts, Arabic without joining
+/// forms...) is listed
 /// in <see cref="WordPdfResult.Gaps"/>.
 /// </summary>
 public static class WordToPdf
@@ -85,23 +87,34 @@ public static class WordToPdf
     /// <summary>Loads a .docx package and converts it.</summary>
     public static WordPdfResult Convert(byte[] docx, WordPdfOptions? options = null) => Convert(WordDocument.Load(docx), options);
 
+    // What the layout of floating shapes, right-to-left text and columns leaves approximate.
     private static void ReportFloatingShapes(WordDocument document, LayoutContext context)
     {
-        var floating = document.Blocks.OfType<WordParagraph>().SelectMany(p => p.Inlines).OfType<WordShape>()
-            .Any(s => s.Floating is { Wrap: not WordWrap.None, BehindText: false });
-        if (floating)
+        var paragraphs = document.Blocks.OfType<WordParagraph>().ToList();
+        var wrapping = paragraphs.SelectMany(p => p.Inlines).OfType<WordShape>().Where(s => s.Floating is { Wrap: not WordWrap.None }).ToList();
+        if (wrapping.Exists(s => s.Floating!.Wrap is WordWrap.Tight or WordWrap.Through))
         {
-            context.Gaps.Add("text does not flow around floating shapes");
+            context.Gaps.Add("tight and through wrapping follows the bounding box of floating shapes");
         }
 
-        if (document.Blocks.OfType<WordParagraph>().Any(p => p.Properties.RightToLeft == true))
+        var elsewhere = document.Blocks.OfType<WordTable>().SelectMany(Shapes)
+            .Concat(document.Sections.SelectMany(s => s.Headers.Values.Concat(s.Footers.Values)).SelectMany(h => h.Blocks.OfType<WordParagraph>()).SelectMany(p => p.Inlines).OfType<WordShape>());
+        if (elsewhere.Any(s => s.Floating is { Wrap: not WordWrap.None }))
         {
-            context.Gaps.Add("right-to-left paragraphs laid out left to right");
+            context.Gaps.Add("text does not flow around floating shapes in tables, headers and footers");
         }
 
-        if (document.Sections.Any(s => s.Page.ColumnWidths is { Count: > 1 } widths && widths.Distinct().Count() > 1))
+        if (paragraphs.Exists(p => p.Text.Any(c => c is >= '؀' and <= 'ۿ' or >= 'ݐ' and <= 'ࣿ')))
         {
-            context.Gaps.Add("unequal columns laid out at the first column's width");
+            context.Gaps.Add("Arabic letters drawn without joining forms");
         }
     }
+
+    private static IEnumerable<WordShape> Shapes(WordTable table) =>
+        table.Rows.SelectMany(r => r.Cells).SelectMany(c => c.Blocks).SelectMany(b => b switch
+        {
+            WordParagraph paragraph => paragraph.Inlines.OfType<WordShape>(),
+            WordTable inner => Shapes(inner),
+            _ => [],
+        });
 }

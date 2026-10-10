@@ -28,7 +28,7 @@ internal static class FragmentPainter
                 box.Paint(context, x, baseline - box.Height);
                 break;
             case AnchorToken anchor:
-                var (left, top) = FloatPosition(context, anchor.Shape.Floating!, x, lineY);
+                var (left, top) = context.Floats.TryGetValue(anchor, out var placed) ? placed : FloatPosition(context, anchor, x, lineY);
                 anchor.Paint(context, left, top);
                 break;
         }
@@ -161,24 +161,12 @@ internal static class FragmentPainter
         }
     }
 
-    /// <summary>The top-left corner of a floating shape from its anchor offsets.</summary>
-    public static (double Left, double Top) FloatPosition(PaintContext context, WordFloatingPosition floating, double anchorX, double paragraphTop)
+    /// <summary>The top-left corner of a floating shape outside the page body (header, footer, note, table cell, text
+    /// box): positioned from the line holding its anchor, which stands for its paragraph.</summary>
+    public static (double Left, double Top) FloatPosition(PaintContext context, AnchorToken anchor, double anchorX, double lineTop)
     {
-        var margins = context.Margins;
-        var left = floating.HorizontalRelativeTo switch
-        {
-            "page" => 0,
-            "margin" or "leftMargin" or "insideMargin" => margins.Left,
-            "character" => anchorX,
-            _ => context.Column.Left,
-        };
-        var top = floating.VerticalRelativeTo switch
-        {
-            "page" or "topMargin" => 0,
-            "margin" => margins.Top,
-            _ => paragraphTop,
-        };
-        return (left + floating.HorizontalOffset, top + floating.VerticalOffset);
+        var frames = new FloatFrames(context.PageSize.Width, context.PageSize.Height, context.Margins, context.Column, anchorX, lineTop, lineTop, context.PageNumber % 2 == 1);
+        return FloatGeometry.Place(anchor.Shape.Floating!, anchor.Shape.Width, anchor.Height, frames);
     }
 }
 

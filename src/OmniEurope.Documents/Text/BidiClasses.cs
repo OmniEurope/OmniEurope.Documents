@@ -65,27 +65,29 @@ internal static class BidiClasses
         return block ?? (codePoint is >= 0x20A0 and <= 0x20CF ? BidiClass.ET : BidiClass.L);
     }
 
-    // The right-to-left blocks: R for Hebrew, NKo, Samaritan, Mandaic and the historic scripts, AL for the Arabic ones.
-    private static BidiClass? Block(int c) => c switch
+    // The right-to-left blocks, first to last code point (the first range holding a code point wins): R for Hebrew, NKo,
+    // Samaritan, Mandaic and the historic scripts, AL for the Arabic, Syriac and Thaana ones.
+    private static readonly (int First, int Last, BidiClass Type)[] Blocks =
+    [
+        (0x0590, 0x05FF, BidiClass.R), (0x0600, 0x07BF, BidiClass.AL), (0x07C0, 0x085F, BidiClass.R), (0x0860, 0x08FF, BidiClass.AL),
+        (0xFB1D, 0xFB4F, BidiClass.R), (0xFB50, 0xFDCF, BidiClass.AL), (0xFDF0, 0xFDFF, BidiClass.AL), (0xFE70, 0xFEFF, BidiClass.AL),
+        (0x10D00, 0x10D3F, BidiClass.AL), (0x10EC0, 0x10EFF, BidiClass.AL), (0x10F30, 0x10F6F, BidiClass.AL), (0x10800, 0x10FFF, BidiClass.R),
+        (0x1EC70, 0x1ECBF, BidiClass.AL), (0x1ED00, 0x1ED4F, BidiClass.AL), (0x1EE00, 0x1EEFF, BidiClass.AL), (0x1E800, 0x1EFFF, BidiClass.R),
+    ];
+
+    private static BidiClass? Block(int codePoint)
     {
-        >= 0x0590 and <= 0x05FF => BidiClass.R,
-        >= 0x0600 and <= 0x07BF => BidiClass.AL,
-        >= 0x07C0 and <= 0x085F => BidiClass.R,
-        >= 0x0860 and <= 0x08FF => BidiClass.AL,
-        >= 0xFB1D and <= 0xFB4F => BidiClass.R,
-        >= 0xFB50 and <= 0xFDCF => BidiClass.AL,
-        >= 0xFDF0 and <= 0xFDFF => BidiClass.AL,
-        >= 0xFE70 and <= 0xFEFF => BidiClass.AL,
-        >= 0x10D00 and <= 0x10D3F => BidiClass.AL,
-        >= 0x10EC0 and <= 0x10EFF => BidiClass.AL,
-        >= 0x10F30 and <= 0x10F6F => BidiClass.AL,
-        >= 0x10800 and <= 0x10FFF => BidiClass.R,
-        >= 0x1EC70 and <= 0x1ECBF => BidiClass.AL,
-        >= 0x1ED00 and <= 0x1ED4F => BidiClass.AL,
-        >= 0x1EE00 and <= 0x1EEFF => BidiClass.AL,
-        >= 0x1E800 and <= 0x1EFFF => BidiClass.R,
-        _ => null,
-    };
+        foreach (var (first, last, type) in Blocks)
+        {
+            if (codePoint >= first && codePoint <= last)
+            {
+                return type;
+            }
+        }
+
+        return null;
+    }
+
 
     private static Dictionary<int, BidiClass> Build()
     {

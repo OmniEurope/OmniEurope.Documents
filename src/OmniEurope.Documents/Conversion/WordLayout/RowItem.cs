@@ -10,6 +10,13 @@ internal sealed class TableContext
 
     /// <summary>Set once a row of the table has been placed, so later pages repeat the header rows.</summary>
     public bool Started { get; set; }
+
+    /// <summary>The column width the table was laid out at.</summary>
+    public double Width { get; init; }
+
+    /// <summary>Lays the whole table out again at another width (a column of another width), its numbering taken up
+    /// where the table started.</summary>
+    public Func<double, List<RowItem>>? Relayout { get; set; }
 }
 
 /// <summary>A cell of a laid-out row: position, margins, formatting and content items.</summary>
@@ -54,6 +61,9 @@ internal sealed class RowItem : FlowItem
     public TableContext Table { get; set; } = new();
 
     public bool IsHeader { get; set; }
+
+    /// <summary>The row's index in its table; -1 for the part of a row that a page or column break split off.</summary>
+    public int Index { get; init; } = -1;
 
     public bool CantSplit { get; set; }
 

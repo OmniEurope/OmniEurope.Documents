@@ -138,14 +138,14 @@ internal sealed class InlineBuilder(RunResolver resolver, ShapeFactory shapes, b
 
     private void AddShape(WordShape shape, TextStyle style)
     {
-        var paint = shapes.Painter(shape);
+        var (paint, height) = shapes.Painter(shape);
         if (shape.Floating is not null)
         {
-            Add(new AnchorToken(style, shape, paint));
+            Add(new AnchorToken(style, shape, paint) { Height = height });
             return;
         }
 
-        Add(new BoxToken(style, shape.Width, shape.Height, paint) { Width = shape.Width });
+        Add(new BoxToken(style, shape.Width, height, paint) { Width = shape.Width });
     }
 
     // Words and runs of spaces become separate tokens; a line may break after a space or a hyphen.
@@ -174,6 +174,13 @@ internal sealed class InlineBuilder(RunResolver resolver, ShapeFactory shapes, b
         if (chunk.Length == 0)
         {
             return;
+        }
+
+        if (style.ComplexScript is not null && HasRightToLeftLetters(chunk))
+        {
+            // Hebrew, Arabic and the other right-to-left scripts are complex script text: Word draws them with the
+            // run's complex script font and size.
+            style = style.ForComplexScript();
         }
 
         foreach (var (text, pieceStyle) in Capitalise(chunk, style))
@@ -222,6 +229,19 @@ internal sealed class InlineBuilder(RunResolver resolver, ShapeFactory shapes, b
         }
 
         _tokens.Add(token);
+    }
+
+    private static bool HasRightToLeftLetters(string text)
+    {
+        foreach (var rune in text.EnumerateRunes())
+        {
+            if (Text.BidiClasses.IsRightToLeft(Text.BidiClasses.Of(rune.Value)))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // No-break spaces (U+00A0, U+202F) and figure spaces keep words together.

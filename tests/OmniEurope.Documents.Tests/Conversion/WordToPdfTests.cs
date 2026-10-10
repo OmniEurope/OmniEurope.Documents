@@ -324,13 +324,14 @@ public sealed class WordToPdfTests
         document.AddParagraph("Police inconnue", null).Inlines[0].Properties = new WordRunProperties { Font = "Police Imaginaire" };
         document.AddParagraph().Add(new WordPicture(WordImage.FromBytes(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Images", "rgb.png"))), 50, 50)
         {
-            Floating = new WordFloatingPosition(10, "margin", 10, "paragraph", WordWrap.Square),
+            Floating = new WordFloatingPosition(10, "margin", 10, "paragraph", WordWrap.Tight),
         });
 
         var gaps = WordToPdf.Convert(document).Gaps;
 
         Assert.Contains("font \"Police Imaginaire\" replaced by LiberationSerif", gaps);
-        Assert.Contains("text does not flow around floating shapes", gaps);
+        Assert.Contains("tight and through wrapping follows the bounding box of floating shapes", gaps);
+        Assert.DoesNotContain("text does not flow around floating shapes", gaps);
     }
 
     // A page holding exactly the given number of 20 pt lines, without spacing between paragraphs.

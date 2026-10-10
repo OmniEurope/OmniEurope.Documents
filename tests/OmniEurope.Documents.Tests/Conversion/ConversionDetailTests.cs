@@ -142,11 +142,16 @@ public sealed class ConversionDetailTests
     }
 
     [Fact]
-    public void Right_to_left_paragraphs_are_reported()
+    public void Right_to_left_paragraphs_are_laid_out_right_to_left_and_no_longer_reported()
     {
         var document = new WordDocument();
         document.Body.Add(new WordParagraph("שלום") { Properties = new WordParagraphProperties { RightToLeft = true } });
 
-        Assert.Contains("right-to-left paragraphs laid out left to right", WordToPdf.Convert(document).Gaps);
+        var result = WordToPdf.Convert(document);
+        var letters = OmniEurope.Documents.Pdf.PdfDocument.Open(result.Pdf).GetPage(1).Letters;
+
+        Assert.DoesNotContain(result.Gaps, g => g.Contains("right-to-left", StringComparison.Ordinal));
+        // The first letter of the word stands rightmost, against the right margin.
+        Assert.Equal(letters.Max(l => l.X), letters.Single(l => l.Value == "שלום"[..1]).X);
     }
 }

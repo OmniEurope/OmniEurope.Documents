@@ -11,13 +11,18 @@ namespace OmniEurope.Documents.Conversion.WordLayout;
 /// </summary>
 internal sealed class TableLayout(LayoutContext context, BlockLayout blocks)
 {
-    public List<FlowItem> Layout(WordTable table, double width)
+    public List<FlowItem> Layout(WordTable table, double width) => [.. Rows(table, width, context.Lists.Clone())];
+
+    // The rows at one width; the table keeps the list counters as they were at its start, to lay it out again at the
+    // width of another column.
+    private List<RowItem> Rows(WordTable table, double width, WordListCounter start)
     {
         var properties = context.Styles.ResolveTable(table.Properties);
         var style = context.Styles.Get(properties.StyleId);
         var grid = Grid(table, properties, width);
         var left = Left(properties, grid.Sum(), width);
-        var shared = new TableContext();
+        var shared = new TableContext { Width = width };
+        shared.Relayout = other => context.WithLists(start.Clone(), () => Rows(table, other, start));
         var rows = new List<RowItem>();
         for (var r = 0; r < table.Rows.Count; r++)
         {
@@ -33,7 +38,7 @@ internal sealed class TableLayout(LayoutContext context, BlockLayout blocks)
         }
 
         MergeVertically(rows);
-        return [.. rows];
+        return rows;
     }
 
     private static List<double> Grid(WordTable table, WordTableProperties properties, double width)
@@ -66,7 +71,7 @@ internal sealed class TableLayout(LayoutContext context, BlockLayout blocks)
     private RowItem Row(WordTable table, int r, List<double> grid, double left, WordTableProperties properties, WordStyle? style)
     {
         var source = table.Rows[r];
-        var row = new RowItem { CantSplit = source.Properties.CantSplit == true };
+        var row = new RowItem { CantSplit = source.Properties.CantSplit == true, Index = r };
         var column = Math.Min(source.Properties.GridBefore ?? 0, grid.Count);
         for (var c = 0; c < source.Cells.Count && column < grid.Count; c++)
         {

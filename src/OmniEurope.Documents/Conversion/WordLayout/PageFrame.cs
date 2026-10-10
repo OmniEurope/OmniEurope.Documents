@@ -9,6 +9,9 @@ internal readonly record struct Placement(FlowItem Item, double X, double Y, dou
 /// <summary>Columns sharing a horizontal band of a page (a page holds several after continuous section breaks).</summary>
 internal sealed class Region(double top, IReadOnlyList<(double Left, double Width)> columns, int firstPlacement)
 {
+    /// <summary>A line is drawn between the columns (<c>w:sep</c>).</summary>
+    public bool Separator { get; init; }
+
     public double Top { get; } = top;
 
     public IReadOnlyList<(double Left, double Width)> Columns { get; } = columns;
@@ -52,6 +55,9 @@ internal sealed class PageFrame
     public List<Region> Regions { get; } = [];
 
     public List<PlacedNote> Footnotes { get; } = [];
+
+    /// <summary>The floating shapes anchored in the body paragraphs placed on the page.</summary>
+    public List<PlacedFloat> Floats { get; } = [];
 
     /// <summary>Height of the separator line drawn above the footnotes.</summary>
     public double SeparatorHeight { get; set; }

@@ -300,6 +300,19 @@ public sealed class WordListCounter(WordNumbering numbering)
         return (Label(numberingId, definition, counters), definition);
     }
 
+    /// <summary>A counter at the same point, numbering on independently (a table laid out again from its start).</summary>
+    internal WordListCounter Clone()
+    {
+        var clone = new WordListCounter(_numbering);
+        foreach (var (id, counters) in _counters)
+        {
+            clone._counters[id] = (int[])counters.Clone();
+        }
+
+        clone._started.UnionWith(_started);
+        return clone;
+    }
+
     private int[] Counters(WordNumberingInstance instance)
     {
         if (!_counters.TryGetValue(instance.AbstractId, out var counters))

@@ -29,7 +29,7 @@ internal sealed class WordDrawingReader(WordContentReader owner)
         var shape = (string?)data?.Attribute("uri") switch
         {
             PictureUri => Picture(data!.Descendants(A + "blip").FirstOrDefault()?.Attribute(R + "embed")?.Value, width, height),
-            ShapeUri => TextBox(data!.Descendants(W + "txbxContent").FirstOrDefault(), width, height, "shape without text"),
+            ShapeUri => Fitted(TextBox(data!.Descendants(W + "txbxContent").FirstOrDefault(), width, height, "shape without text"), data!.Descendants(A + "spAutoFit").Any()),
             var uri => Unsupported(uri),
         };
         if (shape is null)
@@ -41,6 +41,16 @@ internal sealed class WordDrawingReader(WordContentReader owner)
         shape.Description = NonEmpty((string?)properties?.Attribute("descr")) ?? NonEmpty((string?)properties?.Attribute("title"));
         shape.Floating = frame.Name.LocalName == "anchor" ? Floating(frame) : null;
         return shape;
+    }
+
+    private static WordTextBox? Fitted(WordTextBox? box, bool fitsText)
+    {
+        if (box is not null)
+        {
+            box.FitsText = fitsText;
+        }
+
+        return box;
     }
 
     public WordShape? Vml(XElement container)
@@ -56,6 +66,11 @@ internal sealed class WordDrawingReader(WordContentReader owner)
         if (result is not null)
         {
             result.Floating = VmlFloating(style, container);
+        }
+
+        if (result is WordTextBox fitted)
+        {
+            fitted.FitsText = ((string?)container.Descendants(V + "textbox").FirstOrDefault()?.Attribute("style") ?? string.Empty).Contains("mso-fit-shape-to-text:t", StringComparison.OrdinalIgnoreCase);
         }
 
         return result;
@@ -173,9 +188,9 @@ internal sealed class WordDrawingReader(WordContentReader owner)
         var vertical = anchor.Element(Wp + "positionV");
         var wrap = Wrap(anchor);
         var position = new WordFloatingPosition(
-            Measure(horizontal?.Element(Wp + "posOffset")?.Value, EmuPerPoint) ?? 0,
+            Offset(horizontal),
             (string?)horizontal?.Attribute("relativeFrom") ?? "column",
-            Measure(vertical?.Element(Wp + "posOffset")?.Value, EmuPerPoint) ?? 0,
+            Offset(vertical),
             (string?)vertical?.Attribute("relativeFrom") ?? "paragraph",
             wrap.Wrap,
             (string?)anchor.Attribute("behindDoc") is "1" or "true")
@@ -188,20 +203,28 @@ internal sealed class WordDrawingReader(WordContentReader owner)
             DistanceRight = Emu(anchor, "distR"),
             WrapSide = wrap.Side,
         };
-        if ((string?)anchor.Attribute("simplePos") is "1" or "true" && anchor.Element(Wp + "simplePos") is { } simple)
+        return SimplePosition(anchor, position);
+    }
+
+    private static double Offset(XElement? position) => Measure(position?.Element(Wp + "posOffset")?.Value, EmuPerPoint) ?? 0;
+
+    // With simplePos set, the shape is placed by its simple position from the page's top-left corner.
+    private static WordFloatingPosition SimplePosition(XElement anchor, WordFloatingPosition position)
+    {
+        if ((string?)anchor.Attribute("simplePos") is not ("1" or "true") || anchor.Element(Wp + "simplePos") is not { } simple)
         {
-            position = position with
-            {
-                HorizontalOffset = Emu(simple, "x"),
-                HorizontalRelativeTo = "page",
-                VerticalOffset = Emu(simple, "y"),
-                VerticalRelativeTo = "page",
-                HorizontalAlignment = null,
-                VerticalAlignment = null,
-            };
+            return position;
         }
 
-        return position;
+        return position with
+        {
+            HorizontalOffset = Emu(simple, "x"),
+            HorizontalRelativeTo = "page",
+            VerticalOffset = Emu(simple, "y"),
+            VerticalRelativeTo = "page",
+            HorizontalAlignment = null,
+            VerticalAlignment = null,
+        };
     }
 
     private static double Emu(XElement element, string attribute) => Measure((string?)element.Attribute(attribute), EmuPerPoint) ?? 0;

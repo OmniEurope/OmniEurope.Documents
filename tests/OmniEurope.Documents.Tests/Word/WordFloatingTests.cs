@@ -93,6 +93,21 @@ public sealed class WordFloatingTests
         Assert.Null(equal.Sections.Single().Page.ColumnSpacings);
     }
 
+    [Fact]
+    public void A_text_box_growing_to_fit_its_text_is_read_and_written_back()
+    {
+        var anchor = Anchor("""distT="0" distB="0" distL="0" distR="0" simplePos="0" """, """<wp:positionH relativeFrom="column"><wp:posOffset>0</wp:posOffset></wp:positionH><wp:positionV relativeFrom="paragraph"><wp:posOffset>0</wp:posOffset></wp:positionV>""", """<wp:wrapNone/>""")
+            .Replace("</wps:txbx>", "</wps:txbx><wps:bodyPr><a:spAutoFit/></wps:bodyPr>", StringComparison.Ordinal);
+        const string Namespaces = "xmlns:v=\"urn:schemas-microsoft-com:vml\"";
+        var vml = "<w:p><w:r><w:pict " + Namespaces + "><v:shape style=\"width:100pt;height:20pt\"><v:textbox style=\"mso-fit-shape-to-text:t\"><w:txbxContent><w:p/></w:txbxContent></v:textbox></v:shape></w:pict></w:r></w:p>";
+
+        var document = WordDocument.Load(DocxFactory.Build(Paragraph(anchor) + vml));
+        var boxes = document.Blocks.OfType<WordParagraph>().SelectMany(p => p.Inlines).OfType<WordTextBox>().ToList();
+
+        Assert.All(boxes, b => Assert.True(b.FitsText));
+        Assert.True(WordDocument.Load(document.ToArray()).Blocks.OfType<WordParagraph>().SelectMany(p => p.Inlines).OfType<WordTextBox>().First().FitsText);
+    }
+
     private static WordShape Shape(WordDocument document) => document.Blocks.OfType<WordParagraph>().SelectMany(p => p.Inlines).OfType<WordShape>().Single();
 
     private static string Paragraph(string drawing) => $"<w:p><w:r><w:drawing>{drawing}</w:drawing></w:r></w:p>";

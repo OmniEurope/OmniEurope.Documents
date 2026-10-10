@@ -3,7 +3,8 @@ using OmniEurope.Documents.Word;
 
 namespace OmniEurope.Documents.Conversion.WordLayout;
 
-/// <summary>Horizontal geometry and line spacing of one paragraph, relative to its column (0 is the column's left edge).</summary>
+/// <summary>Horizontal geometry and line spacing of one paragraph, relative to its column (0 is the column's start edge:
+/// the left one, the right one in a right-to-left paragraph).</summary>
 internal sealed record LineGeometry(
     double Width,
     double Left,
@@ -16,8 +17,25 @@ internal sealed record LineGeometry(
     WordLineSpacingRule Rule,
     TextStyle MarkStyle);
 
-/// <summary>A token placed on a line.</summary>
-internal readonly record struct Placed(Token Token, int Index, double X, double Width, WordTabLeader Leader = WordTabLeader.None);
+/// <summary>Where the lines of a paragraph may go next to floating shapes.</summary>
+internal interface ILineArea
+{
+    /// <summary>
+    /// The room of a line whose top lies <paramref name="top"/> below the paragraph's first line and whose height is
+    /// <paramref name="height"/>, between <paramref name="left"/> and <paramref name="right"/> (its indents, from the
+    /// start edge of the column).
+    /// </summary>
+    LineRoom Room(double top, double height, double left, double right);
+}
+
+/// <summary>How far a line moves down to find room, and the spans it fills in reading order (from the start edge).</summary>
+internal sealed record LineRoom(double Drop, IReadOnlyList<(double Left, double Right)> Spans)
+{
+    public bool SameAs(LineRoom other) => Math.Abs(Drop - other.Drop) < 0.01 && Spans.SequenceEqual(other.Spans);
+}
+
+/// <summary>A token placed on a line, in the span (the stretch of line between floating shapes) it belongs to.</summary>
+internal readonly record struct Placed(Token Token, int Index, double X, double Width, WordTabLeader Leader = WordTabLeader.None, int Span = 0);
 
 /// <summary>A laid-out line: placed tokens, height and baseline.</summary>
 internal sealed class Line
@@ -32,6 +50,12 @@ internal sealed class Line
     /// <summary>The page or column break that ends the line, if any.</summary>
     public WordBreakKind? BreakAfter { get; set; }
 
+    /// <summary>The index of the line's first token in the paragraph's tokens.</summary>
+    public int StartToken { get; set; }
+
+    /// <summary>The room the line moved down to pass the floating shapes above it.</summary>
+    public double Drop { get; set; }
+
     public IEnumerable<(WordNoteKind Kind, int Id)> Notes =>
         Items.Select(i => i.Token).OfType<TextToken>().Where(t => t.Note is not null).Select(t => t.Note!.Value);
 }
@@ -41,30 +65,37 @@ internal sealed class Line
 /// breaks at the last opportunity (after a space or a hyphen). A word wider than the line is cut between
 /// characters. Tabs go to the next custom stop (left, centre, right or decimal), the hanging indent, or the
 /// default grid. Lines are then aligned or justified (extra space shared by the spaces after the last tab).
+/// Next to floating shapes a line is filled span by span (the stretches left free) and moves down when no span is
+/// left; each span is aligned on its own.
 /// </summary>
 internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
 {
     private const double Epsilon = 0.01;
     private List<Token> _tokens = [];
 
-    public List<Line> Break(List<Token> tokens)
+    /// <summary>Breaks the tokens from <paramref name="start"/> into lines; the first line takes the first-line indent
+    /// when <paramref name="first"/> is set; <paramref name="area"/> gives the room next to floating shapes.</summary>
+    public List<Line> Break(List<Token> tokens, int start = 0, bool first = true, ILineArea? area = null)
     {
         _tokens = tokens;
         var lines = new List<Line>();
-        var index = 0;
+        var index = start;
+        var top = 0.0;
         do
         {
             // A page or column break opening the paragraph leaves its first line (and first-line indent) to what follows.
-            var state = new LineState(lines.TrueForAll(OpensWithBreak) ? geometry.Left + geometry.FirstLine : geometry.Left);
-            index = Fill(index, state);
-            lines.Add(Finish(state, last: index >= _tokens.Count));
+            var left = first && lines.TrueForAll(OpensWithBreak) ? geometry.Left + geometry.FirstLine : geometry.Left;
+            var (line, next) = BreakLine(index, left, top, lines.Count > 0 ? lines[^1].Height : null, area);
+            lines.Add(line);
+            top += line.Drop + line.Height;
+            index = next;
         }
         while (index < _tokens.Count);
 
         if (lines[^1].BreakAfter is not null)
         {
             // After a break the paragraph mark starts a line of its own, as in Word (a page or column break moves it on).
-            lines.Add(Finish(new LineState(geometry.Left), last: true));
+            lines.Add(BreakLine(_tokens.Count, geometry.Left, top, lines[^1].Height, area).Line);
         }
 
         return lines;
@@ -74,6 +105,36 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
     public static bool OpensWithBreak(Line line) =>
         line.BreakAfter is WordBreakKind.Page or WordBreakKind.Column
         && line.Items.TrueForAll(i => i.Token is BreakToken or AnchorToken || i.Token is TextToken { Text: var text } && string.IsNullOrWhiteSpace(text));
+
+    // The room is asked for the height of the line before (or of an empty line), then again for the line's own height
+    // when it came out taller and the room differs there.
+    private (Line Line, int Next) BreakLine(int index, double left, double top, double? previous, ILineArea? area)
+    {
+        if (area is null)
+        {
+            return Attempt(index, new LineRoom(0, [(left, geometry.Right)]));
+        }
+
+        var estimate = previous ?? Finish(new LineState([(left, geometry.Right)]), last: true).Height;
+        var room = area.Room(top, estimate, left, geometry.Right);
+        var attempt = Attempt(index, room);
+        if (attempt.Line.Height > estimate + Epsilon && area.Room(top, attempt.Line.Height, left, geometry.Right) is var taller && !taller.SameAs(room))
+        {
+            attempt = Attempt(index, taller);
+        }
+
+        return attempt;
+    }
+
+    private (Line Line, int Next) Attempt(int index, LineRoom room)
+    {
+        var state = new LineState(room.Spans);
+        var next = index < _tokens.Count ? Fill(index, state) : index;
+        var line = Finish(state, last: next >= _tokens.Count);
+        line.StartToken = index;
+        line.Drop = room.Drop;
+        return (line, next);
+    }
 
     private int Fill(int start, LineState state)
     {
@@ -100,23 +161,17 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
 
             if (Overflows(token, state))
             {
-                if (token.BreakBefore && state.HasContent)
+                var (next, carryOn) = Overflow(k, token, state);
+                if (!carryOn)
                 {
-                    return k;
+                    return next;
                 }
 
-                var resume = BreakPoint(state);
-                if (resume >= 0)
+                if (next >= 0)
                 {
-                    return resume;
+                    k = next - 1;
+                    continue;
                 }
-
-                if (state.HasContent)
-                {
-                    return k;
-                }
-
-                SplitWord(k, state);
             }
 
             state.Add(new Placed(_tokens[k], k, state.X, _tokens[k].Width));
@@ -126,15 +181,44 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
         return _tokens.Count;
     }
 
-    private bool Overflows(Token token, LineState state) =>
-        !(token is TextToken { IsSpace: true }) && state.X + token.Width > geometry.Right + Epsilon;
+    // Where filling goes on when token k overflows its span: the index to go on from and whether the line goes on (in
+    // the next span); (-1, true) places the token here, cut when it is wider than the whole line.
+    private (int Next, bool CarryOn) Overflow(int k, Token token, LineState state)
+    {
+        var resume = token.BreakBefore && state.SpanHasContent ? k : BreakPoint(state);
+        if (resume < 0 && state.SpanHasContent)
+        {
+            resume = k;
+        }
 
-    // The last item a line may break before; the items from there move to the next line.
+        if (resume >= 0)
+        {
+            return (resume, state.NextSpan());
+        }
+
+        if (state.NextSpan())
+        {
+            return (k, true);
+        }
+
+        if (state.HasContent)
+        {
+            return (k, false);
+        }
+
+        SplitWord(k, state);
+        return (-1, true);
+    }
+
+    private static bool Overflows(Token token, LineState state) =>
+        !(token is TextToken { IsSpace: true }) && state.X + token.Width > state.Right + Epsilon;
+
+    // The last item of the span a line may break before; the items from there move on.
     private static int BreakPoint(LineState state)
     {
-        for (var i = state.Items.Count - 1; i > 0; i--)
+        for (var i = state.Items.Count - 1; i > state.SpanStart; i--)
         {
-            if (state.Items[i].Token.BreakBefore && state.Items.Take(i).Any(p => p.Token is not AnchorToken))
+            if (state.Items[i].Token.BreakBefore && state.Items.Skip(state.SpanStart).Take(i - state.SpanStart).Any(p => p.Token is not AnchorToken))
             {
                 var resume = state.Items[i].Index;
                 state.Truncate(i);
@@ -153,16 +237,17 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
             return;
         }
 
-        var room = geometry.Right - state.X;
+        var room = state.Right - state.X;
         var length = 1;
         while (length < word.Text.Length - 1 && context.Measure(word.Text[..(length + 1)], word.Style) <= room)
         {
             length++;
         }
 
-        var rest = new TextToken(word.Text[length..], word.Style) { Note = word.Note, BreakBefore = true };
+        var rest = new TextToken(word.Text[length..], word.Style) { Note = word.Note, BreakBefore = true, Levels = word.Levels?[length..] };
         rest.Width = context.Measure(rest.Text, rest.Style);
         word.Text = word.Text[..length];
+        word.Levels = word.Levels?[..length];
         word.Width = context.Measure(word.Text, word.Style);
         _tokens.Insert(k + 1, rest);
     }
@@ -170,7 +255,7 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
     // Returns false when the tab must start the next line.
     private bool PlaceTab(TabToken tab, int k, LineState state)
     {
-        state.CloseSegment();
+        state.CloseTabRun();
         var (stop, alignment, leader) = NextStop(tab, state.X);
         if (stop > geometry.Right + Epsilon && tab.Positional is null && state.HasContent && stop > geometry.Width)
         {
@@ -185,7 +270,7 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
             return true;
         }
 
-        state.OpenSegment(state.Items.Count, stop, alignment);
+        state.OpenTabRun(state.Items.Count, stop, alignment);
         state.Add(new Placed(tab, k, state.X, 0, leader));
         return true;
     }
@@ -223,45 +308,65 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
 
     private Line Finish(LineState state, bool last)
     {
-        state.CloseSegment();
+        state.CloseTabRun();
         var line = new Line { BreakAfter = state.BreakAfter };
-        var content = state.Items.Where(i => i.Token is not AnchorToken and not BreakToken).ToList();
-        var ascent = content.Count == 0 ? context.LineMetrics(geometry.MarkStyle).Ascent : content.Max(i => i.Token.Ascent(context));
-        var descent = content.Count == 0 ? context.Metrics(geometry.MarkStyle).Descent : content.Max(i => i.Token.Descent(context));
-        var natural = ascent + descent;
-        line.Height = geometry.Rule switch
+        (line.Height, line.Baseline) = Measure(state.Items);
+        var lastLine = last || state.BreakAfter is not null;
+        for (var span = 0; span <= state.Span; span++)
         {
-            WordLineSpacingRule.Exact when geometry.LineSpacing is { } exact => exact,
-            WordLineSpacingRule.AtLeast when geometry.LineSpacing is { } least => Math.Max(natural, least),
-            _ => natural * (geometry.LineSpacing ?? 1),
-        };
-        line.Baseline = geometry.Rule switch
-        {
-            // An exact height smaller than the text cuts its descent first.
-            WordLineSpacingRule.Exact when geometry.LineSpacing is not null => line.Height - (descent * Math.Min(1, line.Height / Math.Max(natural, 0.01))),
-            WordLineSpacingRule.AtLeast when geometry.LineSpacing is not null => line.Height - descent,
-            // Word puts the extra space of a multiple below the text: the baseline stays one ascent down.
-            _ => ascent,
-        };
-        line.Items.AddRange(Align(state, last || state.BreakAfter is not null));
+            var spanItems = state.Items.Where(i => i.Span == span).ToList();
+            line.Items.AddRange(Align(spanItems, state.SpanRight(span), lastLine && span == state.Span));
+        }
+
         if (state.BreakAfter is not null && line.Items.Count == 1 && last)
         {
             // A paragraph holding only a break still takes its line.
             line.Items.Clear();
         }
+
         return line;
     }
 
-    private IEnumerable<Placed> Align(LineState state, bool lastLine)
+    // The height of a line and the distance from its top to its baseline, from its tallest content and its spacing.
+    private (double Height, double Baseline) Measure(List<Placed> items)
     {
-        var items = state.Items;
+        var content = items.Where(i => i.Token is not AnchorToken and not BreakToken).ToList();
+        if (content.Exists(i => i.Token is not TabToken))
+        {
+            // A tab does not make its line taller: Word measures a line by its text (a table of contents tab set in
+            // a larger size than its entry leaves the entry's line height).
+            content.RemoveAll(i => i.Token is TabToken);
+        }
+
+        var ascent = content.Count == 0 ? context.LineMetrics(geometry.MarkStyle).Ascent : content.Max(i => i.Token.Ascent(context));
+        var descent = content.Count == 0 ? context.Metrics(geometry.MarkStyle).Descent : content.Max(i => i.Token.Descent(context));
+        var natural = ascent + descent;
+        var height = geometry.Rule switch
+        {
+            WordLineSpacingRule.Exact when geometry.LineSpacing is { } exact => exact,
+            WordLineSpacingRule.AtLeast when geometry.LineSpacing is { } least => Math.Max(natural, least),
+            _ => natural * (geometry.LineSpacing ?? 1),
+        };
+        var baseline = geometry.Rule switch
+        {
+            // An exact height smaller than the text cuts its descent first.
+            WordLineSpacingRule.Exact when geometry.LineSpacing is not null => height - (descent * Math.Min(1, height / Math.Max(natural, 0.01))),
+            WordLineSpacingRule.AtLeast when geometry.LineSpacing is not null => height - descent,
+            // Word puts the extra space of a multiple below the text: the baseline stays one ascent down.
+            _ => ascent,
+        };
+        return (height, baseline);
+    }
+
+    private IEnumerable<Placed> Align(List<Placed> items, double right, bool lastLine)
+    {
         var end = items.LastOrDefault(i => !(i.Token is TextToken { IsSpace: true }) && i.Token is not BreakToken and not AnchorToken);
         if (items.Count == 0 || end.Token is null)
         {
             return items;
         }
 
-        var free = geometry.Right - (end.X + end.Width);
+        var free = right - (end.X + end.Width);
         var hasTabs = items.Any(i => i.Token is TabToken);
         var alignment = geometry.Alignment;
         if (free <= Epsilon || (hasTabs && alignment is WordAlignment.Center or WordAlignment.Right))
@@ -313,53 +418,80 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
         return result;
     }
 
-    /// <summary>The line being filled.</summary>
-    private sealed class LineState(double start)
+    /// <summary>The line being filled, span by span.</summary>
+    private sealed class LineState(IReadOnlyList<(double Left, double Right)> spans)
     {
-        private (int TabItem, double Stop, WordTabAlignment Alignment)? _segment;
+        private (int TabItem, double Stop, WordTabAlignment Alignment)? _tabRun;
 
-        public double X { get; set; } = start;
+        public double X { get; set; } = spans[0].Left;
 
         public List<Placed> Items { get; } = [];
 
         public WordBreakKind? BreakAfter { get; set; }
 
+        /// <summary>The span being filled.</summary>
+        public int Span { get; private set; }
+
+        /// <summary>The index of the first item of the span being filled.</summary>
+        public int SpanStart { get; private set; }
+
+        public double Right => spans[Span].Right;
+
         public bool HasContent => Items.Any(i => i.Token is not AnchorToken);
 
-        public void Add(Placed placed) => Items.Add(placed);
+        public bool SpanHasContent => Items.Skip(SpanStart).Any(i => i.Token is not AnchorToken);
+
+        public double SpanRight(int span) => spans[span].Right;
+
+        public void Add(Placed placed) => Items.Add(placed with { Span = Span });
+
+        /// <summary>Moves to the next span; false when the line has no other span.</summary>
+        public bool NextSpan()
+        {
+            if (Span + 1 >= spans.Count)
+            {
+                return false;
+            }
+
+            CloseTabRun();
+            Span++;
+            SpanStart = Items.Count;
+            X = spans[Span].Left;
+            return true;
+        }
 
         public void Truncate(int count)
         {
             Items.RemoveRange(count, Items.Count - count);
             X = Items.Count == 0 ? X : Items[^1].X + Items[^1].Width;
-            if (_segment is { } segment && segment.TabItem >= count)
+            if (_tabRun is { } run && run.TabItem >= count)
             {
-                _segment = null;
+                _tabRun = null;
             }
         }
 
-        public void OpenSegment(int tabItem, double stop, WordTabAlignment alignment) => _segment = (tabItem, stop, alignment);
+        public void OpenTabRun(int tabItem, double stop, WordTabAlignment alignment) => _tabRun = (tabItem, stop, alignment);
 
         // Moves the text after a right, centre or decimal tab so it ends, centres or aligns its decimal point on the stop.
-        public void CloseSegment()
+        public void CloseTabRun()
         {
-            if (_segment is not { } segment)
+            if (_tabRun is not { } run)
             {
                 return;
             }
 
-            _segment = null;
-            var tab = Items[segment.TabItem];
+            _tabRun = null;
+            var tab = Items[run.TabItem];
             var width = X - tab.X;
-            var anchor = segment.Alignment switch
+            var anchor = run.Alignment switch
             {
                 WordTabAlignment.Center => width / 2,
-                WordTabAlignment.Decimal => DecimalOffset(segment.TabItem, tab.X) ?? width,
+                WordTabAlignment.Decimal => DecimalOffset(run.TabItem, tab.X) ?? width,
                 _ => width,
             };
-            var shift = Math.Max(0, segment.Stop - anchor - tab.X);
-            Items[segment.TabItem] = tab with { Width = shift };
-            for (var i = segment.TabItem + 1; i < Items.Count; i++)
+            var shift = Math.Max(0, run.Stop - anchor - tab.X);
+            Items[run.TabItem] = tab with { Width = shift };
+            for (var i = run.TabItem + 1; i < Items.Count; i++)
             {
                 Items[i] = Items[i] with { X = Items[i].X + shift };
             }

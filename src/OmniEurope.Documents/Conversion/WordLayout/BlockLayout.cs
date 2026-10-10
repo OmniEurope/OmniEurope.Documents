@@ -101,52 +101,8 @@ internal sealed class BlockLayout
     {
         var resolver = new RunResolver(_context, p, cell);
         var tokens = new InlineBuilder(resolver, Shapes, numbering).Build(paragraph);
-        var left = p.IndentLeft ?? 0;
-        var right = Math.Max(left + 1, width - (p.IndentRight ?? 0));
-        var firstLine = p.FirstLineIndent ?? 0;
-        var geometry = new LineGeometry(
-            width, left, right, firstLine, p.Tabs ?? [], _context.Document.Settings.DefaultTabStop, p.Alignment ?? WordAlignment.Left,
-            p.LineSpacing, p.LineSpacingRule ?? WordLineSpacingRule.Multiple, resolver.Style(p.MarkProperties ?? WordRunProperties.Empty));
-        var lines = new LineBreaker(_context, geometry).Break(tokens);
-        var frame = new ParagraphFrame(Math.Min(left, left + firstLine), right, TextStyle.ParseColor(p.Shading), p.Borders);
-        var items = new List<FlowItem>(lines.Count);
-        for (var i = 0; i < lines.Count; i++)
-        {
-            var item = new LineItem(lines[i], frame, i == 0, i == lines.Count - 1) { Height = lines[i].Height };
-            item.CanBreakBefore = i == 0 || CanBreakBefore(p, i, lines.Count);
-            item.PageBreakBefore = i > 0 && lines[i - 1].BreakAfter == WordBreakKind.Page;
-            item.ColumnBreakBefore = i > 0 && lines[i - 1].BreakAfter == WordBreakKind.Column;
-            items.Add(item);
-        }
-
-        var first = items[0];
-        first.SpaceBefore = p.SpacingBefore ?? 0;
-        first.Source = paragraph.SourceAddress;
-        if (items.Count > 1 && items[1].PageBreakBefore && LineBreaker.OpensWithBreak(lines[0]))
-        {
-            // A paragraph that opens with a page break starts on the next page, its space before kept.
-            items[1].SpaceBefore = first.SpaceBefore;
-        }
-
-        first.PageBreakBefore |= p.PageBreakBefore == true;
-        items[^1].SpaceAfter = p.SpacingAfter ?? 0;
-        if (p.OutlineLevel is >= 0 and < 9 && paragraph.Text.Trim() is { Length: > 0 } title)
-        {
-            first.Bookmark = title.Replace('\n', ' ').Replace('\t', ' ');
-        }
-
-        return items;
-    }
-
-    // Under widow control (Word's default) neither the first nor the last line stands alone on a page.
-    private static bool CanBreakBefore(WordParagraphProperties p, int line, int count)
-    {
-        if (p.KeepLines == true)
-        {
-            return false;
-        }
-
-        return p.WidowControl == false || (line != 1 && line != count - 1);
+        var flow = new ParagraphFlow(_context, paragraph, p, tokens, resolver.Style(p.MarkProperties ?? WordRunProperties.Empty));
+        return [.. flow.Lay(width)];
     }
 }
 
@@ -156,12 +112,21 @@ internal sealed class ShapeFactory(LayoutContext context, BlockLayout blocks)
     private const double BoxInsetX = 7.2;
     private const double BoxInsetY = 3.6;
 
-    public Action<PaintContext, double, double> Painter(WordShape shape) => shape switch
+    /// <summary>Draws the shape with its top-left corner at the given point and the height it takes.</summary>
+    public (Action<PaintContext, double, double> Paint, double Height) Painter(WordShape shape)
     {
-        WordPicture picture => (paint, x, y) => Picture(paint, picture, x, y),
-        WordTextBox box => TextBox(box),
-        _ => (_, _, _) => { },
-    };
+        switch (shape)
+        {
+            case WordPicture picture:
+                return ((paint, x, y) => Picture(paint, picture, x, y), picture.Height);
+            case WordTextBox box:
+                var (paintBox, height) = TextBox(box);
+                return (paintBox, height);
+            default:
+                return ((_, _, _) => { }, shape.Height);
+        }
+    }
+
 
     private void Picture(PaintContext paint, WordPicture picture, double x, double y)
     {
@@ -180,16 +145,17 @@ internal sealed class ShapeFactory(LayoutContext context, BlockLayout blocks)
         paint.Canvas.StrokeRectangle(x, y, picture.Width, picture.Height, Pdf.PdfColor.LightGray, 0.5);
     }
 
-    // The box content is laid out once, then drawn clipped to the box.
-    private Action<PaintContext, double, double> TextBox(WordTextBox box)
+    // The box content is laid out once, then drawn clipped to the box; a box fitting its text grows to hold it.
+    private (Action<PaintContext, double, double> Paint, double Height) TextBox(WordTextBox box)
     {
         var width = Math.Max(1, box.Width - (2 * BoxInsetX));
         var items = blocks.Layout(box.Blocks, width);
-        return (paint, x, y) =>
+        var height = box.FitsText ? Math.Max(box.Height, items.Sum(i => i.SpaceBefore + i.Height + i.SpaceAfter) + (2 * BoxInsetY)) : box.Height;
+        return ((paint, x, y) =>
         {
             var canvas = paint.Canvas;
             canvas.SaveState();
-            canvas.ClipRectangle(x, y, box.Width, box.Height);
+            canvas.ClipRectangle(x, y, box.Width, height);
             var top = y + BoxInsetY;
             foreach (var item in items)
             {
@@ -199,6 +165,6 @@ internal sealed class ShapeFactory(LayoutContext context, BlockLayout blocks)
             }
 
             canvas.RestoreState();
-        };
+        }, height);
     }
 }

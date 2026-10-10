@@ -30,6 +30,21 @@ internal sealed class LayoutContext
 
     public WordListCounter Lists { get; private set; }
 
+    /// <summary>Runs <paramref name="layout"/> with other list counters, then puts the current ones back.</summary>
+    public T WithLists<T>(WordListCounter lists, Func<T> layout)
+    {
+        var current = Lists;
+        Lists = lists;
+        try
+        {
+            return layout();
+        }
+        finally
+        {
+            Lists = current;
+        }
+    }
+
     /// <summary>Note labels in reading order, with the footnote restarts of the settings and sections.</summary>
     public NoteNumbering Notes { get; }
 

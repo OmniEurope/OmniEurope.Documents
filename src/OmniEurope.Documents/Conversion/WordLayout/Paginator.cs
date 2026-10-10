@@ -8,8 +8,10 @@ namespace OmniEurope.Documents.Conversion.WordLayout;
 /// the next column, after stepping back over the items that may not end a column (keep rules); a row that
 /// does not fit splits between lines. Space above an item is dropped at the top of a column reached by a
 /// natural break. Footnotes referenced on a page are placed at its bottom and shrink its columns. Header
-/// rows of a table continuing on a new column are repeated. Before a continuous section break, the columns
-/// of a multi-column section are balanced.
+/// rows of a table continuing on a new column are repeated. Floating shapes are placed with the first line of
+/// their paragraph; the lines after them are broken again around them, as are the paragraphs and tables reaching
+/// a column of another width. Before a continuous section break, the columns of a multi-column section are
+/// balanced.
 /// </summary>
 internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
 {
@@ -25,6 +27,15 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
     private int _columnStart;
     private bool _natural;
     private WordSection _section = null!;
+    private int _droppedOnce = -1;
+
+    // A balancing trial fills the region down to a given height and fails instead of opening a page.
+    private double? _limit;
+    private bool _overflow;
+
+    private bool Trial => _limit is not null;
+
+    private (double Left, double Width) Column => _region.Columns[_column];
 
     public List<PageFrame> Run()
     {
@@ -33,7 +44,7 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
         {
             _section = sections[s];
             context.Notes.Section = s;
-            var width = ColumnWidths(_section.Page)[0].Width;
+            var width = SectionColumns.Of(_section.Page)[0].Width;
             var items = blocks.Layout(_section.Blocks, width);
             if (s == sections.Count - 1)
             {
@@ -58,7 +69,7 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
             var top = _region.Bottoms.Max();
             if (top < _page.BodyBottom - 12)
             {
-                _region = new Region(top, Columns(_page, page), _page.Placements.Count);
+                _region = NewRegion(top, page);
                 _page.Regions.Add(_region);
                 (_column, _y, _columnStart, _natural) = (0, top, 0, false);
                 return;
@@ -72,6 +83,12 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
         }
 
         NewPage(firstOfSection: true);
+    }
+
+    private Region NewRegion(double top, WordPageSetup setup)
+    {
+        var columns = SectionColumns.Of(setup).Select(c => (_page.BodyLeft + c.Left, c.Width)).ToList();
+        return new Region(top, columns, _page.Placements.Count) { Separator = setup.ColumnSeparator && columns.Count > 1 };
     }
 
     private void Place(List<FlowItem> items)
@@ -88,9 +105,72 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
     // Places the item at i (or moves on); returns the next index to place.
     private int PlaceOne(int i)
     {
-        var item = _queue[i];
+        if (!Break(_queue[i], i))
+        {
+            return _queue.Count;
+        }
+
+        RelayTable(i);
+        if (RepeatHeaderRows(i))
+        {
+            return i;
+        }
+
+        var start = _queue[i];
+        var before = AtColumnTop() ? (_natural ? 0 : start.FullSpaceBefore ?? start.SpaceBefore) : start.SpaceBefore;
+        var item = RelayLines(i, _y + before);
+        var drop = item.Drop + (item is RowItem ? PageFloats.RowDrop(_page, Column, _y + before, item.Height) : 0);
+        var bottom = Bottom(item);
+        if (_y + before + drop + item.Height <= bottom + Epsilon || StaysAtTheEnd(item, i))
+        {
+            Put(item, i, before + drop);
+            return i + 1;
+        }
+
+        if (item.Split(bottom - _y - before - drop) is { } parts)
+        {
+            _queue[i] = parts.First;
+            _queue.Insert(i + 1, parts.Remainder);
+            Put(parts.First, i, before + drop);
+            NextColumn(i + 1, natural: true);
+            return i + 1;
+        }
+
+        return AtColumnTop() ? TooTall(item, i, before, drop) : Backtrack(i);
+    }
+
+    // A line holding nothing but a page or column break, and the empty paragraph mark that ends a section before a new
+    // page, stay at the end of the column they end even when they pass its bottom, as in Word.
+    private bool StaysAtTheEnd(FlowItem item, int i)
+    {
+        if (item is not LineItem { Line: var line })
+        {
+            return false;
+        }
+
+        if (LineBreaker.OpensWithBreak(line))
+        {
+            return true;
+        }
+
+        var sections = context.Document.Sections;
+        var index = sections.IndexOf(_section);
+        return i == _queue.Count - 1 && index + 1 < sections.Count
+            && sections[index + 1].Page.Start is not (WordSectionStart.Continuous or WordSectionStart.NextColumn)
+            && line.Items.TrueForAll(p => p.Token is AnchorToken || p.Token is TextToken { IsSpace: true });
+    }
+
+    // Page and column breaks before the item; false when a balancing trial cannot take them.
+    private bool Break(FlowItem item, int i)
+    {
         if (item.PageBreakBefore && _page.Placements.Count > 0)
         {
+            if (Trial)
+            {
+                _overflow = true;
+                return false;
+            }
+
             NewPage(firstOfSection: false, natural: false);
         }
         else if (item.ColumnBreakBefore && !AtColumnTop())
@@ -98,36 +178,104 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
             NextColumn(i, natural: false);
         }
 
-        if (RepeatHeaderRows(i))
+        return !_overflow;
+    }
+
+    // An item that does not fit at the top of a column: pushed down by floating shapes, it tries the next column once;
+    // else it runs past the bottom.
+    private int TooTall(FlowItem item, int i, double before, double drop)
+    {
+        if (Trial)
         {
+            _overflow = true;
+            return _queue.Count;
+        }
+
+        if (drop > Epsilon && _droppedOnce != i)
+        {
+            _droppedOnce = i;
+            _page.Floats.RemoveAll(f => f.QueueIndex >= i);
+            NextColumn(i, natural: true);
             return i;
         }
 
-        var before = AtColumnTop() ? (_natural ? 0 : item.FullSpaceBefore ?? item.SpaceBefore) : item.SpaceBefore;
-        var bottom = Bottom(item);
-        if (_y + before + item.Height <= bottom + Epsilon)
+        context.Gaps.Add("content taller than a page runs past its bottom");
+        Put(item, i, before + drop);
+        return i + 1;
+    }
+
+    // A line placed where it was not broken for (another width, or next to floating shapes) is broken again with the
+    // rest of its paragraph; the first line of a paragraph places the shapes anchored in it first.
+    private FlowItem RelayLines(int i, double top)
+    {
+        if (_queue[i] is not LineItem { Flow: { } flow } line)
         {
-            Put(item, i, before);
-            return i + 1;
+            return _queue[i];
         }
 
-        if (item.Split(bottom - _y - before) is { } parts)
+        if (line.LineIndex == 0 && flow.Anchors.Count > 0)
         {
-            _queue[i] = parts.First;
-            _queue.Insert(i + 1, parts.Remainder);
-            Put(parts.First, i, before);
-            NextColumn(i + 1, natural: true);
-            return i + 1;
+            PageFloats.Register(_page, _queue, i, top, Column);
         }
 
-        if (AtColumnTop())
+        var shapes = PageFloats.Wrapping(_page, Column, top);
+        if (!NeedsRelay(line, top, shapes.Count > 0))
         {
-            context.Gaps.Add("content taller than a page runs past its bottom");
-            Put(item, i, before);
-            return i + 1;
+            return line;
         }
 
-        return Backtrack(i);
+        var end = i;
+        while (end + 1 < _queue.Count && _queue[end + 1] is LineItem next && next.Flow == flow)
+        {
+            end++;
+        }
+
+        var area = shapes.Count > 0 ? new FloatArea(shapes, Column.Left, Column.Width, top, flow.RightToLeft) : null;
+        var lines = flow.Relay(line, (LineItem)_queue[end], Column.Width, area);
+        var y = top;
+        foreach (var laid in lines)
+        {
+            laid.LaidAt = (_pages.Count, _column, y);
+            y += laid.Drop + laid.Height;
+        }
+
+        _queue.RemoveRange(i, end - i + 1);
+        _queue.InsertRange(i, lines);
+        return _queue[i];
+    }
+
+    // A line is broken again unless it lands at the width it was broken at and either where it was broken for or, laid
+    // out free of floating shapes, where no shape is in its way.
+    private bool NeedsRelay(LineItem line, double top, bool shapes)
+    {
+        if (Math.Abs(line.LaidWidth - Column.Width) >= Epsilon)
+        {
+            return true;
+        }
+
+        var placedAsLaid = line.LaidAt is { } at && at.Page == _pages.Count && at.Column == _column && Math.Abs(at.Top - top) < Epsilon;
+        return !placedAsLaid && (line.Wrapped || shapes);
+    }
+
+    // A table reaching a column of another width is laid out again at that width, from the row reached on.
+    private void RelayTable(int i)
+    {
+        if (_queue[i] is not RowItem { Index: >= 0 } row || row.Table.Relayout is not { } relayout || Math.Abs(row.Table.Width - Column.Width) < Epsilon
+            || (row.IsHeader && row.Table.Started))
+        {
+            return;
+        }
+
+        var end = i;
+        while (end + 1 < _queue.Count && _queue[end + 1] is RowItem next && next.Table == row.Table)
+        {
+            end++;
+        }
+
+        var rows = relayout(Column.Width);
+        rows[0].Table.Started = row.Table.Started;
+        _queue.RemoveRange(i, end - i + 1);
+        _queue.InsertRange(i, rows.Where(r => r.Index >= row.Index));
     }
 
     // Moves the items that may not end the column (keep rules) to the next column along with item i.
@@ -145,9 +293,10 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
         }
 
         _page.Placements.RemoveAll(p => p.QueueIndex >= k && p.QueueIndex < i && _page.Placements.IndexOf(p) >= _region.FirstPlacement);
+        _page.Floats.RemoveAll(f => f.QueueIndex >= k);
         RefreshNotes();
         NextColumn(k, natural: true);
-        return k;
+        return _overflow ? _queue.Count : k;
     }
 
     private bool AtColumnTop() => !_page.Placements.Skip(_region.FirstPlacement).Any(p => p.Column == _column);
@@ -156,12 +305,12 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
     {
         var notes = NewNotes(item).ToList();
         var extra = notes.Sum(n => n.Height) + (notes.Count > 0 && _page.Footnotes.Count == 0 ? Separator() : 0);
-        return _page.BodyBottom - _page.NotesHeight - extra;
+        return Math.Min(_page.BodyBottom - _page.NotesHeight - extra, _limit ?? double.PositiveInfinity);
     }
 
     private void Put(FlowItem item, int index, double before)
     {
-        var (left, width) = _region.Columns[_column];
+        var (left, width) = Column;
         _y += before;
         _page.Placements.Add(new Placement(item, left, _y, width, index, _column));
         _y += item.Height + item.SpaceAfter;
@@ -202,6 +351,12 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
             return;
         }
 
+        if (Trial)
+        {
+            _overflow = true;
+            return;
+        }
+
         NewPage(firstOfSection: false, natural);
         _columnStart = queueIndex;
     }
@@ -220,7 +375,7 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
             Footer = HeaderFooter(_section.Footers, setup, firstOfSection, number, width),
         };
         _pages.Add(_page);
-        _region = new Region(_page.BodyTop, Columns(_page, setup), 0);
+        _region = NewRegion(_page.BodyTop, setup);
         _page.Regions.Add(_region);
         (_column, _y, _natural) = (0, _region.Top, natural);
     }
@@ -242,38 +397,6 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
         }
 
         return items;
-    }
-
-    private static List<(double Left, double Width)> Columns(PageFrame page, WordPageSetup setup)
-    {
-        var widths = ColumnWidths(setup);
-        return widths.Select(c => (page.BodyLeft + c.Left, c.Width)).ToList();
-    }
-
-    /// <summary>Columns relative to the left margin: explicit widths, else equal shares.</summary>
-    public static List<(double Left, double Width)> ColumnWidths(WordPageSetup setup)
-    {
-        var result = new List<(double, double)>();
-        var x = 0.0;
-        if (setup.ColumnWidths is { Count: > 0 } widths)
-        {
-            foreach (var width in widths)
-            {
-                result.Add((x, width));
-                x += width + setup.ColumnSpacing;
-            }
-
-            return result;
-        }
-
-        var count = Math.Max(1, setup.Columns);
-        var equal = (setup.ContentWidth - ((count - 1) * setup.ColumnSpacing)) / count;
-        for (var i = 0; i < count; i++)
-        {
-            result.Add((i * (equal + setup.ColumnSpacing), equal));
-        }
-
-        return result;
     }
 
     private IEnumerable<PlacedNote> NewNotes(FlowItem item)
@@ -341,6 +464,12 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
             return;
         }
 
+        if (SectionColumns.Unequal(region.Columns) || _page.Floats.Count > 0)
+        {
+            BalanceByPlacing(region, placed);
+            return;
+        }
+
         var items = placed.Select(p => p.Item).ToList();
         var (low, high) = (items.Max(i => i.Height), region.Bottoms.Max() - region.Top);
         if (ColumnBalancer.Fit(items, region.Columns.Count, high) is null)
@@ -365,42 +494,58 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
             region.Bottoms[column] = Math.Max(region.Bottoms[column], region.Top + y + items[k].Height + items[k].SpaceAfter);
         }
     }
-}
 
-/// <summary>Greedy fill of items into columns of a fixed height, for balancing.</summary>
-internal static class ColumnBalancer
-{
-    /// <summary>Column and offset of each item, or null when they do not fit in <paramref name="columns"/>.</summary>
-    public static List<(int Column, double Y)>? Fit(List<FlowItem> items, int columns, double height)
+    // Columns of other widths (or around floating shapes) hold other numbers of lines: the region's items are placed
+    // again, the paragraphs broken at each column's width, down to the lowest height that holds them.
+    private void BalanceByPlacing(Region region, List<Placement> placed)
     {
-        var slots = new List<(int, double)>(items.Count);
-        var (column, y, start) = (0, 0.0, 0);
-        for (var i = 0; i < items.Count; i++)
+        var first = placed.Min(p => p.QueueIndex);
+        var (low, high) = (placed.Max(p => p.Item.Height), region.Bottoms.Max() - region.Top);
+        if (!TryPlace(region, first, high, keep: false))
         {
-            var before = y == 0 ? 0 : items[i].SpaceBefore;
-            if (y + before + items[i].Height > height + 0.01 && y > 0)
-            {
-                var k = i;
-                while (k > start && !items[k].CanBreakBefore)
-                {
-                    k--;
-                }
-
-                k = k > start ? k : i;
-                slots.RemoveRange(k, slots.Count - k);
-                (column, y, start, i) = (column + 1, 0, k, k - 1);
-                if (column >= columns)
-                {
-                    return null;
-                }
-
-                continue;
-            }
-
-            slots.Add((column, y + before));
-            y += before + items[i].Height + items[i].SpaceAfter;
+            return;
         }
 
-        return slots;
+        for (var step = 0; step < 20 && high - low > 0.5; step++)
+        {
+            var middle = (low + high) / 2;
+            (low, high) = TryPlace(region, first, middle, keep: false) ? (low, middle) : (middle, high);
+        }
+
+        TryPlace(region, first, high, keep: true);
+    }
+
+    // Places the items from queue index first in the region, no column taller than height; restores the region as it
+    // was unless the items fit and keep is set.
+    private bool TryPlace(Region region, int first, double height, bool keep)
+    {
+        var (queue, placements, floats, bottoms) = (_queue, _page.Placements.ToList(), _page.Floats.ToList(), region.Bottoms.ToArray());
+        var state = (_column, _y, _columnStart, _natural);
+        _queue = [.. queue];
+        _page.Placements.RemoveRange(region.FirstPlacement, _page.Placements.Count - region.FirstPlacement);
+        _page.Floats.RemoveAll(f => f.QueueIndex >= first);
+        Array.Fill(region.Bottoms, region.Top);
+        (_column, _y, _columnStart, _natural, _overflow, _limit) = (0, region.Top, first, false, false, region.Top + height);
+        var i = first;
+        while (i < _queue.Count && !_overflow)
+        {
+            i = PlaceOne(i);
+        }
+
+        var fits = !_overflow;
+        (_limit, _overflow) = (null, false);
+        if (fits && keep)
+        {
+            return true;
+        }
+
+        _queue = queue;
+        _page.Placements.Clear();
+        _page.Placements.AddRange(placements);
+        _page.Floats.Clear();
+        _page.Floats.AddRange(floats);
+        Array.Copy(bottoms, region.Bottoms, bottoms.Length);
+        (_column, _y, _columnStart, _natural) = state;
+        return fits;
     }
 }
