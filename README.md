@@ -11,7 +11,7 @@ NuGet package, no user interface, no dependency, licensed under EUPL-1.2.
 | Format | Create | Edit | Read | Convert |
 |---|---|---|---|---|
 | Word (`.docx`) | yes | yes | text and structure | to PDF, to HTML |
-| Excel (`.xlsx`) | yes | yes, in place without loss | cells and sheets | to PDF, to CSV |
+| Excel (`.xlsx`) | yes | yes, in place without loss | cells and sheets | to PDF, to CSV, to HTML |
 | PDF | yes | merge, split, compress, reorder, rotate, stamp | text, **no OCR** | from Word, Excel, Markdown, HTML, images; to PNG |
 | Markdown | yes | yes | yes | to PDF, to Word, to HTML |
 | CSV | yes | yes | yes | to Excel |
@@ -52,8 +52,8 @@ One package, one namespace per format, conversions on their own:
 - `OmniEurope.Documents.Csv`
 - `OmniEurope.Documents.Html`
 - `OmniEurope.Documents.Diff`
-- `OmniEurope.Documents.Conversion` (Word to PDF, Word to HTML, Excel to PDF, HTML and Markdown to Word or
-  PDF, images to PDF)
+- `OmniEurope.Documents.Conversion` (Word to PDF, Word to HTML, Excel to PDF, Excel to HTML, HTML and
+  Markdown to Word or PDF, images to PDF)
 
 ## Dependencies
 

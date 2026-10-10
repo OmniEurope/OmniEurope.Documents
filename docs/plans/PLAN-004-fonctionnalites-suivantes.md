@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 # PLAN-004 : Fonctionnalités suivantes
 
-> Statut : **en cours** (2026-10-10 : lot 12 fractions Excel fait ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
+> Statut : **en cours** (2026-10-10 : lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
 > propriétaire ; l'ordre des lots est celui de la valeur attendue. Un lot ne commence qu'après accord du
 > propriétaire.
 
@@ -100,7 +100,18 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
 
 ## Lot 9 : Excel vers HTML
 
-- [ ] Tableau HTML des valeurs affichées, avec styles, fusions et largeurs de colonnes.
+- [x] Tableau HTML des valeurs affichées, avec styles, fusions et largeurs de colonnes.
+  - Fait (2026-10-10) : `ExcelToHtml.Convert` (`ExcelHtmlOptions`), une page autonome, un tableau par feuille
+    (plage utilisée) : valeurs affichées, largeurs de colonnes (`7w + 5` pixels), fusions en `colspan` et
+    `rowspan` (coupées à la plage, une fusion chevauchante d'un fichier endommagé ignorée), police, taille, gras,
+    italique, souligné, barré, couleur, remplissage, alignements, retour à la ligne et bordure en classes d'une
+    feuille de style intégrée. Texte du classeur encodé par l'encodeur HTML du paquet, noms de police réduits aux
+    lettres, chiffres, espaces, tirets et soulignés, couleurs acceptées en `RRGGBB` seulement ; le corps sort
+    inchangé du `HtmlSanitizer` par défaut. 14 tests dans `ExcelToHtmlTests` sur des classeurs écrits par le
+    paquet, enregistrés puis relus : chaque tableau relu par `HtmlParser`, fusions étalées sur la grille, donne
+    les enregistrements de `XlsxCsvConverter.ToCsv` (culture fr-FR, deux feuilles). Non rendus : hauteurs de
+    lignes, lignes et colonnes masquées, texte qui déborde sur les cellules vides voisines (coupé à sa cellule),
+    couleurs des formats de nombre, mises en forme conditionnelles, images et graphiques.
 - Contrôle : le HTML produit, relu par l'analyseur du paquet, donne les mêmes textes que l'export CSV.
 
 ## Lot 10 : fidélité de la mise en page Word

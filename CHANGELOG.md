@@ -6,6 +6,15 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- `ExcelToHtml.Convert` (`ExcelHtmlOptions`): a workbook to one standalone HTML page, each sheet's used range a table
+  of the values as Excel displays them (the texts of the CSV export), with column widths (`7w + 5` pixels), merged
+  cells as `colspan` and `rowspan` (clipped to the used range, an overlapping range from a damaged file ignored),
+  and the font, size, weight, slant, underline, strike, colour, fill, alignment (General: numbers and dates right,
+  booleans and errors centred), wrapping and border of each cell as classes of an embedded style sheet; grid lines
+  and sheet titles optional, a cell bound (`MaxCells`, default 1,000,000). Workbook text is encoded and font names
+  reduced to letters, digits, spaces, hyphens and underscores, colours accepted only as `RRGGBB`; the body passes
+  the default `HtmlSanitizer` unchanged. Not rendered: row heights, hidden rows and columns, text running on into
+  empty cells (clipped to its cell), number format colours, conditional formats, pictures and charts.
 - Fraction number formats are shown as fractions (they were shown as decimals): `# ?/?`, `# ??/??` and more
   placeholders take the fraction closest to the value whose denominator has at most that many digits (up to nine),
   a written denominator (`# ?/8`, `# ??/100`) is kept and the numerator rounded half away from zero, without an
