@@ -133,6 +133,14 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
 - [x] Numérotation des notes de bas de page qui recommence à chaque page ou à chaque section (réglage du
   document et `w:footnotePr` de chaque section, lu et écrit), dans l'appel en texte comme dans la note
   (2026-10-07).
+- [x] Polices Symbol et Wingdings (2026-10-10, décision du propriétaire) : le texte Symbol, dessiné avec
+  Liberation Sans, avance des largeurs du fichier de métriques Core 14 d'Adobe (`Symbol.afm`, livré non
+  modifié avec sa licence `MustRead.html`) ; le texte Wingdings et Webdings est dessiné avec Noto Sans
+  Symbols 2 (OFL 1.1, repli Liberation Sans) sur la hauteur de ligne de Liberation Sans. 7 tests (avances
+  relues dans le PDF, glyphes présents, texte extrait). Non fait : table Wingdings complète (aucune
+  correspondance publiée sous licence Unicode : les documents WG2 en sont exclus), elle garde ses 21
+  entrées, un code inconnu reste dessiné en puce ; largeurs et hauteur de ligne propres à Wingdings
+  inconnues (données Microsoft, exclues).
 - [ ] Texte qui contourne les objets flottants, écriture de droite à gauche, colonnes de largeurs inégales.
 - Contrôle : positions des lignes vérifiées au point près sur des pages calibrées.
 

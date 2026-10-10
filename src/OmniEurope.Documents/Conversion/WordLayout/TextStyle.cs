@@ -33,6 +33,16 @@ internal sealed record TextStyle(PdfFont Font, double Size, PdfColor Color)
     /// <summary>External link target of the text, if any.</summary>
     public string? Link { get; init; }
 
+    /// <summary>The font whose vertical metrics lay the text out, when it is not <see cref="Font"/>: a symbol font
+    /// drawn with a stand-in face whose own line is taller keeps the line of a text face.</summary>
+    public PdfFont? LineFont { get; init; }
+
+    /// <summary>The font the line height and decorations are measured with.</summary>
+    public PdfFont MetricsFont => LineFont ?? Font;
+
+    /// <summary>The text is Symbol-font text drawn with look-alikes: its advances are the Symbol font's.</summary>
+    public bool SymbolAdvances { get; init; }
+
     private static readonly Dictionary<string, PdfColor> Highlights = new(StringComparer.OrdinalIgnoreCase)
     {
         ["yellow"] = new(255, 255, 0),

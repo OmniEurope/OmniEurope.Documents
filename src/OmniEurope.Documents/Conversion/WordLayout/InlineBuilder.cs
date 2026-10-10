@@ -52,7 +52,7 @@ internal sealed class InlineBuilder(RunResolver resolver, ShapeFactory shapes, b
         var properties = (paragraph.MarkProperties ?? WordRunProperties.Empty).Overlay(next.Level.RunProperties);
         var font = resolver.Resolve(properties).Font;
         var style = resolver.Style(properties);
-        style = style with { Font = Symbols.Font(font, style.Font) };
+        style = Symbols.Style(font, style);
         if (next.Label.Length > 0)
         {
             AddText(Symbols.Map(next.Label, font, Context.Gaps), style, null);
@@ -91,7 +91,7 @@ internal sealed class InlineBuilder(RunResolver resolver, ShapeFactory shapes, b
         switch (inline)
         {
             case WordText text when Symbols.IsSymbolFont(style.Font.Family):
-                AddText(Symbols.Map(text.Value, style.Font.Family, Context.Gaps), style with { Font = Symbols.Font(style.Font.Family, style.Font) }, null);
+                AddText(Symbols.Map(text.Value, style.Font.Family, Context.Gaps), Symbols.Style(style.Font.Family, style), null);
                 break;
             case WordText text:
                 AddText(text.Value, style, null);
@@ -104,7 +104,7 @@ internal sealed class InlineBuilder(RunResolver resolver, ShapeFactory shapes, b
                 _breakNext = true;
                 break;
             case WordSymbol symbol:
-                AddText(Symbols.Map(symbol.Character.ToString(), symbol.Font, Context.Gaps), style with { Font = Symbols.Font(symbol.Font, style.Font) }, null);
+                AddText(Symbols.Map(symbol.Character.ToString(), symbol.Font, Context.Gaps), Symbols.Style(symbol.Font, style), null);
                 break;
             default:
                 AddComplex(inline, style, link);

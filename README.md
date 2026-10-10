@@ -65,9 +65,17 @@ the owner's decision.
 The test projects use xUnit v3, `Microsoft.Testing.Extensions.TrxReport` and `coverlet.MTP`; they never
 ship in the package.
 
-Third-party data shipped in the package: the Liberation (Sans, Serif, Mono), Carlito and Caladea fonts,
-under the SIL Open Font License 1.1 (free commercial use, embedding allowed, licence included in
-`src/OmniEurope.Documents/Fonts/`).
+Third-party data shipped in the package:
+
+- the Liberation (Sans, Serif, Mono), Carlito and Caladea fonts and Noto Sans Symbols 2 (release
+  `NotoSansSymbols2-v2.008` of https://github.com/notofonts/symbols, unhinted TrueType), under the SIL Open
+  Font License 1.1 (free commercial use, embedding allowed, sold only with software; licences in
+  `src/OmniEurope.Documents/Fonts/Bundled/LICENSE-*.txt`, packed under `fonts/`);
+- the Symbol font metrics of Adobe's Core 14 AFM files (`Symbol.afm` from
+  https://download.macromedia.com/pub/developer/opentype/tech-notes/Core14_AFMs.zip), unmodified, with
+  their licence `MustRead.html` (use, copy and distribution for any purpose, copyright notices kept,
+  modifications noted), in `src/OmniEurope.Documents/Fonts/Bundled/Adobe/`, packed under `fonts/adobe/`
+  and embedded in the assembly next to the metrics.
 
 ## Development
 

@@ -47,12 +47,7 @@ internal static class FragmentPainter
         }
 
         var simpleUnderline = style.Underline == WordUnderline.Single || (style.Underline == WordUnderline.Words && !space);
-        canvas.DrawText(text, x, shifted, style.Font, style.Size, style.Color, style.CharacterSpacing, underline: simpleUnderline && !space, strikethrough: style.Strike && !space);
-        if (space && (simpleUnderline || style.Strike))
-        {
-            Decorate(canvas, style, metrics, x, shifted, width, simpleUnderline ? WordUnderline.Single : WordUnderline.None, style.Strike);
-        }
-
+        DrawGlyphs(context, style, metrics, text, space, simpleUnderline, (x, shifted, width));
         Decorate(canvas, style, metrics, x, shifted, width, simpleUnderline ? WordUnderline.None : style.Underline, false);
         if (style.DoubleStrike)
         {
@@ -64,6 +59,43 @@ internal static class FragmentPainter
         if (style.Link is { } link && !space)
         {
             canvas.AddLink(x, shifted - metrics.Ascent, width, metrics.Ascent + metrics.Descent, link);
+        }
+    }
+
+    // Words carry their own underline and strike; spaces and Symbol-font text (placed glyph by glyph) get theirs
+    // over their whole width.
+    private static void DrawGlyphs(PaintContext context, TextStyle style, PdfFontMetrics metrics, string text, bool space, bool simpleUnderline, (double X, double Baseline, double Width) box)
+    {
+        if (!space && !style.SymbolAdvances)
+        {
+            context.Canvas.DrawText(text, box.X, box.Baseline, style.Font, style.Size, style.Color, style.CharacterSpacing, underline: simpleUnderline, strikethrough: style.Strike);
+            return;
+        }
+
+        if (style.SymbolAdvances)
+        {
+            DrawSymbolGlyphs(context, style, text, box.X, box.Baseline);
+        }
+        else
+        {
+            context.Canvas.DrawText(text, box.X, box.Baseline, style.Font, style.Size, style.Color, style.CharacterSpacing);
+        }
+
+        if (simpleUnderline || style.Strike)
+        {
+            Decorate(context.Canvas, style, metrics, box.X, box.Baseline, box.Width, simpleUnderline ? WordUnderline.Single : WordUnderline.None, style.Strike);
+        }
+    }
+
+    // Symbol-font text is drawn with look-alikes whose advances differ from Symbol's: each character is placed at
+    // the Symbol font's advance.
+    private static void DrawSymbolGlyphs(PaintContext context, TextStyle style, string text, double x, double baseline)
+    {
+        foreach (var rune in text.EnumerateRunes())
+        {
+            var glyph = rune.ToString();
+            context.Canvas.DrawText(glyph, x, baseline, style.Font, style.Size, style.Color, style.CharacterSpacing);
+            x += context.Layout.Measure(glyph, style);
         }
     }
 

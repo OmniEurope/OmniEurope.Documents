@@ -6,12 +6,16 @@ namespace OmniEurope.Documents.Fonts;
 
 /// <summary>
 /// Resolves a family name and style to a font. Registered fonts come first; then the fonts bundled in this
-/// package (Liberation Sans, Serif and Mono, Carlito, Caladea, SIL OFL 1.1), reached directly or through the
-/// families they are metric-compatible with (Arial, Helvetica, Times New Roman, Courier New, Calibri,
-/// Cambria); any other family falls back by class (monospaced, sans-serif, else serif). Thread-safe.
+/// package (Liberation Sans, Serif and Mono, Carlito, Caladea and the symbol face Noto Sans Symbols 2, SIL OFL
+/// 1.1), reached directly or through the families they are metric-compatible with (Arial, Helvetica, Times New
+/// Roman, Courier New, Calibri, Cambria); any other family falls back by class (monospaced, sans-serif, else
+/// serif). Thread-safe.
 /// </summary>
 public sealed class FontLibrary
 {
+    // The symbol face has a regular style only: every style resolves to it.
+    private const string SymbolStem = "NotoSansSymbols2";
+
     private static readonly Lazy<FontLibrary> Shared = new(() => new FontLibrary());
     private static readonly ConcurrentDictionary<string, TrueTypeFont> BundledCache = new(StringComparer.Ordinal);
 
@@ -25,6 +29,7 @@ public sealed class FontLibrary
         ["Cousine"] = "LiberationMono",
         ["Carlito"] = "Carlito", ["Calibri"] = "Carlito", ["Calibri Light"] = "Carlito",
         ["Caladea"] = "Caladea", ["Cambria"] = "Caladea",
+        ["Noto Sans Symbols 2"] = SymbolStem,
     };
 
     private static readonly string[] MonospacedHints = ["mono", "courier", "consol", "code", "typewriter", "fixed"];
@@ -35,7 +40,7 @@ public sealed class FontLibrary
     /// <summary>A library holding only the bundled fonts.</summary>
     public static FontLibrary Default => Shared.Value;
 
-    /// <summary>The bundled family names.</summary>
+    /// <summary>The bundled text family names (the symbol face Noto Sans Symbols 2, regular only, is left out).</summary>
     public static IReadOnlyList<string> BundledFamilies { get; } = ["Liberation Sans", "Liberation Serif", "Liberation Mono", "Carlito", "Caladea"];
 
     /// <summary>Registers a font file under its own family name and, optionally, an extra alias.</summary>
@@ -95,7 +100,7 @@ public sealed class FontLibrary
         }
 
         var stem = BundledStem((family ?? string.Empty).Trim());
-        var fallbackStem = stem.StartsWith("Liberation", StringComparison.Ordinal) ? stem : stem == "Carlito" ? "LiberationSans" : "LiberationSerif";
+        var fallbackStem = stem.StartsWith("Liberation", StringComparison.Ordinal) ? stem : stem is "Carlito" or SymbolStem ? "LiberationSans" : "LiberationSerif";
         var fallback = Bundled(fallbackStem, bold, italic);
         return fallback.HasGlyph(codePoint) ? fallback : primary;
     }
@@ -103,7 +108,7 @@ public sealed class FontLibrary
     /// <summary>The bundled face of a stem (LiberationSans, Carlito...).</summary>
     public static TrueTypeFont Bundled(string stem, bool bold, bool italic)
     {
-        var style = (bold, italic) switch
+        var style = stem == SymbolStem ? "Regular" : (bold, italic) switch
         {
             (true, true) => "BoldItalic",
             (true, false) => "Bold",

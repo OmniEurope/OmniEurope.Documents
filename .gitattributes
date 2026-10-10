@@ -17,3 +17,6 @@ docs/third-party-licenses/** -text
 *.jpf binary
 *.j2k binary
 *.pgm binary
+
+# Adobe AFM files ship byte for byte as published (their licence asks for every modification to be noted).
+src/OmniEurope.Documents/Fonts/Bundled/Adobe/** -text

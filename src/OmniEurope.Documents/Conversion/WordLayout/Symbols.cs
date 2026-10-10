@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: EUPL-1.2
 using System.Text;
+using OmniEurope.Documents.Fonts;
 using OmniEurope.Documents.Pdf.Writing;
 
 namespace OmniEurope.Documents.Conversion.WordLayout;
@@ -7,10 +8,19 @@ namespace OmniEurope.Documents.Conversion.WordLayout;
 /// <summary>
 /// Characters of the Symbol and Wingdings fonts (which are not bundled) drawn with Unicode look-alikes
 /// that the bundled fonts carry. Symbol-font text is addressed either directly or in the private use area
-/// (U+F000 + code).
+/// (U+F000 + code). Symbol text is drawn with Liberation Sans but advances by the Symbol font's own widths
+/// (Adobe's Core 14 metrics). Wingdings and Webdings text is drawn with Noto Sans Symbols 2 (Liberation Sans
+/// for a character it lacks) and keeps the line height of Liberation Sans; a Wingdings code without a
+/// look-alike in the table below is drawn as a bullet (•).
 /// </summary>
 internal static class Symbols
 {
+    /// <summary>The bundled face Symbol text is drawn with.</summary>
+    public const string SymbolFace = "Liberation Sans";
+
+    /// <summary>The bundled face Wingdings and Webdings text is drawn with.</summary>
+    public const string DingbatFace = "Noto Sans Symbols 2";
+
     private const string SymbolUpper = "ΑΒΧΔΕΦΓΗΙϑΚΛΜΝΟΠΘΡΣΤΥςΩΞΨΖ";
     private const string SymbolLower = "αβχδεφγηιϕκλμνοπθρστυϖωξψζ";
 
@@ -28,16 +38,55 @@ internal static class Symbols
         [0xFC] = '√', [0xFB] = '×', [0xFE] = '√', [0xA0] = '▪', [0x4A] = '☺',
     };
 
-    public static bool IsSymbolFont(string? font) =>
-        font is not null && (font.Equals("Symbol", StringComparison.OrdinalIgnoreCase) || font.StartsWith("Wingdings", StringComparison.OrdinalIgnoreCase) || font.StartsWith("Webdings", StringComparison.OrdinalIgnoreCase));
+    // The Symbol code each drawn character stands for: the code of its look-alike entry (which wins: Symbol 0xB8
+    // draws ÷, whose own code 0xF7 is another Symbol character), else the code passed through unchanged.
+    private static readonly Lazy<Dictionary<char, int>> SymbolCodes = new(() =>
+    {
+        var codes = new Dictionary<char, int>();
+        var unmapped = Enumerable.Range(0x20, 0xE0).Where(code => MapSymbol(code) is null);
+        foreach (var code in unmapped)
+        {
+            codes[(char)code] = code;
+        }
 
-    /// <summary>The font to draw a symbol with: a bundled sans face instead of a symbol font.</summary>
-    public static PdfFont Font(string? symbolFont, PdfFont current) => IsSymbolFont(symbolFont) ? current with { Family = "Liberation Sans" } : current;
+        foreach (var code in Enumerable.Range(0x20, 0xE0).Except(unmapped))
+        {
+            codes[MapSymbol(code)!.Value] = code;
+        }
+
+        return codes;
+    });
+
+    public static bool IsSymbolFont(string? font) =>
+        font is not null && (IsSymbol(font) || font.StartsWith("Wingdings", StringComparison.OrdinalIgnoreCase) || font.StartsWith("Webdings", StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// The style to draw a symbol font's text with: Symbol text in <see cref="SymbolFace"/> advancing by the
+    /// Symbol widths, Wingdings and Webdings text in <see cref="DingbatFace"/> on a <see cref="SymbolFace"/> line.
+    /// Any other font leaves the style unchanged.
+    /// </summary>
+    public static TextStyle Style(string? symbolFont, TextStyle style)
+    {
+        if (!IsSymbolFont(symbolFont))
+        {
+            return style;
+        }
+
+        var text = style.Font with { Family = SymbolFace };
+        return IsSymbol(symbolFont)
+            ? style with { Font = text, SymbolAdvances = true }
+            : style with { Font = style.Font with { Family = DingbatFace }, LineFont = text };
+    }
+
+    /// <summary>The Symbol font's advance, in thousandths of an em, of a character <see cref="Map"/> produced
+    /// from Symbol text; null when the Symbol font has no such character.</summary>
+    public static int? SymbolAdvance(char drawn) =>
+        SymbolCodes.Value.TryGetValue(drawn, out var code) ? SymbolMetrics.Advance(code) : null;
 
     /// <summary>The text with symbol-font characters replaced by look-alikes.</summary>
     public static string Map(string text, string? font, ISet<string> gaps)
     {
-        var symbol = font?.Equals("Symbol", StringComparison.OrdinalIgnoreCase) == true;
+        var symbol = IsSymbol(font);
         var dingbats = IsSymbolFont(font) && !symbol;
         var builder = new StringBuilder(text.Length);
         foreach (var c in text)
@@ -55,6 +104,8 @@ internal static class Symbols
 
         return builder.ToString();
     }
+
+    private static bool IsSymbol(string? font) => font?.Equals("Symbol", StringComparison.OrdinalIgnoreCase) == true;
 
     private static char? MapSymbol(int code) => code switch
     {

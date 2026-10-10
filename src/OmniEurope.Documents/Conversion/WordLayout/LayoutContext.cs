@@ -35,15 +35,31 @@ internal sealed class LayoutContext
 
     public SortedSet<string> Gaps { get; } = new(StringComparer.Ordinal);
 
-    public double Measure(string text, TextStyle style) => Builder.MeasureText(text, style.Font, style.Size, style.CharacterSpacing);
+    public double Measure(string text, TextStyle style) =>
+        style.SymbolAdvances ? MeasureSymbol(text, style) : Builder.MeasureText(text, style.Font, style.Size, style.CharacterSpacing);
+
+    // Symbol-font text is drawn with look-alikes but advances by the Symbol font's own widths; a character the
+    // Symbol font lacks takes the width of the face that draws it.
+    private double MeasureSymbol(string text, TextStyle style)
+    {
+        double width = 0;
+        foreach (var rune in text.EnumerateRunes())
+        {
+            width += rune.IsBmp && Symbols.SymbolAdvance((char)rune.Value) is { } advance
+                ? (advance * style.Size / 1000) + style.CharacterSpacing
+                : Builder.MeasureText(rune.ToString(), style.Font, style.Size, style.CharacterSpacing);
+        }
+
+        return width;
+    }
 
     public Pdf.Writing.PdfFontMetrics Metrics(TextStyle style)
     {
         CheckFont(style.Font.Family);
-        if (!_metrics.TryGetValue((style.Font, style.Size), out var metrics))
+        if (!_metrics.TryGetValue((style.MetricsFont, style.Size), out var metrics))
         {
-            metrics = Builder.Metrics(style.Font, style.Size);
-            _metrics[(style.Font, style.Size)] = metrics;
+            metrics = Builder.Metrics(style.MetricsFont, style.Size);
+            _metrics[(style.MetricsFont, style.Size)] = metrics;
         }
 
         return metrics;
@@ -55,12 +71,12 @@ internal sealed class LayoutContext
     /// </summary>
     public Pdf.Writing.PdfFontMetrics LineMetrics(TextStyle style)
     {
-        if (!_lineMetrics.TryGetValue((style.Font, style.Size), out var line))
+        if (!_lineMetrics.TryGetValue((style.MetricsFont, style.Size), out var line))
         {
             var metrics = Metrics(style);
-            var leading = Builder.ExternalLeading(style.Font, style.Size);
+            var leading = Builder.ExternalLeading(style.MetricsFont, style.Size);
             line = metrics with { Ascent = metrics.Ascent + leading, LineHeight = metrics.LineHeight + leading };
-            _lineMetrics[(style.Font, style.Size)] = line;
+            _lineMetrics[(style.MetricsFont, style.Size)] = line;
         }
 
         return line;

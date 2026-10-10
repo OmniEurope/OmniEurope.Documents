@@ -112,6 +112,15 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Changed
 
+- Word to PDF draws Symbol and Wingdings text closer to Word. Symbol text (runs, symbols and list labels in the
+  Symbol font) is still drawn with Liberation Sans look-alikes but each character advances by the Symbol font's
+  own width, read from Adobe's Core 14 metrics file `Symbol.afm` (shipped unmodified with its licence
+  `MustRead.html`, packed under `fonts/adobe/`): a Symbol bullet is 0.46 em wide. Wingdings and Webdings text is
+  drawn with the bundled Noto Sans Symbols 2 (SIL OFL 1.1, Liberation Sans for a character it lacks) and keeps the
+  line height of Liberation Sans, the Noto line (1.7 em) being much taller. `FontLibrary` resolves
+  `Noto Sans Symbols 2` in every style to its regular face. Unchanged: the Wingdings table keeps its 21 look-alikes
+  (an unknown code is still drawn as a bullet) and the line height of Symbol text is that of Liberation Sans.
+
 - Word to PDF lays lines out as Word does: a single line holds the font's external leading (its hhea line gap beyond
   the Windows ascent and descent) above its text; the extra space of a multiple line spacing goes below the text;
   after a page or column break the paragraph mark starts a line of its own; a paragraph opening with a page or

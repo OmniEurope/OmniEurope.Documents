@@ -35,4 +35,10 @@
     <None Include="Fonts\Bundled\LICENSE-*.txt" Pack="true" PackagePath="fonts/" />
   </ItemGroup>
 
+  <!-- Symbol advance widths: Adobe's Core 14 metrics file, unmodified, always with its licence (MustRead.html). -->
+  <ItemGroup>
+    <EmbeddedResource Include="Fonts\Bundled\Adobe\Symbol.afm;Fonts\Bundled\Adobe\MustRead.html" LogicalName="OmniEurope.Documents.Fonts.Adobe.%(Filename)%(Extension)" />
+    <None Include="Fonts\Bundled\Adobe\Symbol.afm;Fonts\Bundled\Adobe\MustRead.html" Pack="true" PackagePath="fonts/adobe/" />
+  </ItemGroup>
+
 </Project>
