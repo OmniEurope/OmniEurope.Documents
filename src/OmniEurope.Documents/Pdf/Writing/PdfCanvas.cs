@@ -262,6 +262,12 @@ public sealed class PdfCanvas
             .Set("Contents", table.Add(EmbeddedFont.Stream(FinishContent())));
         if (_annotations.Count > 0)
         {
+            if (_document.IsArchive)
+            {
+                // PDF/A: every annotation is printable (ISO 19005-2, 6.3.2).
+                _annotations.ForEach(a => a.SetNumber("F", 4));
+            }
+
             page.Set("Annots", new PdfArray(_annotations.Select(a => (PdfObject)table.Add(a))));
         }
 
@@ -330,7 +336,7 @@ public sealed class PdfCanvas
         foreach (var rune in text.EnumerateRunes())
         {
             var value = rune.Value == '\t' ? ' ' : rune.Value;
-            if (value < 0x20 || value == 0x7F)
+            if (value < 0x20 || value == 0x7F || (_document.IsArchive && value is 0xFEFF or 0xFFFE))
             {
                 continue;
             }
@@ -374,8 +380,50 @@ public sealed class PdfCanvas
             _content.Op("Tc", characterSpacing);
         }
 
-        _content.Op("Tm", origin.Cos, origin.Sin, -origin.Sin, origin.Cos, origin.X, origin.Y).Hex(codes).Raw("Tj\nET\n");
+        _content.Op("Tm", origin.Cos, origin.Sin, -origin.Sin, origin.Cos, origin.X, origin.Y);
+        if (_document.IsArchive && run.Exists(r => r.Glyph == 0))
+        {
+            ShowWithoutNotdef(face, run, size, characterSpacing);
+        }
+        else
+        {
+            _content.Hex(codes).Raw("Tj\n");
+        }
+
+        _content.Raw("ET\n");
         return width;
+    }
+
+    // PDF/A forbids showing the .notdef glyph (ISO 19005-2, 6.2.11.8): each character without a glyph is replaced by a
+    // TJ move of its advance, so the text after it keeps its place.
+    private void ShowWithoutNotdef(TrueTypeFont face, List<(int Glyph, string Text)> run, double size, double characterSpacing)
+    {
+        var parts = new List<string>();
+        var codes = new List<byte>();
+        foreach (var (glyph, _) in run)
+        {
+            if (glyph != 0)
+            {
+                codes.AddRange([(byte)(glyph >> 8), (byte)glyph]);
+                continue;
+            }
+
+            if (codes.Count > 0)
+            {
+                parts.Add("<" + Convert.ToHexString([.. codes]) + ">");
+                codes.Clear();
+            }
+
+            parts.Add(PdfFormat.Real(-((face.GetAdvanceWidth(0) * 1000.0 / face.UnitsPerEm) + (characterSpacing * 1000 / size))));
+            _document.OmittedCharacters++;
+        }
+
+        if (codes.Count > 0)
+        {
+            parts.Add("<" + Convert.ToHexString([.. codes]) + ">");
+        }
+
+        _content.Raw("[" + string.Join(' ', parts) + "] TJ\n");
     }
 
     private void Opacity(double opacity)

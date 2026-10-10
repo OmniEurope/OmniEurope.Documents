@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 # PLAN-004 : Fonctionnalités suivantes
 
-> Statut : **en cours** (2026-10-10 : lot 3 formulaires PDF, lot 8 caviardage PDF, lot 7 chiffrement PDF AES-256, lot 6 révisions, table des matières et champs Word, lot 5 Word vers Markdown, lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
+> Statut : **en cours** (2026-10-10 : lot 4 PDF/A-2b et A-2u, lot 3 formulaires PDF, lot 8 caviardage PDF, lot 7 chiffrement PDF AES-256, lot 6 révisions, table des matières et champs Word, lot 5 Word vers Markdown, lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
 > propriétaire ; l'ordre des lots est celui de la valeur attendue. Un lot ne commence qu'après accord du
 > propriétaire.
 
@@ -77,9 +77,29 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
 
 ## Lot 4 : PDF/A
 
-- [ ] Production de PDF/A-2b (et A-2u) depuis l'écrivain et les conversions : polices embarquées, profil de
+- [x] Production de PDF/A-2b (et A-2u) depuis l'écrivain et les conversions : polices embarquées, profil de
   couleur de sortie, métadonnées XMP, aucune fonction interdite (chiffrement, JavaScript, transparence non
   conforme).
+  - Fait (2026-10-10) : `PdfDocumentBuilder.Conformance` (`PdfA2b`, `PdfA2u`), `WordPdfOptions.Conformance` (Word, Excel,
+    HTML, Markdown) et `ImagePdfOptions.Conformance`. Intention de sortie `GTS_PDFA1` avec un profil ICC 2.1 sRGB calculé
+    dans le code d'après IEC 61966-2-1 (primaires et blanc D65, matrice adaptée à D50 par Bradford, courbe de transfert
+    échantillonnée sur 1024 points ; rien de téléchargé) ; paquet XMP non filtré `pdfaid:part` 2, `pdfaid:conformance` B
+    ou U, reflet du dictionnaire d'information ; polices en sous-ensembles embarqués avec `ToUnicode` ; caractère sans
+    glyphe laissé de côté plutôt que `.notdef` (un déplacement `TJ` garde la place du texte suivant, compté et signalé
+    dans `Gaps`) ; liens imprimables ; images CMJN converties en RVB ; chiffrement refusé. 10 tests : un vérificateur
+    structurel écrit dans les tests contrôle les fichiers produits (écrivain avec texte accentué, `€`, caractère sans
+    glyphe, opacité, lien, image avec alpha, JPEG CMJN, signet, puis Word, Excel, Markdown et images) contre les clauses
+    6.1.2, 6.1.3, 6.1.4, 6.1.7.1, 6.1.7.2, 6.1.9, 6.1.13, 6.2.2, 6.2.3, 6.2.4.3, 6.2.5, 6.2.8, 6.2.9, 6.2.10,
+    6.2.11.3.2, 6.2.11.4.1, 6.2.11.5, 6.2.11.7.2, 6.2.11.8, 6.3.2, 6.3.3, 6.5.1, 6.5.2, 6.6.2.1, 6.6.2.3.1, 6.6.3 et
+    6.6.4 ; le même vérificateur relève sur un PDF ordinaire l'absence d'intention de sortie et de métadonnées, l'image
+    CMJN, le lien non imprimable, le glyphe `.notdef` et le chiffrement ; profil ICC contrôlé (en-tête, table des
+    balises, balises requises d'un profil d'écran à matrice, colorants D50 comparés à la matrice sRGB publiée à 5e-4
+    près). Suite rapide 1987 tests, couverture des lignes 97,16 %.
+  - Limites : aucun validateur PDF/A disponible hors ligne (pas de confrontation à un outil tiers) ; les numéros de
+    clause sont ceux d'ISO 19005-2:2011 tels que connus, le texte de la norme n'étant pas disponible ici ; le
+    vérificateur couvre ce que le paquet écrit, ce n'est pas un validateur complet ; conversion CMJN vers RVB par la
+    formule du complément (pas de gestion de couleur) ; pas de PDF/A-2a (structure balisée) ni de conversion d'un PDF
+    existant ; `PdfStamper`, `PdfEditor` et `PdfForm` ne produisent pas de PDF/A.
 - Contrôle : chaque règle de la norme vérifiée par un test sur les fichiers produits.
 
 ## Lot 5 : Word vers HTML et Markdown

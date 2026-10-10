@@ -59,6 +59,19 @@ public sealed class PdfDocumentBuilder
     /// <see cref="Save"/> throw <see cref="ArgumentException"/>.</remarks>
     public PdfEncryption? Encryption { get; set; }
 
+    /// <summary>
+    /// PDF/A-2b or PDF/A-2u (ISO 19005-2); none by default. The file then carries an sRGB output intent (an ICC profile
+    /// computed from the IEC 61966-2-1 parameters) and XMP metadata with its PDF/A identification that mirror the
+    /// information dictionary; link annotations are printable; characters no font can show are left out (the
+    /// <c>.notdef</c> glyph is forbidden) and counted in <see cref="OmittedCharacters"/>; CMYK images added afterwards are
+    /// converted to RGB. Set it before adding images: <see cref="Save"/> throws <see cref="InvalidOperationException"/>
+    /// when a DeviceCMYK image or <see cref="Encryption"/> is present.
+    /// </summary>
+    public PdfConformance Conformance { get; set; }
+
+    /// <summary>Characters drawn so far that no font has a glyph for, left out under a PDF/A <see cref="Conformance"/>.</summary>
+    public int OmittedCharacters { get; internal set; }
+
     /// <summary>The pages added so far.</summary>
     public IReadOnlyList<PdfCanvas> Pages => _pages;
 
@@ -82,7 +95,7 @@ public sealed class PdfDocumentBuilder
         var key = Convert.ToHexString(SHA256.HashData(file));
         if (!_images.TryGetValue(key, out var image))
         {
-            image = PdfImage.Create(file, _table, ResourcePrefix + "Im" + (_images.Count + 1));
+            image = PdfImage.Create(file, _table, ResourcePrefix + "Im" + (_images.Count + 1), IsArchive);
             _images.Add(key, image);
         }
 
@@ -93,7 +106,7 @@ public sealed class PdfDocumentBuilder
     public PdfImage AddImage(RasterImage pixels)
     {
         ArgumentNullException.ThrowIfNull(pixels);
-        var image = PdfImage.FromRaster(pixels, _table, ResourcePrefix + "Im" + (_images.Count + 1));
+        var image = PdfImage.FromRaster(pixels, _table, ResourcePrefix + "Im" + (_images.Count + 1), IsArchive);
         _images.Add(Guid.NewGuid().ToString("N"), image);
         return image;
     }
@@ -177,6 +190,12 @@ public sealed class PdfDocumentBuilder
             catalog.SetName("PageMode", "UseOutlines");
         }
 
+        if (IsArchive)
+        {
+            PdfArchive.Check(Encryption is not null, _images.Values.Any(i => i.IsCmyk));
+            PdfArchive.Complete(_table, catalog, Conformance, Properties());
+        }
+
         _table.Set(catalogRef, catalog);
         using var buffer = new MemoryStream();
         var encryptor = Encryption is null ? null : PdfEncryptor.Create(Encryption);
@@ -230,9 +249,20 @@ public sealed class PdfDocumentBuilder
 
     internal PdfObjectTable Table => _table;
 
+    /// <summary>True under a PDF/A conformance.</summary>
+    internal bool IsArchive => Conformance != PdfConformance.None;
+
+    // The information dictionary entries, cleaned of the characters XMP cannot carry under PDF/A so both say the same.
+    private XmpProperties Properties()
+    {
+        string? Value(string? text) => string.IsNullOrEmpty(text) ? null : IsArchive ? XmpPacket.Clean(text) : text;
+        return new XmpProperties(Value(Title), Value(Author), Value(Subject), Value(Keywords), Value(Creator), "OmniEurope.Documents", CreationDate);
+    }
+
     private PdfDictionary InfoDictionary()
     {
-        var info = new PdfDictionary().Set("Producer", PdfString.FromText("OmniEurope.Documents"));
+        var properties = Properties();
+        var info = new PdfDictionary().Set("Producer", PdfString.FromText(properties.Producer));
         void Text(string key, string? value)
         {
             if (!string.IsNullOrEmpty(value))
@@ -241,11 +271,11 @@ public sealed class PdfDocumentBuilder
             }
         }
 
-        Text("Title", Title);
-        Text("Author", Author);
-        Text("Subject", Subject);
-        Text("Keywords", Keywords);
-        Text("Creator", Creator);
+        Text("Title", properties.Title);
+        Text("Author", properties.Author);
+        Text("Subject", properties.Subject);
+        Text("Keywords", properties.Keywords);
+        Text("Creator", properties.Creator);
         if (CreationDate is { } date)
         {
             var offset = date.Offset;

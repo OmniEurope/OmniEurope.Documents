@@ -38,13 +38,22 @@ public sealed class PdfImage
 
     internal PdfReference Reference { get; }
 
+    /// <summary>True when the image is stored in DeviceCMYK.</summary>
+    internal bool IsCmyk { get; init; }
+
     /// <summary>Builds the image XObject: JPEG data is embedded as is (DCTDecode), other formats are decoded
-    /// and stored compressed, with their alpha channel as a soft mask.</summary>
-    internal static PdfImage Create(byte[] file, PdfObjectTable table, string resourceName)
+    /// and stored compressed, with their alpha channel as a soft mask. With <paramref name="rgbOnly"/> (PDF/A with an
+    /// sRGB output intent, which forbids DeviceCMYK) CMYK pixels are converted to RGB by the complement formula.</summary>
+    internal static PdfImage Create(byte[] file, PdfObjectTable table, string resourceName, bool rgbOnly = false)
     {
         if (JpegDecoder.IsJpeg(file))
         {
             var (width, height, components) = JpegDecoder.ReadHeader(file);
+            if (components == 4 && rgbOnly)
+            {
+                return FromRaster(ImageDecoder.Decode(file), table, resourceName, rgbOnly);
+            }
+
             var jpeg = new PdfStream(file)
                 .SetName("Type", "XObject").SetName("Subtype", "Image")
                 .SetNumber("Width", width).SetNumber("Height", height)
@@ -58,15 +67,16 @@ public sealed class PdfImage
             }
 
             ImageInfo.TryIdentify(file, out var info);
-            return new PdfImage(resourceName, table.Add(jpeg), width, height, info.DpiX, info.DpiY);
+            return new PdfImage(resourceName, table.Add(jpeg), width, height, info.DpiX, info.DpiY) { IsCmyk = components == 4 };
         }
 
         var image = ImageDecoder.Decode(file);
         return FromRaster(image, table, resourceName);
     }
 
-    internal static PdfImage FromRaster(RasterImage image, PdfObjectTable table, string resourceName)
+    internal static PdfImage FromRaster(RasterImage image, PdfObjectTable table, string resourceName, bool rgbOnly = false)
     {
+        image = rgbOnly && image.ColorType == ImageColorType.Cmyk ? image.ConvertTo(ImageColorType.Rgb) : image;
         var (colorSpace, colorBytes, alpha) = Split(image);
         var stream = Compressed(colorBytes)
             .SetName("Type", "XObject").SetName("Subtype", "Image")
@@ -83,7 +93,7 @@ public sealed class PdfImage
             stream.Set("SMask", table.Add(mask));
         }
 
-        return new PdfImage(resourceName, table.Add(stream), image.Width, image.Height, image.DpiX, image.DpiY);
+        return new PdfImage(resourceName, table.Add(stream), image.Width, image.Height, image.DpiX, image.DpiY) { IsCmyk = colorSpace == "DeviceCMYK" };
     }
 
     private static (string ColorSpace, byte[] Color, byte[]? Alpha) Split(RasterImage image)

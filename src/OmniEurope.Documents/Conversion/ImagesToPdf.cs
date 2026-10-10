@@ -18,6 +18,9 @@ public sealed record ImagePdfOptions
 
     /// <summary>Document title.</summary>
     public string? Title { get; init; }
+
+    /// <summary>PDF/A-2b or PDF/A-2u output (<see cref="PdfDocumentBuilder.Conformance"/>); a plain PDF by default.</summary>
+    public PdfConformance Conformance { get; init; }
 }
 
 /// <summary>
@@ -32,7 +35,7 @@ public static class ImagesToPdf
     {
         ArgumentNullException.ThrowIfNull(images);
         options ??= new ImagePdfOptions();
-        var builder = new PdfDocumentBuilder { Title = options.Title, Creator = "OmniEurope.Documents" };
+        var builder = new PdfDocumentBuilder { Title = options.Title, Creator = "OmniEurope.Documents", Conformance = options.Conformance };
         var count = 0;
         foreach (var data in images)
         {

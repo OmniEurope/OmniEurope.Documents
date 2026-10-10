@@ -6,6 +6,18 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- `PdfDocumentBuilder.Conformance` (`PdfConformance.PdfA2b`, `PdfConformance.PdfA2u`), `WordPdfOptions.Conformance` (Word,
+  Excel, HTML and Markdown to PDF) and `ImagePdfOptions.Conformance`: PDF/A-2 output (ISO 19005-2). The catalog gets a
+  `GTS_PDFA1` output intent whose destination profile is an ICC version 2.1 sRGB display profile computed in code from
+  the IEC 61966-2-1 parameters (primaries and D65 white to an RGB to XYZ matrix, Bradford-adapted to D50, tone curves
+  sampling the sRGB transfer function at 1024 points; nothing downloaded), and an unfiltered XMP packet with
+  `pdfaid:part` 2 and `pdfaid:conformance` B or U that mirrors the information dictionary (title, author, subject,
+  keywords, creator, producer, creation date; characters XML cannot carry are left out of both). Fonts were already
+  embedded subsets with `ToUnicode`; under PDF/A a character no font has a glyph for is left out instead of showing
+  `.notdef` (a `TJ` move keeps the text after it in place), counted in `PdfDocumentBuilder.OmittedCharacters` and
+  listed in the conversion gaps; U+FEFF and U+FFFE are not drawn; link annotations are printable; CMYK images are
+  converted to RGB (complement formula). Encryption, or a CMYK image added before the conformance was set, makes
+  `Save` throw `InvalidOperationException`.
 - `PdfForm.Read`, `PdfForm.Fill` and `PdfForm.Flatten` (`OmniEurope.Documents.Pdf.Forms`: `PdfFormField`, `PdfFormWidget`,
   `PdfChoiceOption`, `PdfFieldValue`, `PdfFormFillOptions`): the interactive form of ISO 32000-1 §12.7. Reading walks
   the field tree with its inherited attributes (`FT`, `Ff`, `V`, `DA`, `Q`) and gives each terminal field its full

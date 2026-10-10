@@ -15,6 +15,9 @@ public sealed record WordPdfOptions
 
     /// <summary>Adds an outline entry for each heading (paragraph with an outline level).</summary>
     public bool Bookmarks { get; init; } = true;
+
+    /// <summary>PDF/A-2b or PDF/A-2u output (<see cref="PdfDocumentBuilder.Conformance"/>); a plain PDF by default.</summary>
+    public PdfConformance Conformance { get; init; }
 }
 
 /// <summary>A converted document: the PDF, its page count and what the conversion could not render faithfully.</summary>
@@ -45,11 +48,17 @@ public static class WordToPdf
             Subject = information.Subject,
             Keywords = information.Keywords,
             Creator = "OmniEurope.Documents",
+            Conformance = options.Conformance,
         };
         var context = new LayoutContext(document, builder);
         var pages = Paginate(context);
         ReportFloatingShapes(document, context);
         new PagePainter(context, options.Bookmarks).Paint(pages);
+        if (builder.OmittedCharacters > 0)
+        {
+            context.Gaps.Add("characters without a glyph in any font left out (PDF/A forbids the .notdef glyph)");
+        }
+
         var gaps = document.Gaps.Concat(context.Gaps).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToList();
         return new WordPdfResult(builder.ToArray(), pages.Count, gaps);
     }
