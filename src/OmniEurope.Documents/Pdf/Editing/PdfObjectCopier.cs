@@ -15,6 +15,10 @@ internal sealed class PdfObjectCopier(PdfObjectTable target, Func<PdfObjectStore
     private const int MaxDepth = 256;
     private readonly Dictionary<(PdfObjectStore, int), PdfReference> _copied = [];
     private readonly Queue<(PdfObjectStore Store, PdfObject Source, PdfReference Target, ISet<int>? Pages)> _pending = new();
+    private readonly Dictionary<PdfObject, PdfObject> _substitutes = new(ReferenceEqualityComparer.Instance);
+
+    /// <summary>Makes every later copy of <paramref name="placeholder"/> (by identity) the target object <paramref name="replacement"/>.</summary>
+    public void Substitute(PdfObject placeholder, PdfObject replacement) => _substitutes[placeholder] = replacement;
 
     /// <summary>Copies a whole object graph (a catalog with its page tree, an information dictionary): every
     /// reference is followed and parents are kept.</summary>
@@ -25,15 +29,17 @@ internal sealed class PdfObjectCopier(PdfObjectTable target, Func<PdfObjectStore
         return copy;
     }
 
-    /// <summary>Copies a page: inherited attributes become its own, its parent becomes <paramref name="parent"/>.</summary>
-    public PdfReference CopyPage(PdfPage page, PdfReference parent, ISet<int> copiedPageNumbers, int? rotate = null)
+    /// <summary>Copies a page: inherited attributes become its own, its parent becomes <paramref name="parent"/>;
+    /// <paramref name="entries"/> and <paramref name="resources"/> stand for the page's own when given.</summary>
+    public PdfReference CopyPage(PdfPage page, PdfReference parent, ISet<int> copiedPageNumbers, int? rotate = null, PdfDictionary? entries = null, PdfDictionary? resources = null)
     {
         var store = page.Store;
         var reference = page.Reference is { } r ? Map(store, r) : target.Reserve();
         var copy = new PdfDictionary();
-        foreach (var (key, value) in page.Dictionary.Entries)
+        foreach (var (key, value) in (entries ?? page.Dictionary).Entries)
         {
-            if (key is "Parent" or "B" or "StructParents" or "PieceInfo")
+            // Resources are copied below (the inherited ones, or the replacement given): copying them here too would write unused objects.
+            if (key is "Parent" or "B" or "StructParents" or "PieceInfo" or "Resources")
             {
                 continue;
             }
@@ -42,7 +48,8 @@ internal sealed class PdfObjectCopier(PdfObjectTable target, Func<PdfObjectStore
         }
 
         copy.SetName("Type", "Page").Set("Parent", parent);
-        copy.Set("Resources", page.Resources is null ? new PdfDictionary() : Copy(store, page.Resources, copiedPageNumbers, 0));
+        var ownResources = resources ?? page.Resources;
+        copy.Set("Resources", ownResources is null ? new PdfDictionary() : Copy(store, ownResources, copiedPageNumbers, 0));
         copy.Set("MediaBox", Box(page.MediaBox));
         if (!page.CropBox.Equals(page.MediaBox))
         {
@@ -81,6 +88,11 @@ internal sealed class PdfObjectCopier(PdfObjectTable target, Func<PdfObjectStore
         if (depth > MaxDepth)
         {
             return PdfNull.Instance;
+        }
+
+        if (_substitutes.TryGetValue(value, out var substitute))
+        {
+            return substitute;
         }
 
         switch (value)

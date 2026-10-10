@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 # PLAN-004 : Fonctionnalités suivantes
 
-> Statut : **en cours** (2026-10-10 : lot 7 chiffrement PDF AES-256, lot 6 révisions, table des matières et champs Word, lot 5 Word vers Markdown, lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
+> Statut : **en cours** (2026-10-10 : lot 8 caviardage PDF, lot 7 chiffrement PDF AES-256, lot 6 révisions, table des matières et champs Word, lot 5 Word vers Markdown, lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
 > propriétaire ; l'ordre des lots est celui de la valeur attendue. Un lot ne commence qu'après accord du
 > propriétaire.
 
@@ -140,8 +140,21 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
 
 ## Lot 8 : caviardage PDF
 
-- [ ] Suppression réelle d'un texte et des images sous une zone : contenu retiré du flux, pas seulement
+- [x] Suppression réelle d'un texte et des images sous une zone : contenu retiré du flux, pas seulement
   recouvert ; métadonnées nettoyées sur demande.
+  - Fait (2026-10-10) : `PdfRedactor.Redact` écrit un nouveau fichier : glyphe touché par une zone retiré en
+    entier de sa chaîne (la suite garde sa place par un ajustement `TJ`), image couverte retirée, image touchée
+    redessinée avec les pixels sous la zone à la couleur de remplissage, images en ligne touchées, masques et
+    images illisibles retirés, formulaires XObject réécrits, annotations touchées retirées, `ActualText`, `Alt` et
+    `E` du contenu marqué retirés, zones peintes ; métadonnées (Info et XMP des pages) retirées sur demande.
+    8 tests : texte retiré absent de l'extraction et de toutes les chaînes et de tous les flux décompressés du
+    fichier (originaux d'images et de formulaires compris), positions des lettres restantes inchangées (avec
+    `Tc`, `Tw`, `Tz`, `Ts`, `TL`, `'`, `"`), pixels de l'image sous la zone noirs et les autres intacts, zone peinte au
+    rendu, annotation, texte de remplacement et métadonnées retirés. Suite rapide 1961 tests, couverture des
+    lignes 97,19 %.
+  - Limites : tracés vectoriels et dégradés sous une zone recouverts, non retirés (signalé dans `Gaps`) ;
+    propriétés de contenu marqué nommées non nettoyées ; structures de document (signets, formulaires, structure
+    balisée) non reportées, comme pour `PdfEditor`.
 - Contrôle : le texte caviardé n'apparaît plus ni à l'extraction ni dans les octets décompressés du fichier.
 
 ## Lot 9 : Excel vers HTML

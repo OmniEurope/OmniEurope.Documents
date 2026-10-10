@@ -12,7 +12,7 @@ NuGet package, no user interface, no dependency, licensed under EUPL-1.2.
 |---|---|---|---|---|
 | Word (`.docx`) | yes | yes, tracked changes accepted or rejected, fields and contents updated | text and structure, schema validation | to PDF, to HTML, to Markdown |
 | Excel (`.xlsx`) | yes | yes, in place without loss | cells and sheets | to PDF, to CSV, to HTML |
-| PDF | yes, AES-256 encryption | merge, split, compress, reorder, rotate, stamp, encrypt | text, **no OCR** | from Word, Excel, Markdown, HTML, images; to PNG |
+| PDF | yes, AES-256 encryption | merge, split, compress, reorder, rotate, stamp, encrypt, redact | text, **no OCR** | from Word, Excel, Markdown, HTML, images; to PNG |
 | Markdown | yes | yes | yes | to PDF, to Word, to HTML |
 | CSV | yes | yes | yes | to Excel |
 

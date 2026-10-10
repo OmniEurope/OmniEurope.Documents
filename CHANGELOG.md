@@ -6,6 +6,18 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- `PdfRedactor.Redact` (`PdfRedaction`, `PdfRedactionOptions`, `PdfRedactionResult`): true redaction into a new
+  PDF. Each glyph whose box meets an area is taken out of its string, whole even when only partly inside (the
+  text after it keeps its place through a `TJ` adjustment; `'` and `"` are rewritten with their line move and
+  spacing); an image an area covers is removed, one it meets is redrawn as RGB with the pixels whose centre lies
+  under the area set to the fill colour (soft mask kept); inline images an area meets, stencil masks and images
+  that cannot be decoded are removed whole; forms an area meets are rewritten the same way; annotations whose
+  rectangle meets an area are removed; marked content around removed text loses its `ActualText`, `Alt` and `E`;
+  the areas are then painted (black by default). The original content, replaced images and forms are not written
+  to the file; on request the document information and the pages' XMP metadata are dropped. The result gives the
+  removed text and counts. Vector graphics and shadings under an area are painted over, not removed (listed in
+  the gaps); named marked-content properties are not cleaned; document-level structures are not carried over, as
+  with `PdfEditor`. Copying a page no longer writes its original resources a second time when they are replaced.
 - `PdfDocumentBuilder.Encryption` and `PdfEditor.Encrypt` (`PdfEncryption`, `PdfPermissions`): AES-256 encryption
   at writing, ISO 32000-2 standard security handler V 5, R 6, crypt filter AESV3, file marked PDF 2.0. User and
   owner passwords are prepared with SASLprep (RFC 4013: non-ASCII spaces mapped, B.1 removed, NFKC, prohibited

@@ -8,7 +8,7 @@ namespace OmniEurope.Documents.Pdf.Text;
 
 /// <summary>One code of a shown string: its text, its advance in text space (per unit of font size) and
 /// whether it is the single-byte space that word spacing applies to.</summary>
-internal readonly record struct DecodedGlyph(string Text, double Advance, bool IsWordSpace, uint Code);
+internal readonly record struct DecodedGlyph(string Text, double Advance, bool IsWordSpace, uint Code, int Length = 1);
 
 /// <summary>
 /// Turns the bytes of a text-showing operator into glyphs for one font resource: code splitting (one byte
@@ -97,7 +97,7 @@ internal sealed class PdfFontDecoder
         foreach (var (code, length) in _encoding!.Codes(bytes))
         {
             var cid = _encoding.ToCid(code);
-            yield return new DecodedGlyph(Text(code, length), Width(cid, code), length == 1 && code == 32, code);
+            yield return new DecodedGlyph(Text(code, length), Width(cid, code), length == 1 && code == 32, code, length);
         }
     }
 
