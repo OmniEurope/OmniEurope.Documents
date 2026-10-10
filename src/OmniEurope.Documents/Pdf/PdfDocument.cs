@@ -64,6 +64,15 @@ public sealed class PdfDocument
     /// <summary>True when the file is encrypted.</summary>
     public bool IsEncrypted => Store.IsEncrypted;
 
+    /// <summary>
+    /// The permissions the file grants to the user password (its P entry); every permission for a file that is not
+    /// encrypted. Opened with the owner password, the reader may do everything whatever this says.
+    /// </summary>
+    public PdfPermissions Permissions => Store.Security is { } security ? (PdfPermissions)security.Permissions & PdfPermissions.All : PdfPermissions.All;
+
+    /// <summary>True when the file is not encrypted or was opened with its owner password.</summary>
+    public bool OpenedAsOwner => Store.Security?.OpenedAsOwner ?? true;
+
     /// <summary>True when the cross-reference information was damaged and rebuilt from a scan.</summary>
     public bool WasRepaired => Store.Repaired;
 

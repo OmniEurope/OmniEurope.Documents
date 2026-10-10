@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 using System.Globalization;
 using OmniEurope.Documents.Pdf.Objects;
+using OmniEurope.Documents.Pdf.Writing;
 
 namespace OmniEurope.Documents.Pdf.Editing;
 
@@ -8,7 +9,7 @@ namespace OmniEurope.Documents.Pdf.Editing;
 /// Page-level operations that produce a new PDF: merge, extract (in any order, so also reorder),
 /// split, remove, rotate. Pages keep their content, resources, annotations and inherited attributes;
 /// document-level structures that name pages (outline, forms, tagged structure) are not carried over.
-/// The output is never encrypted.
+/// The output is encrypted only by <see cref="Encrypt"/>.
 /// </summary>
 public static class PdfEditor
 {
@@ -78,7 +79,16 @@ public static class PdfEditor
         return Build(document.Pages.Select(p => (p, turned.Contains(p.Number) ? (int?)((((p.Rotation + degrees) % 360) + 360) % 360) : null)).ToList(), document);
     }
 
-    private static byte[] Build(List<(PdfPage Page, int? Rotate)> pages, PdfDocument metadataSource)
+    /// <summary>A copy of every page encrypted with AES-256 (<see cref="PdfEncryption"/>), the metadata kept.</summary>
+    /// <exception cref="ArgumentException">A password SASLprep refuses, or an empty owner password.</exception>
+    public static byte[] Encrypt(PdfDocument document, PdfEncryption encryption)
+    {
+        ArgumentNullException.ThrowIfNull(document);
+        ArgumentNullException.ThrowIfNull(encryption);
+        return Build(document.Pages.Select(p => (p, (int?)null)).ToList(), document, PdfEncryptor.Create(encryption));
+    }
+
+    private static byte[] Build(List<(PdfPage Page, int? Rotate)> pages, PdfDocument metadataSource, PdfEncryptor? encryptor = null)
     {
         var table = new PdfObjectTable();
         var catalog = table.Reserve();
@@ -104,7 +114,7 @@ public static class PdfEditor
         table.Set(tree, new PdfDictionary().SetName("Type", "Pages").Set("Kids", new PdfArray(kids)).SetNumber("Count", kids.Count));
         table.Set(catalog, new PdfDictionary().SetName("Type", "Catalog").Set("Pages", tree));
         using var output = new MemoryStream();
-        table.Write(output, catalog, table.Add(Information(metadataSource.Information)));
+        table.Write(output, catalog, table.Add(Information(metadataSource.Information)), encryptor: encryptor);
         return output.ToArray();
     }
 

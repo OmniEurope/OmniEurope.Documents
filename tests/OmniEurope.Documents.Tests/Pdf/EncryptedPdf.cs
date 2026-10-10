@@ -166,7 +166,7 @@ internal static class EncryptedPdf
     }
 
     // ISO 32000-2 algorithm 2.B: at least 64 rounds, then until the last byte of E is at most the round count minus 32.
-    private static byte[] HashB(byte[] password, byte[] salt, byte[] userKey)
+    public static byte[] HashB(byte[] password, byte[] salt, byte[] userKey)
     {
         var k = SHA256.HashData([.. password, .. salt, .. userKey]);
         using var aes = Aes.Create();
@@ -213,7 +213,7 @@ internal static class EncryptedPdf
         return [.. iv, .. aes.EncryptCbc(data, iv, PaddingMode.PKCS7)];
     }
 
-    private static byte[] AesNoPadding(byte[] key, byte[] data)
+    public static byte[] AesNoPadding(byte[] key, byte[] data)
     {
         using var aes = Aes.Create();
         aes.Key = key;

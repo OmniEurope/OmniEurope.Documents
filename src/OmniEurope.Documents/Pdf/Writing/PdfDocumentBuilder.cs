@@ -9,7 +9,7 @@ namespace OmniEurope.Documents.Pdf.Writing;
 /// <summary>
 /// Creates a PDF: add pages, draw on their <see cref="PdfCanvas"/>, then save. Fonts are embedded as
 /// subsets (Unicode text stays searchable and copyable), images are embedded once even when drawn many
-/// times, and the output is deterministic (same content, same bytes).
+/// times, and the output is deterministic (same content, same bytes) unless it is encrypted.
 /// </summary>
 public sealed class PdfDocumentBuilder
 {
@@ -53,6 +53,11 @@ public sealed class PdfDocumentBuilder
 
     /// <summary>Creation date; none by default so equal documents stay byte-identical.</summary>
     public DateTimeOffset? CreationDate { get; set; }
+
+    /// <summary>AES-256 encryption with user and owner passwords and permissions; none by default.</summary>
+    /// <remarks>A password that SASLprep refuses (control characters, mixed right-to-left text...) makes
+    /// <see cref="Save"/> throw <see cref="ArgumentException"/>.</remarks>
+    public PdfEncryption? Encryption { get; set; }
 
     /// <summary>The pages added so far.</summary>
     public IReadOnlyList<PdfCanvas> Pages => _pages;
@@ -174,7 +179,8 @@ public sealed class PdfDocumentBuilder
 
         _table.Set(catalogRef, catalog);
         using var buffer = new MemoryStream();
-        _table.Write(buffer, catalogRef, _table.Add(InfoDictionary()));
+        var encryptor = Encryption is null ? null : PdfEncryptor.Create(Encryption);
+        _table.Write(buffer, catalogRef, _table.Add(InfoDictionary()), encryptor: encryptor);
         _saved = buffer.ToArray();
         output.Write(_saved);
     }

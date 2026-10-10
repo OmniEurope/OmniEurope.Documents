@@ -59,6 +59,9 @@ internal sealed class PdfObjectStore
 
     public bool IsEncrypted => _security is not null;
 
+    /// <summary>The security handler of an encrypted file, or null.</summary>
+    public PdfSecurity? Security => _security;
+
     public IEnumerable<int> ObjectNumbers => _entries.Where(e => e.Value.Offset >= 0 || e.Value.InStream).Select(e => e.Key).Order();
 
     /// <summary>Follows references until a direct object (null for missing objects and cycles).</summary>

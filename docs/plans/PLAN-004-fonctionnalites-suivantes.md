@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 # PLAN-004 : Fonctionnalités suivantes
 
-> Statut : **en cours** (2026-10-10 : lot 6 révisions, table des matières et champs Word, lot 5 Word vers Markdown, lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
+> Statut : **en cours** (2026-10-10 : lot 7 chiffrement PDF AES-256, lot 6 révisions, table des matières et champs Word, lot 5 Word vers Markdown, lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
 > propriétaire ; l'ordre des lots est celui de la valeur attendue. Un lot ne commence qu'après accord du
 > propriétaire.
 
@@ -121,7 +121,20 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
 
 ## Lot 7 : protection PDF à l'écriture
 
-- [ ] Chiffrement AES-256 avec mots de passe utilisateur et propriétaire, et permissions.
+- [x] Chiffrement AES-256 avec mots de passe utilisateur et propriétaire, et permissions.
+  - Fait (2026-10-10) : `PdfDocumentBuilder.Encryption`, `PdfEditor.Encrypt` (`PdfEncryption`, `PdfPermissions`),
+    gestionnaire standard ISO 32000-2 V 5 R 6 AESV3, fichier en PDF 2.0 ; mots de passe préparés par SASLprep
+    (RFC 4013) et coupés à 127 octets UTF-8 ; U, UE, O, OE, Perms selon les algorithmes 2.B, 8, 9 et 10 ; clé,
+    sels et vecteurs d'initialisation tirés de `RandomNumberGenerator`, seulement AES et SHA-2 de la bibliothèque
+    de base. Le lecteur essaie d'abord le mot de passe propriétaire, retombe sur l'UTF-8 brut, vérifie Perms
+    contre P et donne `Permissions` et `OpenedAsOwner`. 23 tests : relecture avec chaque mot de passe, mauvais
+    mot de passe et absence refusés, permissions relues, P altéré détecté, vecteurs connus de U, UE, O, OE et Perms
+    auto-dérivés (aucun vecteur publié de révision 6 disponible hors ligne : calculés une fois par
+    l'implémentation indépendante des tests et figés), exemples de la RFC 4013 §3. Suite rapide 1953 tests,
+    couverture des lignes 97,28 %.
+  - Limites : normalisation NFKC à la version Unicode du runtime (pas 3.2), table D.2 approchée par les
+    catégories lettre et marque d'espacement, points de code non attribués acceptés ; sortie chiffrée non
+    déterministe ; `PdfEditor.Encrypt` ne reporte pas les structures de document (signets, formulaires).
 - Contrôle : le lecteur du paquet ouvre le fichier avec le bon mot de passe et le refuse sans ; les
   permissions se relisent.
 

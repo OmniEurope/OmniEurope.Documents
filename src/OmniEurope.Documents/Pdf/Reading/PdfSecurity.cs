@@ -35,6 +35,12 @@ internal sealed class PdfSecurity
 
     public bool EncryptMetadata { get; }
 
+    /// <summary>The P entry: the permissions granted to a user who opens with the user password.</summary>
+    public int Permissions { get; private init; }
+
+    /// <summary>True when the password given is the owner password.</summary>
+    public bool OpenedAsOwner { get; private init; }
+
     public static PdfSecurity Create(PdfDictionary encrypt, byte[] firstId, string? password)
     {
         if (encrypt["Filter"] is PdfName { Value: not "Standard" } filter)
@@ -50,21 +56,26 @@ internal sealed class PdfSecurity
         var encryptMetadata = encrypt["EncryptMetadata"] is not PdfBoolean { Value: false };
         var (streamMethod, stringMethod, lengthBits) = Methods(encrypt, version);
         var pass = password ?? string.Empty;
-        byte[]? key;
+        (byte[] Key, bool Owner)? opened;
         if (revision >= 5)
         {
-            key = Aes256Key(pass, owner, user, Bytes(encrypt, "OE"), Bytes(encrypt, "UE"), revision);
+            opened = Aes256Key(pass, owner, user, Bytes(encrypt, "OE"), Bytes(encrypt, "UE"), revision);
+            if (opened is { } aes)
+            {
+                CheckPerms(aes.Key, Bytes(encrypt, "Perms"), permissions);
+            }
         }
         else
         {
             var length = revision == 2 ? 5 : Math.Clamp(lengthBits / 8, 5, 16);
-            key = UserKey(Pad(pass), owner, permissions, firstId, revision, length, encryptMetadata, user)
-                ?? OwnerKey(pass, owner, permissions, firstId, revision, length, encryptMetadata, user);
+            opened = UserKey(Pad(pass), owner, permissions, firstId, revision, length, encryptMetadata, user) is { } userKey
+                ? (userKey, false)
+                : OwnerKey(pass, owner, permissions, firstId, revision, length, encryptMetadata, user) is { } ownerKey ? (ownerKey, true) : null;
         }
 
-        return key is null
+        return opened is not { } result
             ? throw new PdfPasswordException("The PDF is password protected; the password given does not open it.")
-            : new PdfSecurity(key, streamMethod, stringMethod, encryptMetadata);
+            : new PdfSecurity(result.Key, streamMethod, stringMethod, encryptMetadata) { Permissions = permissions, OpenedAsOwner = result.Owner };
     }
 
     public byte[] DecryptString(byte[] data, int number, int generation) => Decrypt(data, number, generation, _stringMethod);
@@ -180,58 +191,74 @@ internal sealed class PdfSecurity
         return UserKey(userPassword[..Math.Min(32, userPassword.Length)], owner, permissions, id, revision, length, encryptMetadata, user);
     }
 
-    private static byte[]? Aes256Key(string password, byte[] owner, byte[] user, byte[] ownerKey, byte[] userKey, int revision)
+    // Algorithm 2.A: the owner password is tried first (its key comes from OE), then the user password (UE). The
+    // password is prepared with SASLprep; a password SASLprep refuses, or one that does not match once prepared, is
+    // tried again as its plain UTF-8 bytes, which writers that skip SASLprep hash.
+    private static (byte[] Key, bool Owner)? Aes256Key(string password, byte[] owner, byte[] user, byte[] ownerKey, byte[] userKey, int revision)
     {
-        var bytes = Encoding.UTF8.GetBytes(password);
-        bytes = bytes[..Math.Min(bytes.Length, 127)];
-        if (user.Length >= 48 && Hash(bytes, user[32..40], [], revision).AsSpan().SequenceEqual(user.AsSpan(0, 32)))
+        if (owner.Length < 48 || user.Length < 48)
         {
-            return AesNoIv(Hash(bytes, user[40..48], [], revision), userKey);
+            return null;
         }
 
-        if (owner.Length >= 48 && user.Length >= 48 && Hash(bytes, owner[32..40], user[..48], revision).AsSpan().SequenceEqual(owner.AsSpan(0, 32)))
+        foreach (var bytes in Candidates(password))
         {
-            return AesNoIv(Hash(bytes, owner[40..48], user[..48], revision), ownerKey);
+            if (PdfPasswordHash.Compute(bytes, owner[32..40], user[..48], revision).AsSpan().SequenceEqual(owner.AsSpan(0, 32)))
+            {
+                return (AesNoIv(PdfPasswordHash.Compute(bytes, owner[40..48], user[..48], revision), ownerKey), true);
+            }
+
+            if (PdfPasswordHash.Compute(bytes, user[32..40], [], revision).AsSpan().SequenceEqual(user.AsSpan(0, 32)))
+            {
+                return (AesNoIv(PdfPasswordHash.Compute(bytes, user[40..48], [], revision), userKey), false);
+            }
         }
 
         return null;
     }
 
-    // Revision 5: one SHA-256; revision 6: the iterated hash of ISO 32000-2 algorithm 2.B.
-    private static byte[] Hash(byte[] password, byte[] salt, byte[] extra, int revision)
+    private static IEnumerable<byte[]> Candidates(string password)
     {
-        var k = SHA256.HashData([.. password, .. salt, .. extra]);
-        if (revision == 5)
+        var plain = Encoding.UTF8.GetBytes(password);
+        plain = plain.Length > 127 ? plain[..127] : plain;
+        byte[]? prepared = null;
+        try
         {
-            return k;
+            prepared = SaslPrep.PasswordBytes(password);
+        }
+        catch (ArgumentException)
+        {
+            // Refused by SASLprep: only the plain bytes can match.
         }
 
-        using var aes = Aes.Create();
-        for (var round = 0; ; round++)
+        if (prepared is not null)
         {
-            byte[] block = [.. password, .. k, .. extra];
-            var k1 = new byte[block.Length * 64];
-            for (var i = 0; i < 64; i++)
-            {
-                block.CopyTo(k1, i * block.Length);
-            }
+            yield return prepared;
+        }
 
-            aes.Key = k[..16];
-            var e = aes.EncryptCbc(k1, k[16..32], PaddingMode.None);
-            var selector = e.Take(16).Sum(b => b) % 3;
-            k = selector switch
-            {
-                0 => SHA256.HashData(e),
-                1 => SHA384.HashData(e),
-                _ => SHA512.HashData(e),
-            };
-            if (round >= 63 && e[^1] <= round + 1 - 32)
-            {
-                return k[..32];
-            }
+        if (prepared is null || !prepared.AsSpan().SequenceEqual(plain))
+        {
+            yield return plain;
         }
     }
 
+    // Algorithm 13: the Perms entry, decrypted with the file key, repeats P and carries "adb"; a mismatch means the
+    // encryption dictionary was altered.
+    private static void CheckPerms(byte[] key, byte[] perms, int permissions)
+    {
+        if (perms.Length < 16)
+        {
+            throw new InvalidDataException("The AES-256 encryption dictionary has no valid Perms entry.");
+        }
+
+        using var aes = Aes.Create();
+        aes.Key = key;
+        var clear = aes.DecryptEcb(perms.AsSpan(0, 16), PaddingMode.None);
+        if (clear[9] != 'a' || clear[10] != 'd' || clear[11] != 'b' || BitConverter.ToInt32(clear, 0) != permissions)
+        {
+            throw new InvalidDataException("The permissions of the encrypted PDF do not match its Perms entry; the file has been altered.");
+        }
+    }
     private static byte[] AesNoIv(byte[] key, byte[] data)
     {
         using var aes = Aes.Create();

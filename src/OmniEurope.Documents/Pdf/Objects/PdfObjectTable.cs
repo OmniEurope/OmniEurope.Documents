@@ -37,8 +37,12 @@ internal sealed class PdfObjectTable(int firstNumber = 1)
     public PdfObject? Get(PdfReference reference) =>
         reference.Number >= firstNumber && reference.Number < firstNumber + _objects.Count ? _objects[reference.Number - firstNumber] : null;
 
-    public void Write(Stream output, PdfReference root, PdfReference? info, string version = "1.7")
+    /// <summary>Writes the file; with an encryptor every object but the encryption dictionary is encrypted and the
+    /// file is marked PDF 2.0 (the version of the AES-256 handler).</summary>
+    public void Write(Stream output, PdfReference root, PdfReference? info, string version = "1.7", Writing.PdfEncryptor? encryptor = null)
     {
+        var encrypt = encryptor is null ? null : Add(encryptor.Dictionary);
+        version = encryptor is null ? version : "2.0";
         using var body = new MemoryStream();
         PdfSerializer.Ascii(body, $"%PDF-{version}\n");
         body.Write([(byte)'%', 0xE2, 0xE3, 0xCF, 0xD3, (byte)'\n']);
@@ -47,7 +51,8 @@ internal sealed class PdfObjectTable(int firstNumber = 1)
         {
             offsets[i] = body.Position;
             PdfSerializer.Ascii(body, (i + 1).ToString(CultureInfo.InvariantCulture) + " 0 obj\n");
-            PdfSerializer.Write(_objects[i] ?? PdfNull.Instance, body);
+            var value = _objects[i] ?? PdfNull.Instance;
+            PdfSerializer.Write(encryptor is null || encrypt!.Number == firstNumber + i ? value : encryptor.Encrypt(value), body);
             PdfSerializer.Ascii(body, "\nendobj\n");
         }
 
@@ -63,6 +68,7 @@ internal sealed class PdfObjectTable(int firstNumber = 1)
             .SetNumber("Size", _objects.Count + 1)
             .Set("Root", root)
             .Set("Info", info)
+            .Set("Encrypt", encrypt)
             .Set("ID", new PdfArray(new PdfString(id, hex: true), new PdfString(id, hex: true)));
         PdfSerializer.Ascii(body, "trailer\n");
         PdfSerializer.Write(trailer, body);

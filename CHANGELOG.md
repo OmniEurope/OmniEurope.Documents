@@ -6,6 +6,18 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- `PdfDocumentBuilder.Encryption` and `PdfEditor.Encrypt` (`PdfEncryption`, `PdfPermissions`): AES-256 encryption
+  at writing, ISO 32000-2 standard security handler V 5, R 6, crypt filter AESV3, file marked PDF 2.0. User and
+  owner passwords are prepared with SASLprep (RFC 4013: non-ASCII spaces mapped, B.1 removed, NFKC, prohibited
+  tables and bidirectional rule) and cut to 127 UTF-8 bytes; U, UE, O, OE and Perms follow algorithms 2.B, 8, 9 and
+  10; every string and stream is AES-256-CBC with its own random initialisation vector; the file key, salts and
+  vectors come from `RandomNumberGenerator`, only base library AES and SHA-2 are used. The owner password must
+  not be empty; the XMP metadata may stay in clear (`EncryptMetadata`). The reader now tries the owner password
+  first (algorithm 2.A), prepares passwords with SASLprep and falls back to the plain UTF-8 bytes, checks the
+  Perms entry against P (an altered file throws `InvalidDataException`) and gives `PdfDocument.Permissions` and
+  `PdfDocument.OpenedAsOwner`. Limits: normalization uses the runtime's Unicode version, the bidirectional check
+  approximates table D.2 by letter and spacing-mark categories, unassigned code points are allowed; encrypted
+  output is not byte-deterministic.
 - `WordEditor.TrackedChanges`, `AcceptAllChanges`, `RejectAllChanges`, `AcceptChange`, `RejectChange`
   (`WordTrackedChange`, `WordTrackedChangeKind`): the tracked changes of ECMA-376 Part 1 §17.13.5 in the text
   parts, the styles and the list definitions, listed with their author, date and text and accepted or rejected
