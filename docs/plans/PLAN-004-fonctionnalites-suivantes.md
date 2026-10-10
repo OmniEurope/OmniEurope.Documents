@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 # PLAN-004 : Fonctionnalités suivantes
 
-> Statut : **en cours** (2026-10-10 : lot 11 fidélité du rendu PDF, lot 13 signature PAdES B-B, lot 4 PDF/A-2b et A-2u, lot 3 formulaires PDF, lot 8 caviardage PDF, lot 7 chiffrement PDF AES-256, lot 6 révisions, table des matières et champs Word, lot 5 Word vers Markdown, lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
+> Statut : **en cours** (2026-10-10 : lot 10 fidélité de la mise en page Word, lot 11 fidélité du rendu PDF, lot 13 signature PAdES B-B, lot 4 PDF/A-2b et A-2u, lot 3 formulaires PDF, lot 8 caviardage PDF, lot 7 chiffrement PDF AES-256, lot 6 révisions, table des matières et champs Word, lot 5 Word vers Markdown, lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
 > propriétaire ; l'ordre des lots est celui de la valeur attendue. Un lot ne commence qu'après accord du
 > propriétaire.
 
@@ -224,7 +224,44 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
   correspondance publiée sous licence Unicode : les documents WG2 en sont exclus), elle garde ses 21
   entrées, un code inconnu reste dessiné en puce ; largeurs et hauteur de ligne propres à Wingdings
   inconnues (données Microsoft, exclues).
-- [ ] Texte qui contourne les objets flottants, écriture de droite à gauche, colonnes de largeurs inégales.
+- [x] Texte qui contourne les objets flottants, écriture de droite à gauche, colonnes de largeurs inégales
+  (2026-10-10).
+  - Objets flottants (ECMA-376 §20.4.2, §20.4.3) : placés avec la première ligne de leur paragraphe, depuis la page,
+    les marges (gauche, droite, haut, bas, intérieure, extérieure), la colonne, le caractère, le paragraphe ou la
+    ligne d'ancrage, par décalage, alignement ou position simple ; `wrapSquare` retire des lignes la boîte de l'objet
+    élargie de `distT`/`distB`/`distL`/`distR`, des deux côtés, à gauche, à droite ou du côté le plus large
+    (`wrapText`), chaque tronçon de ligne rempli et aligné à part ; `wrapTopAndBottom` reporte les lignes sous l'objet ;
+    `wrapNone` ne change rien. Les lignes sont recoupées là où le paragraphe tombe ; les lignes de tableau passent sous
+    un objet qu'elles chevaucheraient ; une zone de texte `spAutoFit` grandit à la taille de son texte. Lecture et
+    écriture des distances, alignements, position simple, côté d'habillage, `spAutoFit` (et VML).
+  - Droite à gauche : paragraphes `w:bidi` posés depuis la marge droite (retraits, tabulations, alignement pris au bord
+    de départ), algorithme bidirectionnel Unicode (UAX #9 complet : X1 à X10 avec séquences isolées, W1 à W7, N0 avec
+    paires de crochets, N1, N2, I1, I2, L1, L2, miroir L4) pour toute ligne qui contient du texte de droite à gauche ;
+    `w:rtl` : police et taille complexes, neutres pris comme R ; lettres hébraïques et arabes à la police et taille
+    complexes de leur run.
+  - Colonnes inégales : largeur et espace propres à chaque colonne (`w:col/@w:space`, lu et écrit), paragraphes et
+    tableaux recoupés à la largeur de la colonne atteinte, trait `w:sep` au milieu de chaque intervalle, équilibrage
+    avant un saut de section continu par replacement du contenu à des hauteurs décroissantes.
+  - Mesures : 59 cas de test de mise en page (positions des glyphes relues dans le PDF de documents écrits en .docx puis relus :
+    lignes raccourcies au point près à côté d'un objet, reprise sous un objet haut et bas, ordre droite à gauche et
+    alignement à droite, hébreu, latin et chiffres dans l'ordre de UAX #9, crochets en miroir, abscisses et largeurs
+    des colonnes, équilibrage), 9 de lecture et écriture, 68 cas UAX #9 tirés à la main de la spécification. Parité avec Word sur un
+    corpus de dix documents comparés aux PDF que Word en a faits (avant → après) : guide de 155 pages, premières lignes
+    de page identiques 73 → 80, dernières 155 → 155, mots manquants 0,067 → 0,064 (156 pages, Word 155) ; guide de 133
+    pages, premières 30 → 59, dernières 34 → 65, manquants 0,031 → 0,029 (136 pages) ; les huit autres inchangés. Deux règles mesurées contre Word en chemin : une
+    tabulation ne grandit pas sa ligne (tables des matières), une ligne qui ne tient qu'un saut de page ou le
+    paragraphe vide qui finit une section avant une nouvelle page reste en bas de la page qu'il finit.
+  - Non fait (limites) : habillage serré et traversant suivi par la boîte englobante (le polygone n'est pas lu,
+    signalé) ; seuil de 18 pt sous lequel un tronçon n'est pas rempli (celui de Word n'est pas publié) ; objets des
+    tableaux, en-têtes et pieds sans habillage (signalé) ; un objet placé depuis la page n'écarte que les lignes posées
+    après son paragraphe d'ancrage ; un objet placé depuis son paragraphe qui chevaucherait un objet placé avant lui
+    descend sous lui (comportement observé de Word, non spécifié) ; les tableaux ne se rétrécissent pas à côté d'un
+    objet ; classes bidirectionnelles dérivées des catégories Unicode et des blocs de droite à gauche, avec la liste
+    des exceptions connues (la bibliothèque de base ne publie pas `Bidi_Class` ; un caractère hors de ces règles peut
+    être mal classé) ; paires de crochets et miroirs limités aux paires listées ; formes de liaison arabes non
+    choisies (aucune police livrée n'a de glyphes arabes, signalé) ; `bCs`/`iCs` non lus ; sections et tableaux de
+    droite à gauche (`w:bidi` de section, `w:bidiVisual`) non lus ; en-têtes de tableau répétés gardés à la largeur
+    d'origine quand le tableau passe dans une colonne d'une autre largeur.
 - Contrôle : positions des lignes vérifiées au point près sur des pages calibrées.
 
 ## Lot 11 : fidélité du rendu PDF

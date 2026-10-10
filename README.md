@@ -46,6 +46,9 @@ Companion tools: HTML parsing and sanitising, text diff (lines and words).
   keep their last computed result and are reported.
 - Word to HTML leaves line and page breaks to the browser and lists what it approximates in its gaps; Word to
   Markdown lists what Markdown cannot carry (underline, headers and footers, comments, merged cells...).
+- Word to PDF wraps text around the floating shapes of body paragraphs (tight and through wrapping by the bounding
+  box; not in tables, headers or footers), orders right-to-left and mixed text by the Unicode Bidirectional Algorithm
+  with bidirectional classes derived from the Unicode categories, and draws Arabic letters without joining forms.
 
 ## Layout
 

@@ -6,6 +6,37 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- Word to PDF wraps text around floating shapes, lays out right-to-left text and unequal columns (ECMA-376 part 1,
+  §20.4.2 and §20.4.3, §17.3.1.6, §17.3.2.30, §17.6.4). Floating shapes anchored in body paragraphs are placed with
+  the first line of their paragraph, from the page, the margins (left, right, top, bottom, inside, outside), the
+  column, the anchoring character, paragraph or line, by offset or alignment (`left`, `center`, `right`, `top`,
+  `bottom`, `inside`, `outside`) or by their simple position. Square wrapping takes the shape's box widened by its
+  `distT`, `distB`, `distL` and `distR` out of the lines beside it, on both sides or on the `left`, `right` or
+  `largest` side (`wrapText`), each stretch of line filled and aligned on its own (stretches narrower than 18 pt are
+  left empty); tight and through wrapping follow the bounding box (reported); top-and-bottom wrapping moves the lines
+  below the shape; a line with no room left moves down past the shapes. Lines are broken again wherever the
+  paragraph lands (another column, page or position); table rows go below a wrapping shape they would overlap; a
+  wrapping shape positioned from its paragraph or line moves below the wrapping shapes placed before it; text boxes
+  with `a:spAutoFit` (VML `mso-fit-shape-to-text`) grow to hold their text. Right-to-left paragraphs (`w:bidi`) are
+  laid out from the right edge (start and end indents, tabs and alignment taken from the start edge) and every line
+  holding right-to-left text is put in drawing order by the Unicode Bidirectional Algorithm (UAX #9: explicit
+  embeddings, overrides and isolates, weak types, paired brackets, neutrals, implicit levels, then per line the reset
+  of trailing white space and the reordering), right-to-left pieces drawn reversed with mirrored brackets; `w:rtl` runs
+  use their complex script font and size and their neutral characters count as right to left, Hebrew, Arabic and
+  the other right-to-left letters of any run use the run's complex script font and size. The bidirectional classes
+  are derived from the Unicode categories and the right-to-left blocks, with the classes that differ from them listed
+  (the base class library publishes no bidirectional property). Arabic letters keep their nominal forms (no joining
+  forms: the bundled fonts have no Arabic glyphs), reported as "Arabic letters drawn without joining forms". Unequal
+  columns (`w:equalWidth="0"`) take each column's own width and space after it (`w:col/@w:space`, read and written),
+  paragraphs and tables reaching a column of another width are broken again at it, the line between columns
+  (`w:sep`) is drawn down the middle of each gap, and unequal columns (or columns beside floating shapes) are
+  balanced before a continuous section break by placing their content again at decreasing heights. The gaps "text
+  does not flow around floating shapes", "right-to-left paragraphs laid out left to right" and "unequal columns laid
+  out at the first column's width" are gone; "text does not flow around floating shapes in tables, headers and
+  footers" is reported instead. `WordFloatingPosition` gains `HorizontalAlignment`, `VerticalAlignment`,
+  `DistanceTop`, `DistanceBottom`, `DistanceLeft`, `DistanceRight` and `WrapSide` (`WordWrapSide`), `WordPageSetup`
+  gains `ColumnSpacings`, `WordTextBox` gains `FitsText`, all read and written.
+
 - `PdfRenderer` draws transparency and patterns (ISO 32000-1 §8.7 and §11). The sixteen blend modes of the `BM` entry
   (a name or the first known name of an array, Normal otherwise): Normal, Multiply, Screen, Overlay, Darken,
   Lighten, ColorDodge, ColorBurn, HardLight, SoftLight, Difference, Exclusion and the non-separable Hue,
@@ -240,6 +271,11 @@ Notable changes to this project are documented here, following the Keep a Change
   cells, empty ones included, throws `DocumentFormatException` before anything is written.
 
 ### Changed
+
+- Word to PDF measured against Word: a tab no longer makes its line taller (a table of contents entry keeps its own
+  line height when its tab is set in a larger size), and a line holding nothing but a page or column break, or the
+  empty paragraph ending a section before a new page, stays at the end of the page it ends instead of opening a
+  page of its own.
 
 - Word to PDF draws Symbol and Wingdings text closer to Word. Symbol text (runs, symbols and list labels in the
   Symbol font) is still drawn with Liberation Sans look-alikes but each character advances by the Symbol font's
