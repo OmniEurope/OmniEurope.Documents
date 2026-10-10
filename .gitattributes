@@ -20,3 +20,6 @@ docs/third-party-licenses/** -text
 
 # Adobe AFM files ship byte for byte as published (their licence asks for every modification to be noted).
 src/OmniEurope.Documents/Fonts/Bundled/Adobe/** -text
+
+# Ecma-376 XML schemas ship byte for byte as published (the Ecma copyright notice forbids modifying them).
+src/OmniEurope.Documents/Word/Schemas/** -text

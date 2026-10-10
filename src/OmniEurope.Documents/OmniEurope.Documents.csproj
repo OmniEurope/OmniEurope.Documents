@@ -41,4 +41,13 @@
     <None Include="Fonts\Bundled\Adobe\Symbol.afm;Fonts\Bundled\Adobe\MustRead.html" Pack="true" PackagePath="fonts/adobe/" />
   </ItemGroup>
 
+  <!-- Office Open XML schemas: Ecma-376 electronic inserts, unmodified, always with their notice (NOTICE-Ecma.txt). -->
+  <ItemGroup>
+    <EmbeddedResource Include="Word\Schemas\Transitional\*.xsd" LogicalName="OmniEurope.Documents.Word.Schemas.Transitional.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Word\Schemas\Strict\*.xsd" LogicalName="OmniEurope.Documents.Word.Schemas.Strict.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Word\Schemas\Opc\*.xsd" LogicalName="OmniEurope.Documents.Word.Schemas.Opc.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Word\Schemas\NOTICE-Ecma.txt" LogicalName="OmniEurope.Documents.Word.Schemas.NOTICE-Ecma.txt" />
+    <None Include="Word\Schemas\NOTICE-Ecma.txt" Pack="true" PackagePath="schemas/" />
+  </ItemGroup>
+
 </Project>

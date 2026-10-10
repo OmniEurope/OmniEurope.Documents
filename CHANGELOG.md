@@ -6,6 +6,22 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- `WordSchemaValidator.Validate` (`OmniEurope.Documents.Word.Validation`, `WordSchemaReport`, `WordSchemaError`):
+  validates every XML part of a Word package against the Office Open XML schemas of ECMA-376 5th edition shipped
+  in the package (transitional WordprocessingML of Part 4 with the DrawingML, VML, math, shared types, document
+  properties, custom XML and bibliography schemas it uses, strict WordprocessingML of Part 1, content types and
+  relationships of Part 2; source https://ecma-international.org/publications-and-standards/standards/ecma-376/,
+  files unmodified under Ecma's default copyright notice, `Word/Schemas/NOTICE-Ecma.txt`, packed under
+  `schemas/`). Markup compatibility (Part 3) is processed first: namespaces declared ignorable and not understood
+  (`w14`, `w15`...) are removed, `mc:ProcessContent` keeps their content, `mc:AlternateContent` resolves to its
+  first understood choice or its fallback, `mc:MustUnderstand` of an unknown namespace and malformed alternate
+  content are errors; the content types and relationships parts are validated without it. Each attribute of the
+  relationships namespace (`r:id`, `r:embed`...) must name a relationship its part declares. Each error gives the
+  part, line, position, element path and the validator's message. Parts no shipped schema covers (core
+  properties, custom XML data, extensions) are listed as unchecked; pictures are not read. The schemas compile
+  once (the strict schema's three invalid `"off"` defaults read as `false`, see the notice) and validations run
+  one at a time. Every Word writer of the package (model, editor, merge, HTML, Markdown and Excel to Word)
+  produces documents that validate clean.
 - `WordToMarkdown.Convert` (`WordMarkdownOptions`, `WordMarkdownResult`, `WordMarkdownImage`): a Word document to
   GitHub-flavoured Markdown. Headings from outline levels 1 to 6 (a numbered heading keeps its label, the bold or
   italic of its style is not marked), paragraphs, hard line breaks, bold, italic and strike (`**`, `*`, `~~`, spaces

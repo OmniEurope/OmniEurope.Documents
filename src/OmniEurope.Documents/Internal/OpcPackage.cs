@@ -88,7 +88,19 @@ internal sealed class OpcPackage
             return null;
         }
 
-        XDocument document;
+        var document = ParseXml(name, bytes, LoadOptions.PreserveWhitespace);
+        var key = name;
+        document.Changed += (_, _) => _changed.Add(key);
+        _xml[name] = document;
+        return document;
+    }
+
+    /// <summary>
+    /// Parses the bytes of a part (DTDs prohibited, nothing resolved, at most <see cref="MaxXmlDepth"/> levels of
+    /// elements); a part that is not well-formed or nests too deep throws <see cref="DocumentFormatException"/>.
+    /// </summary>
+    public static XDocument ParseXml(string name, byte[] bytes, LoadOptions options)
+    {
         var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null };
         try
         {
@@ -105,17 +117,12 @@ internal sealed class OpcPackage
             }
 
             using var reader = XmlReader.Create(new MemoryStream(bytes), settings);
-            document = XDocument.Load(reader, LoadOptions.PreserveWhitespace);
+            return XDocument.Load(reader, options);
         }
         catch (XmlException exception)
         {
             throw new DocumentFormatException($"Part '{name}' is not well-formed XML.", exception);
         }
-
-        var key = name;
-        document.Changed += (_, _) => _changed.Add(key);
-        _xml[name] = document;
-        return document;
     }
 
     /// <summary>Adds or replaces an XML part.</summary>

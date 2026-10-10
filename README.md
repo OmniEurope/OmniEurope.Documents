@@ -10,7 +10,7 @@ NuGet package, no user interface, no dependency, licensed under EUPL-1.2.
 
 | Format | Create | Edit | Read | Convert |
 |---|---|---|---|---|
-| Word (`.docx`) | yes | yes | text and structure | to PDF, to HTML, to Markdown |
+| Word (`.docx`) | yes | yes | text and structure, schema validation | to PDF, to HTML, to Markdown |
 | Excel (`.xlsx`) | yes | yes, in place without loss | cells and sheets | to PDF, to CSV, to HTML |
 | PDF | yes | merge, split, compress, reorder, rotate, stamp | text, **no OCR** | from Word, Excel, Markdown, HTML, images; to PNG |
 | Markdown | yes | yes | yes | to PDF, to Word, to HTML |
@@ -46,6 +46,7 @@ One package, one namespace per format, conversions on their own:
 
 - `OmniEurope.Documents.Pdf`
 - `OmniEurope.Documents.Word`
+- `OmniEurope.Documents.Word.Validation` (`WordSchemaValidator`: validation against the ECMA-376 schemas)
 - `OmniEurope.Documents.Excel` (`XlsxWorkbook.Recalculate`: formula recalculation)
 - `OmniEurope.Documents.Excel.Editing` (`XlsxEditor`: in-place cell edits)
 - `OmniEurope.Documents.Markdown`
@@ -75,7 +76,14 @@ Third-party data shipped in the package:
   https://download.macromedia.com/pub/developer/opentype/tech-notes/Core14_AFMs.zip), unmodified, with
   their licence `MustRead.html` (use, copy and distribution for any purpose, copyright notices kept,
   modifications noted), in `src/OmniEurope.Documents/Fonts/Bundled/Adobe/`, packed under `fonts/adobe/`
-  and embedded in the assembly next to the metrics.
+  and embedded in the assembly next to the metrics;
+- the Office Open XML schemas (W3C XML Schema) of ECMA-376 5th edition, from
+  https://ecma-international.org/publications-and-standards/standards/ecma-376/: the transitional schemas of
+  Part 4 (December 2016), the strict schemas of Part 1 (December 2016) and the content types and relationships
+  schemas of Part 2 (December 2021), only those a Word package needs, unmodified, under Ecma's default copyright
+  notice (copies and implementing works allowed, files unmodified, notice kept), in
+  `src/OmniEurope.Documents/Word/Schemas/` with their notice `NOTICE-Ecma.txt` (sources, archive hashes, the one
+  in-memory workaround), embedded in the assembly and the notice packed under `schemas/`.
 
 ## Development
 

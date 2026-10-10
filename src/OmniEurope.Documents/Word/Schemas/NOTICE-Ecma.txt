@@ -1,0 +1,78 @@
+Office Open XML schemas (W3C XML Schema) shipped with OmniEurope.Documents
+==========================================================================
+
+The .xsd files in this directory are copies, unmodified byte for byte, of the electronic inserts of the
+Ecma International standard ECMA-376, Office Open XML File Formats (aligned with ISO/IEC 29500:2016),
+downloaded on 2026-10-10 from https://ecma-international.org/publications-and-standards/standards/ecma-376/ :
+
+- Transitional/ : OfficeOpenXML-XMLSchema-Transitional.zip of ECMA-376 Part 4, 5th edition, December 2016
+  (Transitional Migration Features), archive
+  https://ecma-international.org/wp-content/uploads/ECMA-376-4_5th_edition_december_2016.zip
+  (SHA-256 bd25da1109f73762356596918bf5ff8b74a1331642dba5f1c1d1dfc6bed34ecd).
+- Strict/ : OfficeOpenXML-XMLSchema-Strict.zip of ECMA-376 Part 1, 5th edition, December 2016
+  (Fundamentals and Markup Language Reference), archive
+  https://ecma-international.org/wp-content/uploads/ECMA-376-1_5th_edition_december_2016.zip
+  (SHA-256 9d0bcad9cf06054785b03762fcfadbf6bab7e54a5f9d69434e34b7fd464d4129).
+- Opc/ : OpenPackagingConventions-XMLSchema.zip of ECMA-376 Part 2, 5th edition, December 2021
+  (Open Packaging Conventions), archive
+  https://ecma-international.org/wp-content/uploads/ECMA-376-2_5th_edition_december_2021.zip
+  (SHA-256 1d489dc491168ea1f9e9a59063acc8dd5f02b4ad1d21aa7ec19ba9a58d020c70).
+
+Only the schemas a WordprocessingML package needs are shipped (WordprocessingML, the DrawingML, VML, math,
+shared types, document properties, custom XML and bibliography schemas they import, the content types and
+relationships schemas). The package uses them to validate Word documents
+(OmniEurope.Documents.Word.Validation.WordSchemaValidator), as an implementation of the standard.
+
+The files are never modified. One defect of the published strict WordprocessingML schema (Strict/wml.xsd) is
+worked around in memory when the package compiles the schemas: the attributes beforeAutospacing and
+afterAutospacing of CT_Spacing and nlCheck of CT_WritingStyle have the default "off", which the strict ST_OnOff
+(xsd:boolean) does not allow, so the schema does not compile as published; the package reads those three defaults
+as "false", the value they mean. The XML namespace, which the schemas import without a location, is declared by
+the package itself (its xml:space attribute, values "default" and "preserve").
+
+The text of the three parts as published carries no copyright notice of its own. Ecma's text copyright policy
+(version 3, December 2025, https://ecma-international.org/policies/by-ipr/ecma-text-copyright-policy/) states
+that its default copyright notice applies to every Ecma standard, including those published without it. That
+notice follows; it allows copying and distributing the schemas unmodified, in whole or in part, with the notice,
+and works that implement the specification in standard conformant products.
+
+COPYRIGHT NOTICE
+© Ecma International
+
+By obtaining and/or copying this work, you (the licensee) agree that you have read, understood, and will comply
+with the following terms and conditions.
+
+This document may be copied, published and distributed to others, and certain derivative works of it may be
+prepared, copied, published, and distributed, in whole or in part, provided that the above copyright notice and
+this Copyright License and Disclaimer are included on all such copies and derivative works. The only derivative
+works that are permissible under this Copyright License and Disclaimer are:
+
+(i) works which incorporate all or portion of this document for the purpose of providing commentary or
+explanation (such as an annotated version of the document),
+
+(ii) works which incorporate all or portion of this document for the purpose of incorporating features that
+provide accessibility,
+
+(iii) translations of this document into languages other than English and into different formats and
+
+(iv) works by making use of this specification in standard conformant products by implementing (e.g. by
+copy and paste wholly or partly) the functionality therein.
+
+However, the content of this document itself may not be modified in any way, including by removing the
+copyright notice or references to Ecma International, except as required to translate it into languages other
+than English or into a different format.
+
+The official version of an Ecma International document is the English language version on the Ecma
+International website. In the event of discrepancies between a translated version and the official version, the
+official version shall govern.
+
+The limited permissions granted above are perpetual and will not be revoked by Ecma International or its
+successors or assigns.
+
+This document and the information contained herein is provided on an "AS IS" basis and ECMA
+INTERNATIONAL DISCLAIMS ALL WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+LIMITED TO ANY WARRANTY THAT THE USE OF THE INFORMATION HEREIN WILL NOT INFRINGE
+ANY OWNERSHIP RIGHTS OR ANY IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR
+A PARTICULAR PURPOSE.
+
+Ecma International, Rue du Rhône 114, CH-1204 Geneva, www.ecma-international.org
