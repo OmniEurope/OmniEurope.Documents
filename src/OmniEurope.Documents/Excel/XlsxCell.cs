@@ -65,8 +65,8 @@ public sealed class XlsxCell
         set => SetValue(value);
     }
 
-    /// <summary>The formula without its leading <c>=</c>, or null. Its last computed result is <see cref="Value"/>;
-    /// formulas are stored, never evaluated.</summary>
+    /// <summary>The formula without its leading <c>=</c>, or null. Its last computed result is <see cref="Value"/>,
+    /// computed again by <see cref="XlsxWorkbook.Recalculate"/>.</summary>
     public string? Formula { get; set; }
 
     /// <summary>The look of the cell.</summary>

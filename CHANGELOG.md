@@ -14,6 +14,20 @@ Notable changes to this project are documented here, following the Keep a Change
   tables and table segments, page information with its default pixel, combination operators, end of stripe on a page
   of unknown height. Not decoded: extended generic templates (the image is reported as not drawn); colour extensions
   and profiles are ignored.
+- `XlsxWorkbook.Recalculate` computes every formula of a workbook again, in dependency order across sheets
+  (without recursion), and stores the results; a date cell stays a date. Operators with Excel precedence
+  (`-2^2` is 4), text and boolean coercion, comparison of numbers, text and booleans, ranges and array constants
+  computed element by element, absolute references, whole rows and columns, references to other sheets, Excel
+  errors (`#DIV/0!`, `#VALUE!`, `#REF!`, `#NAME?`, `#NUM!`, `#N/A`), and 101 functions: mathematical and
+  statistical (SUM, SUMIFS, SUMPRODUCT, AVERAGEIFS, COUNTIFS, ROUND...), logical and information (IF, IFS,
+  IFERROR, SWITCH, IS...), lookup (VLOOKUP, HLOOKUP, XLOOKUP, INDEX, MATCH), text (TEXT, TEXTJOIN, SUBSTITUTE,
+  FIND...) and dates (DATE, EDATE, EOMONTH, DATEDIF, WEEKDAY...). A cycle throws
+  `XlsxCircularReferenceException` with its cells. A formula it does not compute (a defined name, a table
+  reference, a reference over several sheets, the union or intersection operator, INDIRECT, OFFSET, another
+  function, a syntax error) keeps its stored result and is listed in `XlsxRecalculation.Unsupported`; a formula
+  returning an array fills its own cell only.
+- Loading an `.xlsx` gives each cell of a shared formula its own formula, the group's first one with its
+  relative references moved to the cell (they were read without a formula before).
 - `XlsxEditor` (`OmniEurope.Documents.Excel.Editing`): opens an `.xlsx` and edits cells in place.
   `XlsxEditableSheet.SetValue` (number, text, boolean, date, empty) and `SetFormula` change one cell of the
   worksheet part; every other part (charts, pictures, conditional formats, validations, comments, tables, pivot

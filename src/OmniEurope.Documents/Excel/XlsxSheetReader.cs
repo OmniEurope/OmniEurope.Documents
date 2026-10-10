@@ -8,6 +8,7 @@ namespace OmniEurope.Documents.Excel;
 /// <summary>Reads one worksheet part: cells, column widths, frozen panes, merges and the auto-filter.</summary>
 internal sealed class XlsxSheetReader(XlsxWorksheet sheet, List<string> sharedStrings, List<XlsxStyle> styles)
 {
+    private readonly Formulas.SharedFormulas _sharedFormulas = new();
     private int _row;
     private int _column;
 
@@ -89,7 +90,8 @@ internal sealed class XlsxSheetReader(XlsxWorksheet sheet, List<string> sharedSt
         _column = column;
         var type = xml.GetAttribute("t") ?? "n";
         var style = int.TryParse(xml.GetAttribute("s"), NumberStyles.None, CultureInfo.InvariantCulture, out var s) && s < styles.Count ? styles[s] : XlsxStyle.Default;
-        var (value, formula, inline) = xml.IsEmptyElement ? default : ReadContent(xml);
+        var (value, formula, group, inline) = xml.IsEmptyElement ? default : ReadContent(xml);
+        formula = _sharedFormulas.Resolve(formula, group, row, column);
         xml.Read();
         if (value is null && formula is null && inline is null && style == XlsxStyle.Default)
         {
@@ -103,17 +105,24 @@ internal sealed class XlsxSheetReader(XlsxWorksheet sheet, List<string> sharedSt
         cell.SetLoadedValue(converted, kind);
     }
 
-    // The <v> value, <f> formula and <is> inline string of a <c> element; leaves the reader on its end tag.
-    private static (string? Value, string? Formula, string? Inline) ReadContent(XmlReader xml)
+    // The <v> value, <f> formula (with its shared group) and <is> inline string of a <c> element; leaves the
+    // reader on its end tag.
+    private static (string? Value, string? Formula, string? Group, string? Inline) ReadContent(XmlReader xml)
     {
         string? value = null;
         string? formula = null;
+        string? group = null;
         string? inline = null;
         var depth = xml.Depth;
         xml.Read();
         while (!xml.EOF && xml.Depth > depth)
         {
             var element = xml.NodeType == XmlNodeType.Element ? xml.LocalName : null;
+            if (element == "f" && xml.GetAttribute("t") == "shared")
+            {
+                group = xml.GetAttribute("si");
+            }
+
             if (element is "v" or "f")
             {
                 var content = xml.ReadElementContentAsString();
@@ -129,7 +138,7 @@ internal sealed class XlsxSheetReader(XlsxWorksheet sheet, List<string> sharedSt
             xml.Read();
         }
 
-        return (value, formula, inline);
+        return (value, formula, group, inline);
     }
 
     private (object? Value, XlsxValueType Type) Convert(string type, string? value, string? inline, XlsxStyle style) =>

@@ -36,9 +36,17 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
 
 ## Lot 2 : calcul des formules
 
-- [ ] Moteur de formules : opérateurs, références et plages entre feuilles, fonctions courantes
+- [x] Moteur de formules : opérateurs, références et plages entre feuilles, fonctions courantes
   (mathématiques, logiques, recherche, texte, dates), erreurs (`#DIV/0!`, `#REF!`, `#N/A`...), références
   circulaires refusées ; recalcul à la demande avant export PDF ou CSV.
+  - Fait (2026-10-10) : `XlsxWorkbook.Recalculate`, 101 fonctions, opérateurs avec la précédence d'Excel,
+    plages et constantes matricielles calculées élément par élément, références absolues, lignes et colonnes
+    entières, autres feuilles ; ordre de dépendance sans récursion (chaîne de 100 000 cellules), cycles refusés
+    (`XlsxCircularReferenceException`) ; formules partagées relues cellule par cellule. 326 tests aux résultats
+    calculés à la main, une facture remplie relue en PDF et en CSV. Non calculés, gardent leur résultat stocké
+    et sont listés dans `Unsupported` : noms définis, références de tableau, références sur plusieurs feuilles
+    (`Jan:Mar!A1`), opérateurs d'union et d'intersection, `INDIRECT`, `OFFSET`, toute fonction hors liste ;
+    une formule matricielle ne remplit que sa propre cellule (premier élément).
 - Contrôle : résultats attendus calculés à la main pour chaque fonction ; un modèle rempli donne ses totaux
   justes en PDF et en CSV.
 

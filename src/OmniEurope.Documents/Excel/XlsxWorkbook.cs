@@ -45,6 +45,20 @@ public sealed class XlsxWorkbook
         _worksheets.Find(w => w.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
         ?? throw new KeyNotFoundException($"No sheet named '{name}'.");
 
+    /// <summary>
+    /// Computes every formula of the workbook again and stores the results as the cells' values, in dependency
+    /// order across sheets. Operators, references and ranges between sheets, array constants and the common
+    /// mathematical, statistical, logical, lookup, text and date functions are computed; errors follow Excel
+    /// (<c>#DIV/0!</c>, <c>#VALUE!</c>, <c>#REF!</c>, <c>#N/A</c>...). A formula using something else (a defined
+    /// name, a table reference, a reference over several sheets, the union or intersection operator, INDIRECT,
+    /// OFFSET, a function not computed) keeps its stored result and is listed in
+    /// <see cref="XlsxRecalculation.Unsupported"/>. A formula whose result is an array stores its first element in
+    /// its own cell only. Call it before exporting to PDF or CSV after changing values.
+    /// </summary>
+    /// <exception cref="XlsxCircularReferenceException">Formulas depend on their own result.</exception>
+    public XlsxRecalculation Recalculate(XlsxRecalculationOptions? options = null) =>
+        new Formulas.XlsxCalculator(this, options?.Now ?? DateTime.Now).Run();
+
     /// <summary>Removes a worksheet.</summary>
     public void RemoveWorksheet(XlsxWorksheet worksheet) => _worksheets.Remove(worksheet);
 

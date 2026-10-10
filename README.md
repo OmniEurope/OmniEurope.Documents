@@ -34,7 +34,9 @@ Companion tools: HTML parsing and sanitising, text diff (lines and words).
 - **Saving a loaded `XlsxWorkbook` is not lossless**: it keeps cells, styles, merges, panes and filters only.
   `XlsxEditor` edits cells in place and keeps everything else the file holds (charts, pictures, conditional
   formats, validations, comments, pivot tables).
-- **No formula evaluation**: formulas are kept with their last computed result, never recalculated.
+- **Formulas are recalculated only on request** (`XlsxWorkbook.Recalculate`) and only with the operators and
+  common functions the engine computes; defined names, table and multi-sheet references, INDIRECT and OFFSET
+  keep their last computed result and are reported.
 - **No Word to Markdown yet**; Word to HTML leaves line and page breaks to the browser and lists what it
   approximates in its gaps.
 
@@ -44,7 +46,7 @@ One package, one namespace per format, conversions on their own:
 
 - `OmniEurope.Documents.Pdf`
 - `OmniEurope.Documents.Word`
-- `OmniEurope.Documents.Excel`
+- `OmniEurope.Documents.Excel` (`XlsxWorkbook.Recalculate`: formula recalculation)
 - `OmniEurope.Documents.Excel.Editing` (`XlsxEditor`: in-place cell edits)
 - `OmniEurope.Documents.Markdown`
 - `OmniEurope.Documents.Csv`
