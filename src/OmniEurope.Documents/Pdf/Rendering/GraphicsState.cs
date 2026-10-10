@@ -17,14 +17,33 @@ internal sealed record GraphicsState
 
     public PdfColor FillColor { get; set; } = PdfColor.Black;
 
-    /// <summary>A shading pattern used as the fill colour, with the matrix from shading space to device pixels.</summary>
-    public (Shading Shading, Matrix ToDevice)? FillPattern { get; set; }
+    /// <summary>A pattern used as the fill colour (null for a plain colour).</summary>
+    public PatternPaint? FillPaint { get; set; }
+
+    /// <summary>A pattern used as the stroke colour (null for a plain colour).</summary>
+    public PatternPaint? StrokePaint { get; set; }
+
+    /// <summary>The underlying space of a <c>[/Pattern base]</c> fill space, for uncoloured tiling patterns.</summary>
+    public PdfColorSpace? FillUnderlying { get; set; }
+
+    public PdfColorSpace? StrokeUnderlying { get; set; }
 
     public PdfColor StrokeColor { get; set; } = PdfColor.Black;
 
     public double FillAlpha { get; set; } = 1;
 
     public double StrokeAlpha { get; set; } = 1;
+
+    public BlendMode Mode { get; set; }
+
+    /// <summary>The soft mask of the ExtGState SMask entry, null for none.</summary>
+    public SoftMask? Mask { get; set; }
+
+    /// <summary>The AIS flag: the soft mask and alpha constant are shape rather than opacity.</summary>
+    public bool AlphaIsShape { get; set; }
+
+    /// <summary>The clip, blend mode, soft mask and AIS flag objects are painted with.</summary>
+    public Compositing Compositing => new(Clip, Mode, Mask, AlphaIsShape);
 
     public double LineWidth { get; set; } = 1;
 

@@ -30,7 +30,9 @@ public sealed record PdfPageRendering(RasterImage Image, IReadOnlyList<string> G
 /// Renders PDF pages to images: anti-aliased paths (non-zero and even-odd fills, strokes with joins, caps and
 /// dashes), clipping, opacity, images (masks and soft masks), text with embedded TrueType, CFF and Type 1
 /// programs (bundled look-alikes for fonts that are not embedded), Type 3 fonts, forms and annotation
-/// appearances, in grey, RGB, CMYK and the colour spaces built on them. The page rotation and crop box apply.
+/// appearances, in grey, RGB, CMYK and the colour spaces built on them; axial and radial shadings, tiling and shading
+/// patterns, the sixteen blend modes, alpha constants, soft masks and transparency groups (isolated and knockout)
+/// composited in RGB. The page rotation and crop box apply.
 /// </summary>
 public static class PdfRenderer
 {

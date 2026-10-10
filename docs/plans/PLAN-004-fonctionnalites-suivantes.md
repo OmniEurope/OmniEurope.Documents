@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 # PLAN-004 : Fonctionnalités suivantes
 
-> Statut : **en cours** (2026-10-10 : lot 13 signature PAdES B-B, lot 4 PDF/A-2b et A-2u, lot 3 formulaires PDF, lot 8 caviardage PDF, lot 7 chiffrement PDF AES-256, lot 6 révisions, table des matières et champs Word, lot 5 Word vers Markdown, lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
+> Statut : **en cours** (2026-10-10 : lot 11 fidélité du rendu PDF, lot 13 signature PAdES B-B, lot 4 PDF/A-2b et A-2u, lot 3 formulaires PDF, lot 8 caviardage PDF, lot 7 chiffrement PDF AES-256, lot 6 révisions, table des matières et champs Word, lot 5 Word vers Markdown, lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
 > propriétaire ; l'ordre des lots est celui de la valeur attendue. Un lot ne commence qu'après accord du
 > propriétaire.
 
@@ -229,10 +229,45 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
 
 ## Lot 11 : fidélité du rendu PDF
 
-- [ ] Motifs en mosaïque, masques doux, modes de fusion, images JPEG 2000 et JBIG2.
-  - JBIG2 fait (2026-10-09) : toutes les régions et tous les dictionnaires, segments globaux, filtre `JBIG2Decode`
+- [x] Motifs en mosaïque, masques doux, modes de fusion, images JPEG 2000 et JBIG2.
+  - Motifs, masques doux et modes de fusion faits (2026-10-10) : `PdfRenderer` (ISO 32000-1 §8.7 et §11). Les seize
+    modes de fusion de `BM` (nom ou premier nom connu d'un tableau, Normal sinon), séparables et non séparables, avec
+    `CA`, `ca` et `AIS`, composés en RGB ; groupes de transparence (formulaires `/Group /S /Transparency`) dessinés sur
+    leur propre calque, mode, alpha et masque remis à zéro, puis composés comme un seul objet : isolés (fond
+    transparent), non isolés (fond copié puis retiré, §11.4.8), à élimination (`K`, chaque objet composé avec le fond
+    initial et pondéré par sa forme) ; masques doux `SMask` de l'ExtGState (`Alpha` et `Luminosity`, fond `BC` dans
+    l'espace du groupe, fonction `TR`, valeur du fond hors de la boîte du groupe, matrice de l'opérateur `gs`,
+    `/None`, sauvegarde par `q`/`Q`) ; le masque propre d'une image (`SMask` ou `SMaskInData`) remplace celui de
+    l'état, `Matte` déprémultiplie l'image ; motifs en mosaïque (`PaintType` 1 colorés et 2 non colorés avec la
+    couleur donnée dans `[/Pattern base]`, opérateurs de couleur de la cellule ignorés, chaque `TilingType` dessiné
+    sur le réseau exact `XStep`/`YStep`, `Matrix` dans l'espace par défaut du flux qui utilise le motif, page,
+    formulaire ou cellule, cellules qui se chevauchent) pour les remplissages, les traits, le texte et les masques de
+    pochoir ; motifs de dégradé aussi pour les traits et le texte, avec leur `Background`.
+    Mesure : 59 cas, `PdfTransparencyTests` (42) et `PdfPatternTests` (17), couleurs attendues calculées à la main
+    d'après les formules de la norme (valeurs et calcul en commentaire), dont 48 des 54 premiers échouent sur le code
+    précédent. Non-régression : 262 pages de 139 PDF (échantillons JBIG2 et JPEG 2000, documents réels) rendues avant
+    et après, 257 identiques à l'octet près, 5 changées par le seul `Matte [0 0 0]` de leurs images (vérifié en
+    désactivant `Matte` : les 262 pages redeviennent identiques ; 612 à 1 393 pixels par page ; face au rendu de
+    référence, écart moyen ramené de 39,3 à 29,7 niveaux sur 2 pages, accru de 1,4 à 3 niveaux sur 3 pages dont la
+    bande concernée s'écartait déjà de 8 à 60 niveaux avant, cause non établie) ; suite rapide 2054 tests et suite
+    de charge 50 tests verts. Confrontation à un rendu PDF de référence (outil jetable hors dépôt, 46 pages,
+    tolérance 2 niveaux) : 81 points sur 86 dans la tolérance, 40 pages sans aucun pixel écarté de plus de 8 ; les
+    5 écarts viennent de la référence (groupes à élimination non pris en charge, couleur des motifs non colorés
+    ignorée pour les traits, matrice d'un motif partagé par la page et un formulaire figée au premier usage ; avec un
+    objet propre au formulaire, la référence donne le même pixel) ; une colonne de pixels diffère à l'extrémité d'un
+    dégradé (couleur prise au centre du pixel).
+    Limites : composition toujours en RGB (espace `CS` d'un groupe et fond CMJN non utilisés pour la fusion),
+    surimpression (`OP`, `OPM`) et `TK` ignorés, groupe de page sans effet, forme d'un groupe prise égale à son alpha
+    quand il est composé dans un groupe à élimination, cellule de motif rendue une fois à la résolution du
+    périphérique (au plus un million de pixels, moins de résolution au-delà) puis prise au plus proche, au plus quatre
+    cellules superposées par axe ; fonctions `TR` de type 4 (PostScript) non lues (signalées, identité) ; dégradés
+    de types 1 et 4 à 7 toujours non dessinés ; cas limites de ColorDodge et ColorBurn selon ISO 32000-1 (`Cs` = 1
+    donne 1, `Cs` = 0 donne 0).
+  - JBIG2 fait (2026-10-09, commits `a405082`, `db22afa`, `87c4d88`) : toutes les régions et tous les dictionnaires,
+    segments globaux, filtre `JBIG2Decode`
     (modèles génériques étendus non pris en charge).
-  - JPEG 2000 fait (2026-10-10) : flux bruts et fichiers JP2/JPX, ondelettes 5-3 et 9-7, RCT et ICT, toutes les
+  - JPEG 2000 fait (2026-10-10, commit `024790f`) : flux bruts et fichiers JP2/JPX, ondelettes 5-3 et 9-7, RCT
+    et ICT, toutes les
     progressions et les POC, tuiles et parties de tuile, précincts, en-têtes regroupés PPM/PPT, tous les styles de
     blocs, ROI, sous-échantillonnage, composantes signées de 1 à 30 bits, palettes et définitions de canaux, filtre
     `JPXDecode` avec `SMaskInData`. Mesure : 69 échantillons (fixtures du paquet, licences dans leur `LICENSE.txt`)

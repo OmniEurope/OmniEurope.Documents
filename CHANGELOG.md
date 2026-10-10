@@ -6,6 +6,27 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- `PdfRenderer` draws transparency and patterns (ISO 32000-1 §8.7 and §11). The sixteen blend modes of the `BM` entry
+  (a name or the first known name of an array, Normal otherwise): Normal, Multiply, Screen, Overlay, Darken,
+  Lighten, ColorDodge, ColorBurn, HardLight, SoftLight, Difference, Exclusion and the non-separable Hue,
+  Saturation, Color and Luminosity, with the alpha constants `CA` and `ca` and the `AIS` flag, composited in RGB.
+  Transparency group forms (`/Group /S /Transparency`) are drawn on their own layer with the blend mode, alpha and
+  soft mask reset, then composited as one object; isolated groups start transparent, non-isolated groups start from
+  their backdrop and take it out again (§11.4.8), knockout groups composite each object with the initial backdrop
+  weighted by its shape. The `SMask` entry of an ExtGState renders its group under the matrix of the `gs` operator:
+  `Alpha` keeps the group alpha, `Luminosity` the luminosity of the group over its `BC` backdrop (in the group
+  colour space, black by default), the `TR` function applied, the backdrop value kept outside the group box;
+  `/None` ends the mask, `q`/`Q` save it. An image with its own `SMask` (or `SMaskInData`) uses it instead of the
+  state's mask, and a soft mask image with `Matte` is unpremultiplied. Tiling patterns (`PatternType 1`) fill,
+  stroke, text and stencil masks: coloured (`PaintType 1`) and uncoloured (`PaintType 2`, painted with the colour
+  given before the name in a `[/Pattern base]` space, the cell's own colour operators ignored), every `TilingType`
+  drawn with the exact `XStep`/`YStep` lattice, the pattern `Matrix` placed in the default space of the content
+  stream using the pattern (page, form or cell), cells larger than the steps overlapping; the cell is drawn once per
+  placement and colour at about the device resolution (at most a million pixels) and taken nearest to each pixel
+  centre. Shading patterns also stroke and fill text, with their `Background` outside the shading. The gaps "soft
+  masks are not applied", "blend modes are drawn as normal" and "tiling patterns and stroked patterns are drawn as a
+  flat colour" are gone; unreadable masks, transfer functions and patterns are reported instead.
+
 - `PdfSigner.Sign` and `PdfSigner.Verify` (`OmniEurope.Documents.Pdf.Signing`: `PdfSignatureOptions`,
   `PdfSignatureVerification`): PAdES baseline B-B signatures (ETSI EN 319 142-1) with a certificate the application
   provides (RSA PKCS #1 v1.5 or ECDSA private key; SHA-256, SHA-384 or SHA-512). An incremental update adds an

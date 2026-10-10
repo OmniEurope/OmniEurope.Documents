@@ -7,7 +7,8 @@ namespace OmniEurope.Documents.Pdf.Rendering;
 
 /// <summary>
 /// Draws image XObjects and inline images: the unit square mapped by the current matrix, each device pixel
-/// sampled bilinearly from the image (its alpha and soft mask included); stencil masks paint the fill colour.
+/// sampled bilinearly from the image (its alpha and soft mask included); stencil masks paint the fill colour or
+/// pattern.
 /// Images whose data cannot be decoded are reported.
 /// </summary>
 internal sealed class ImagePainter(PageRenderer page)
@@ -32,6 +33,9 @@ internal sealed class ImagePainter(PageRenderer page)
 
         var inverse = new Matrix(ctm.D / determinant, -ctm.B / determinant, -ctm.C / determinant, ctm.A / determinant,
             ((ctm.C * ctm.F) - (ctm.D * ctm.E)) / determinant, ((ctm.B * ctm.E) - (ctm.A * ctm.F)) / determinant);
+        // An image with its own soft mask is masked by it instead of the soft mask of the graphics state (§11.6.5.3).
+        var ownMask = inlineData is null && (store.Get(image, "SMask") is PdfStream || store.Number(image, "SMaskInData") != 0);
+        var compositing = ownMask ? page.State.Compositing with { Mask = null } : page.State.Compositing;
         var (left, top, right, bottom) = Bounds(ctm, page.Surface);
         for (var y = top; y < bottom; y++)
         {
@@ -40,13 +44,13 @@ internal sealed class ImagePainter(PageRenderer page)
                 var (u, v) = inverse.Transform(x + 0.5, y + 0.5);
                 if (u is >= 0 and < 1 && v is >= 0 and < 1)
                 {
-                    Pixel(raster, stencil, x, y, u * raster.Width, (1 - v) * raster.Height);
+                    Pixel(raster, stencil, compositing, (x, y), (u * raster.Width, (1 - v) * raster.Height));
                 }
             }
         }
     }
 
-    private static (int Left, int Top, int Right, int Bottom) Bounds(Matrix ctm, Surface surface)
+    private static (int Left, int Top, int Right, int Bottom) Bounds(Matrix ctm, Canvas surface)
     {
         (double X, double Y)[] corners = [ctm.Transform(0, 0), ctm.Transform(1, 0), ctm.Transform(0, 1), ctm.Transform(1, 1)];
         return (
@@ -56,19 +60,30 @@ internal sealed class ImagePainter(PageRenderer page)
             Math.Min(surface.Height, (int)Math.Ceiling(corners.Max(c => c.Y))));
     }
 
-    private void Pixel(RasterImage raster, bool stencil, int x, int y, double sx, double sy)
+    private void Pixel(RasterImage raster, bool stencil, Compositing compositing, (int X, int Y) device, (double X, double Y) source)
     {
         var state = page.State;
-        var (r, g, b, a) = Sample(raster, sx, sy);
+        var (x, y) = device;
+        var (r, g, b, a) = Sample(raster, source.X, source.Y);
         if (stencil)
         {
-            // A stencil sample of 0 (decoded black) is painted with the fill colour.
+            // A stencil sample of 0 (decoded black) is painted with the fill colour or pattern.
             var paint = (255 - r) / 255.0;
-            page.Surface.Blend(x, y, state.FillColor.R, state.FillColor.G, state.FillColor.B, paint * state.FillAlpha, state.Clip);
+            if (state.FillPaint is { } pattern)
+            {
+                if (pattern.At(x, y) is { } sample)
+                {
+                    page.Surface.Composite(x, y, sample.R, sample.G, sample.B, paint, state.FillAlpha * sample.A, compositing);
+                }
+
+                return;
+            }
+
+            page.Surface.Composite(x, y, state.FillColor.R, state.FillColor.G, state.FillColor.B, paint, state.FillAlpha, compositing);
             return;
         }
 
-        page.Surface.Blend(x, y, r, g, b, a / 255.0 * state.FillAlpha, state.Clip);
+        page.Surface.Composite(x, y, r, g, b, a / 255.0, state.FillAlpha, compositing);
     }
 
     // Bilinear sampling between the four nearest image pixels.

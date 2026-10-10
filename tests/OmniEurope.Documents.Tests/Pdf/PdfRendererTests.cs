@@ -151,7 +151,7 @@ public sealed class PdfRendererTests
         var rendering = PdfRenderer.Render(PdfDocument.Open(pdf).GetPage(1), new PdfRenderOptions { Dpi = 144 });
         var png = PngCodec.Decode(rendering.ToPng());
 
-        Assert.Equal(["blend modes are drawn as normal", "shadings of this kind are not drawn", "soft masks are not applied"], rendering.Gaps);
+        Assert.Equal(["shadings of this kind are not drawn", "soft masks that cannot be read are not applied"], rendering.Gaps);
         Assert.Equal((400, 400), (png.Width, png.Height));
         Assert.Equal(PdfRenderer.RenderToPng(PdfDocument.Open(pdf), 1, new PdfRenderOptions { Dpi = 144 }), rendering.ToPng());
     }

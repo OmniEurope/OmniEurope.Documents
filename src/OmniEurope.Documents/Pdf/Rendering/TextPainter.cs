@@ -155,7 +155,7 @@ internal sealed class TextPainter(PageRenderer page)
         var mode = State.RenderMode;
         if (mode is 0 or 2 or 4 or 6)
         {
-            page.Surface.Fill(device.Select(p => (IReadOnlyList<(double X, double Y)>)p.Points), false, State.FillColor, State.FillAlpha, State.Clip);
+            page.FillShape(device.Select(p => (IReadOnlyList<(double X, double Y)>)p.Points), false);
         }
 
         if (mode is 1 or 2 or 5 or 6)

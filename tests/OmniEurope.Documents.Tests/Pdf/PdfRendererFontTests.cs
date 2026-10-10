@@ -93,7 +93,7 @@ public sealed class PdfRendererFontTests
             "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")).GetPage(1), new PdfRenderOptions { Dpi = 72 });
 
         Assert.Equal((255, 0, 0, 255), rendering.Image.GetRgba(25, 175));
-        Assert.Contains("tiling patterns and stroked patterns are drawn as a flat colour", rendering.Gaps);
+        Assert.Contains("patterns that cannot be read are drawn as a flat colour", rendering.Gaps);
         var inked = Enumerable.Range(0, 200).Where(x => rendering.Image.GetRgba(x, 85).R < 100).ToList();
         Assert.Contains(inked, x => x < 40);
         Assert.Contains(inked, x => x is > 120 and < 150);
@@ -167,7 +167,7 @@ public sealed class PdfRendererFontTests
         Assert.InRange(image.GetRgba(150, 100).R, 240, 255);
         Assert.InRange(image.GetRgba(197, 100).R, 0, 20);
         Assert.InRange(image.GetRgba(175, 175).R, 30, 70);
-        Assert.Equal(["shadings of this kind are not drawn", "tiling patterns and stroked patterns are drawn as a flat colour"], rendering.Gaps);
+        Assert.Equal(["patterns that cannot be read are drawn as a flat colour", "shadings of this kind are not drawn"], rendering.Gaps);
     }
 
     [Fact]

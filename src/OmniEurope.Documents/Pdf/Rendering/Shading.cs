@@ -161,8 +161,15 @@ internal sealed class Shading
 
         var extend = store.Get<PdfArray>(dictionary, "Extend")?.Items.Select(i => store.Resolve(i) is PdfBoolean { Value: true }).ToArray() ?? [false, false];
         var space = PdfColorSpace.Resolve(store, store.Get(dictionary, "ColorSpace"), resources);
-        return new Shading(space, function, coords, ShadingFunction.Numbers(store, dictionary, "Domain") ?? [0, 1], extend.ElementAtOrDefault(0), extend.ElementAtOrDefault(1), type == 3);
+        var background = ShadingFunction.Numbers(store, dictionary, "Background") is { Length: > 0 } values ? GraphicsState.ToRgb(space, values) : (PdfColor?)null;
+        return new Shading(space, function, coords, ShadingFunction.Numbers(store, dictionary, "Domain") ?? [0, 1], extend.ElementAtOrDefault(0), extend.ElementAtOrDefault(1), type == 3)
+        {
+            Background = background,
+        };
     }
+
+    /// <summary>The Background colour, painted outside the shading when it is used as a pattern.</summary>
+    public PdfColor? Background { get; private init; }
 
     /// <summary>The colour at a point of shading space, or null outside the shading.</summary>
     public PdfColor? ColorAt(double x, double y)

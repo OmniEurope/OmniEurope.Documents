@@ -11,7 +11,7 @@ namespace OmniEurope.Documents.Pdf.Text;
 /// Decodes PDF image XObjects and inline images to pixels: 1 to 16 bits per component, DeviceGray, RGB and
 /// CMYK, ICC-based (by component count), Indexed, CalGray/CalRGB, Lab (approximate), Separation and DeviceN
 /// (as ink coverage), image masks, Decode arrays, DCT, CCITT, JBIG2 and JPEG 2000 data, and the soft mask as alpha
-/// (for JPEG 2000 with SMaskInData, the opacity channel of the data instead).
+/// (unpremultiplied by its Matte colour; for JPEG 2000 with SMaskInData, the opacity channel of the data instead).
 /// </summary>
 internal static class PdfImageDecoder
 {
@@ -26,7 +26,7 @@ internal static class PdfImageDecoder
             }
 
             var alpha = Decode(store, mask, null, resources);
-            return alpha is null ? decoded : WithAlpha(decoded, alpha);
+            return alpha is null ? decoded : WithAlpha(decoded, alpha, Matte(store, image, mask, resources));
         }
         catch (Exception exception) when (exception is InvalidDataException or NotSupportedException or IndexOutOfRangeException or ArgumentException)
         {
@@ -200,7 +200,30 @@ internal static class PdfImageDecoder
         }
     }
 
-    private static RasterImage WithAlpha(RasterImage image, RasterImage alpha)
+    // The Matte of a soft mask: the colour the image was premultiplied with, in the image's colour space (§11.6.5.3).
+    private static (byte R, byte G, byte B)? Matte(PdfObjectStore store, PdfDictionary image, PdfStream mask, PdfDictionary? resources)
+    {
+        if (store.Get<PdfArray>(mask, "Matte") is not { Count: > 0 } matte)
+        {
+            return null;
+        }
+
+        var space = PdfColorSpace.Resolve(store, store.Get(image, "ColorSpace"), resources);
+        var samples = new double[Math.Max(space.Components, matte.Count)];
+        for (var i = 0; i < matte.Count; i++)
+        {
+            samples[i] = store.Resolve(matte[i]) is PdfNumber n ? n.Value : 0;
+        }
+
+        var pixel = new RasterImage(1, 1, space.Output);
+        space.Write(samples, pixel.Pixels, 0);
+        var (r, g, b, _) = pixel.ConvertTo(ImageColorType.Rgb).GetRgba(0, 0);
+        return (r, g, b);
+    }
+
+    // The soft mask (resampled to the image size) becomes alpha; with a Matte the colours are first unpremultiplied:
+    // c = m + (c' - m) / alpha.
+    private static RasterImage WithAlpha(RasterImage image, RasterImage alpha, (byte R, byte G, byte B)? matte)
     {
         var rgb = image.ColorType == ImageColorType.Rgb ? image : image.ConvertTo(ImageColorType.Rgb);
         var result = new RasterImage(rgb.Width, rgb.Height, ImageColorType.Rgba);
@@ -214,12 +237,21 @@ internal static class PdfImageDecoder
                 result.Pixels[(i * 4) + 2] = rgb.Pixels[(i * 3) + 2];
                 var ax = Math.Min(x * alpha.Width / rgb.Width, alpha.Width - 1);
                 var ay = Math.Min(y * alpha.Height / rgb.Height, alpha.Height - 1);
-                result.Pixels[(i * 4) + 3] = alpha.GetRgba(ax, ay).R;
+                var a = alpha.GetRgba(ax, ay).R;
+                result.Pixels[(i * 4) + 3] = a;
+                if (matte is { } m && a > 0)
+                {
+                    result.Pixels[i * 4] = Unpremultiply(result.Pixels[i * 4], m.R, a);
+                    result.Pixels[(i * 4) + 1] = Unpremultiply(result.Pixels[(i * 4) + 1], m.G, a);
+                    result.Pixels[(i * 4) + 2] = Unpremultiply(result.Pixels[(i * 4) + 2], m.B, a);
+                }
             }
         }
 
         return result;
     }
+
+    private static byte Unpremultiply(byte stored, byte matte, byte alpha) => (byte)Math.Clamp(Math.Round(matte + ((stored - matte) * 255.0 / alpha)), 0, 255);
 
     private static double Value(PdfObjectStore store, PdfDictionary dictionary, string key, string shortKey, double fallback = 0) =>
         store.Get(dictionary, key) is PdfNumber n ? n.Value : store.Number(dictionary, shortKey, fallback);

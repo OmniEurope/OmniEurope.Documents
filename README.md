@@ -17,7 +17,9 @@ NuGet package, no user interface, no dependency, licensed under EUPL-1.2.
 | CSV | yes | yes | yes | to Excel |
 
 PDF operations: merge several files, split a file (by pages or ranges), compress (images and streams),
-extract the text of a PDF that contains text, read the metadata, render a page to a PNG image. Forms
+extract the text of a PDF that contains text, read the metadata, render a page to a PNG image (`PdfRenderer`:
+paths, text, images including JBIG2 and JPEG 2000, shadings, tiling and shading patterns, the sixteen blend modes,
+soft masks and transparency groups, composited in RGB). Forms
 (`PdfForm`) are read, filled with appearances drawn in embedded fonts and flattened, as incremental updates that
 keep the original bytes. `PdfDocumentBuilder.Conformance` and the conversion options write PDF/A-2b or
 PDF/A-2u (sRGB output intent with a profile computed in code, XMP identification, no encryption). `PdfSigner`
