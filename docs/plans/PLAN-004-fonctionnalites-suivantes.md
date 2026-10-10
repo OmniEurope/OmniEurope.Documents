@@ -116,6 +116,18 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
 - [ ] Motifs en mosaïque, masques doux, modes de fusion, images JPEG 2000 et JBIG2.
   - JBIG2 fait (2026-10-09) : toutes les régions et tous les dictionnaires, segments globaux, filtre `JBIG2Decode`
     (modèles génériques étendus non pris en charge).
+  - JPEG 2000 fait (2026-10-10) : flux bruts et fichiers JP2/JPX, ondelettes 5-3 et 9-7, RCT et ICT, toutes les
+    progressions et les POC, tuiles et parties de tuile, précincts, en-têtes regroupés PPM/PPT, tous les styles de
+    blocs, ROI, sous-échantillonnage, composantes signées de 1 à 30 bits, palettes et définitions de canaux, filtre
+    `JPXDecode` avec `SMaskInData`. Mesure : 69 échantillons (fixtures du paquet, licences dans leur `LICENSE.txt`)
+    comparés plan par plan à des références indépendantes : 64 réversibles identiques à l'échantillon près (60 à un
+    décodeur de référence, 2 à un rendu PDF de référence, 1 à l'image source, 1 contrôlé indirectement : couleurs
+    réécrites sans compression rendues à l'identique, opacité égale à la source),
+    5 irréversibles à un niveau au plus (au plus 4 échantillons sur 48 076 écartés d'un niveau, erreur
+    quadratique moyenne inférieure à 1e-4) ; image de 4096 x 3072 en 12 tuiles identique au motif encodé ; 1 200
+    flux endommagés décodés ou refusés proprement. Non pris en charge (refusés proprement) : codeur de blocs haut
+    débit (15444-15), extensions de la partie 2, composantes de plus de 30 bits ; profils ICC non appliqués
+    (espace de leurs données retenu), décalages CRG ignorés, première spécification de couleur retenue.
 - Contrôle : pixels attendus calculés d'après la spécification sur des pages écrites à la main.
 
 ## Lot 12 : fractions Excel

@@ -14,6 +14,19 @@ Notable changes to this project are documented here, following the Keep a Change
   tables and table segments, page information with its default pixel, combination operators, end of stripe on a page
   of unknown height. Not decoded: extended generic templates (the image is reported as not drawn); colour extensions
   and profiles are ignored.
+- PDF images with the `JPXDecode` filter (JPEG 2000, ITU-T T.800 | ISO/IEC 15444-1) are decoded, read and rendered:
+  bare codestreams and JP2/JPX files, every tile and tile-part, the five progression orders and POC changes,
+  precincts, quality layers, packed packet headers (PPM, PPT), SOP and EPH markers, every code-block style (bypass,
+  context reset, termination of each pass, vertically causal contexts, predictable termination, segmentation
+  symbols), scalar quantization (derived or expounded) or none, the region of interest shift, the reversible 5-3 and
+  irreversible 9-7 wavelets, the RCT and ICT component transforms, subsampled and signed components of 1 to 30 bits,
+  the JP2 palette, component mapping, channel definitions (colours reordered, opacity, premultiplied opacity) and
+  colour specification (sRGB, grey, sYCC, CMYK, CIE Lab with its ranges, ICC profiles by their data colour space).
+  An image without `ColorSpace` takes the colour space of its data, an `Indexed` one takes the samples as indices,
+  and `SMaskInData` 1 or 2 makes the opacity channel the soft mask. A codestream cut short decodes what it holds.
+  Refused, the image then reported as not drawn: the high-throughput block coder (ISO/IEC 15444-15), part 2
+  markers and wavelets, components of more than 30 bits, and a codestream claiming far more samples than its data
+  can code (more than 16 million and 4096 per byte). ICC profiles are not applied.
 - `XlsxWorkbook.Recalculate` computes every formula of a workbook again, in dependency order across sheets
   (without recursion), and stores the results; a date cell stays a date. Operators with Excel precedence
   (`-2^2` is 4), text and boolean coercion, comparison of numbers, text and booleans, ranges and array constants

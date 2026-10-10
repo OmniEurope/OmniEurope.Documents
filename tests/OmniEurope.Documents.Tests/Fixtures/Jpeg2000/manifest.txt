@@ -1,0 +1,93 @@
+# group sample expected-planes tolerance reference cross-checks
+#
+# Each expected file holds the decoded planes of the sample (its colour channels in order, then its opacity channel),
+# each at its own size and sample depth, as concatenated binary PGM images; signed samples are stored offset by half
+# their range. The planes were produced once by independent reference decoders, never run by the tests:
+#   reference-a  an independent PDF renderer drawing the sample as a JPXDecode image, one pixel per sample (it gives
+#                grey or RGB pixels only, so opacity comes from the source image of the sample);
+#   reference-b  an independent JPEG 2000 decoder giving each component's samples raw, at their own depth;
+#   source       the image the lossless sample was encoded from (where neither reference decodes the sample).
+# The reference column names where the planes come from; the cross-checks give, for each source, how many samples
+# of this decoder's output differ from it and by how much at most (differing/largest). reference-a is compared on
+# 8-bit pixels: it scales 4- and 16-bit samples another way (one level), converts CMYK and Lab its own way, renders
+# 4:1:0 and 4:4:0 subsampled sYCC blank, and draws lossy-rgba-u8-prog0-layers1-res6-mct.jp2 and
+# lossless-rgba-u8-prog0-tile-part-index-overflow.jp2 wrongly. reference-b ignores the region of interest shift of
+# lossless-RGN.jp2 and fails on three samples (cross-check "fails").
+# reference-a-roundtrip: the colour planes, written uncompressed in a PDF as DeviceCMYK, render pixel for pixel as
+# reference-a renders the sample (neither reference gives the CMYK planes of a five-component image).
+#
+# Tolerance: lossless samples (reversible 5-3 wavelet) must decode exactly. The irreversible 9-7 wavelet is computed
+# in real numbers, and the standard sets no bit-exact result for it; the two references themselves differ by one
+# level on these samples, so one level is allowed there.
+#
+# Files ending in .rgb.pgm hold reference-a's RGB rendering of the sYCC samples (4:2:0 and 4:2:2), against which
+# the colour conversion is checked within one level (rounding of the conversion).
+block Samples/rgba-u8-cbstyle-01-bypass-finer-layers.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+block Samples/rgba-u8-cbstyle-01-bypass-layers.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+block Samples/rgba-u8-cbstyle-01-bypass.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+block Samples/rgba-u8-cbstyle-02-resetprob.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+block Samples/rgba-u8-cbstyle-04-termall-layers.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+block Samples/rgba-u8-cbstyle-04-termall.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+block Samples/rgba-u8-cbstyle-05-bypass-termall.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+block Samples/rgba-u8-cbstyle-06-resetprob-termall.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+block Samples/rgba-u8-cbstyle-08-vcausal.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+block Samples/rgba-u8-cbstyle-16-pterm.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+block Samples/rgba-u8-cbstyle-32-segsym.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+block Samples/rgba-u8-cbstyle-36-termall-segsym.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+block Samples/rgba-u8-cbstyle-59-all-but-termall.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+block Samples/rgba-u8-cbstyle-63-all.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+block Samples/rgba-u8-solid-alpha-cbstyle-04-termall.jp2 rgba-u8-solid-alpha-cbstyle-04-termall.pgm 0 reference-b reference-b:0/0;reference-a:0/0
+components Samples/cmyk-small.jpf cmyk-small.pgm 0 reference-b reference-b:0/0;reference-a:6/115(converts;CMYK;its;own;way)
+components Samples/indexed-small.jp2 indexed-small.pgm 0 reference-b reference-b:0/0;reference-a:0/0
+components Samples/lossless-cmyk-u8-prog1-layers1-res6.jp2 lossless-cmyk-u8-prog1-layers1-res6.pgm 0 reference-b reference-b:0/0;reference-a:12019/89(converts;CMYK;its;own;way)
+components Samples/lossless-cmyka-u8-prog1-layers1-res6.jp2 lossless-cmyka-u8-prog1-layers1-res6.pgm 0 reference-a-roundtrip+source-alpha reference-b:fails;reference-a:12019/92(converts;CMYK;its;own;way);colours-rendered-uncompressed-identically;alpha-vs-source:0
+components Samples/lossless-gray-alpha-u8-prog1-layers1-res6.jp2 lossless-gray-alpha-u8-prog1-layers1-res6.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+components Samples/lossless-gray-u8-prog1-layers1-res6-icc.jp2 gray.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+components Samples/lossless-gray-u8-prog1-layers1-res6.jp2 gray.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+components Samples/lossless-lab-alpha-u8-prog1-layers1-res6.jp2 lossless-lab-alpha-u8-prog1-layers1-res6.pgm 0 reference-b reference-b:0/0;reference-a:12019/255(converts;Lab;its;own;way)
+components Samples/lossless-lab-u8-prog1-layers1-res6.jp2 lossless-lab-u8-prog1-layers1-res6.pgm 0 reference-b reference-b:0/0;reference-a:12019/204(converts;Lab;its;own;way)
+components Samples/lossless-rgb-u8-prog1-layers1-res6-mct.jp2 lossless-rgb-u8-prog1-layers1-res6-mct.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+components Samples/lossless-rgba-u16-prog1-layers1-res6.jp2 lossless-rgba-u16-prog1-layers1-res6.pgm 0 reference-b reference-b:0/0;reference-a:6984/1
+components Samples/lossless-rgba-u8-prog1-layers1-res6-mct.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+components Samples/lossless-bgra-u8.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+components Samples/lossless-indexed-u8-rgb-u8.jp2 lossless-indexed-u8-rgb-u8.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+components Samples/lossless-rgba-u4.jp2 lossless-rgba-u4.pgm 0 reference-b reference-b:0/0;reference-a:11340/15
+components Samples/gray16-a.jp2 gray16-a.pgm 0 reference-b reference-b:0/0;reference-a:6267/1
+components Samples/palette-b.jp2 palette-b.pgm 0 reference-b reference-b:0/0;reference-a:0/0
+components Samples/subsampled-410-a.jp2 subsampled-410-a.pgm 0 reference-b reference-b:0/0;reference-a:14352/255
+components Samples/subsampled-420-cprl.j2k pattern-420.pgm 0 reference-b reference-b:0/0;reference-a:13789/1
+components Samples/subsampled-420-b.jp2 subsampled-420-b.pgm 0 reference-b reference-b:0/0;reference-a:9586/1
+components Samples/subsampled-420-a.jp2 pattern-420.pgm 0 reference-b reference-b:0/0;reference-a:13789/1
+components Samples/subsampled-422-a.jp2 subsampled-422-a.pgm 0 reference-b reference-b:0/0;reference-a:13589/1
+components Samples/subsampled-440-b.jp2 subsampled-440-b.pgm 0 reference-b reference-b:0/0;reference-a:11397/255
+components Samples/yuva420-a.jp2 yuva420-a.pgm 0 reference-b reference-b:0/0;reference-a:13789/1
+components Samples/signed-gray.jp2 gray.pgm 0 reference-b reference-b:0/0;reference-a:0/0
+irreversible Samples/buggie-gray.jpf buggie-gray.pgm 1 reference-b reference-b:0/0;reference-a:14/1
+irreversible Samples/lossy-rgba-u8-prog0-layers1-res6-mct.jp2 lossy-rgba-u8-prog0-layers1-res6-mct.pgm 1 reference-b reference-b:4/1;reference-a:11958/255
+irreversible Samples/lossy-quantization-scalar-derived.jp2 lossy-quantization-scalar-derived.pgm 1 reference-b reference-b:2/1;reference-a:11/1
+irreversible Samples/irreversible-rgb-b.jp2 irreversible-rgb-b.pgm 1 reference-b reference-b:0/0;reference-a:47/1
+irreversible Samples/irreversible-rgb-a.jp2 irreversible-rgb-a.pgm 1 reference-b reference-b:1/1;reference-a:16/1
+markers Samples/lossless-rgba-u8-PLT.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+markers Samples/lossless-rgba-u8-prog0-EPH-empty-packets.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+markers Samples/lossless-rgba-u8-prog0-EPH-SOP.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+markers Samples/lossless-rgba-u8-prog0-EPH.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+markers Samples/lossless-rgba-u8-prog0-SOP.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+markers Samples/lossless-rgba-u8-TLM.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+markers Samples/lossless-RGN.jp2 rgba.pgm 0 reference-a+source-alpha reference-b:46934/255;reference-a:0/0;source:0/0
+markers Samples/packed-ppm-tiles.jp2 fractal-rgb.pgm 0 reference-b reference-b:0/0;reference-a:0/0
+markers Samples/packed-ppm.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0
+markers Samples/packed-ppt-tiles.jp2 fractal-rgb.pgm 0 reference-b reference-b:0/0;reference-a:0/0
+markers Samples/packed-ppt.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0
+progression Samples/tile4x2-res5.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+progression Samples/lossless-rgba-u8-prog0-tile-part-index-overflow.jp2 rgba.pgm 0 source reference-b:fails;reference-a:12019/255;source:0/0
+progression Samples/lossless-rgba-u8-prog0-tile4x2-cblk4x16-tp3-layers3-res2.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+progression Samples/lossless-rgba-u8-prog1-tile4x2-cblk4x16-tp3-layers3-res2.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+progression Samples/lossless-rgba-u8-prog2-tile4x2-cblk4x16-tp3-layers3-res2.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+progression Samples/lossless-rgba-u8-prog3-tile4x2-cblk4x16-tp3-layers3-res2.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0;source:0/0
+progression Samples/lossless-rgba-u8-prog4-tile4x2-cblk4x16-tp3-layers3-res2.jp2 rgba.pgm 0 reference-a+source-alpha reference-b:fails;reference-a:0/0;source:0/0
+progression Samples/layers-b.jp2 layers-b.pgm 0 reference-b reference-b:0/0;reference-a:0/0
+progression Samples/tiles-sop-eph-b.jp2 fractal-rgb.pgm 0 reference-b reference-b:0/0;reference-a:0/0
+progression Samples/offset-origin.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0
+progression Samples/poc-main.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0
+progression Samples/poc-tile.jp2 rgba.pgm 0 reference-b reference-b:0/0;reference-a:0/0
+progression Samples/tile-cod.jp2 fractal-rgb.pgm 0 reference-b reference-b:0/0;reference-a:0/0

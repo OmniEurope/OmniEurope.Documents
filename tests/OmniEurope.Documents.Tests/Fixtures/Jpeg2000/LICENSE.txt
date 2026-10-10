@@ -1,0 +1,50 @@
+JPEG 2000 conformance samples
+
+They are test data only: never shipped in the package.
+
+1. Public test inputs. Every file under Samples/ not listed in 2 and 3 is taken byte for byte (with its name
+   shortened) from https://github.com/SerenityOS/serenity, directory Tests/LibGfx/test-inputs/jpeg2000/
+   (branch master read on 2026-10-09; every file identical to its blob at commit 2267e6acbcc3, the last change to
+   that directory).
+
+2. Rewritten public test inputs. packed-ppm.jp2, packed-ppt.jp2, poc-main.jp2, poc-tile.jp2, offset-origin.jp2 and
+   signed-gray.jp2 hold the coded data of the inputs of 1 (lossless-rgba-u8-prog0-EPH-SOP.jp2,
+   lossless-rgba-u8-prog2-tile4x2-cblk4x16-tp3-layers3-res2.jp2, lossless-gray-u8-prog1-layers1-res6.jp2) with their
+   markers rearranged: packet headers moved to PPM or PPT markers, packets reordered under a POC marker, the image
+   and tile origins moved by a multiple of every code-block and precinct size, components declared signed.
+
+The files of 1 and 2 are redistributed under the following licence:
+
+BSD 2-Clause License
+
+Copyright (c) 2018-2026, the SerenityOS developers.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+3. Samples made for this repository, under its licence (EUPL-1.2): the files whose name ends in -a or -b,
+   subsampled-420-cprl.j2k, packed-ppm-tiles.jp2, packed-ppt-tiles.jp2 and tile-cod.jp2 under Samples/, and
+   Large/large-4096x3072.jp2. They were encoded by two independent JPEG 2000 encoders (-a and -b) from synthetic
+   test patterns computed for the purpose; the last three rewrite tiles-sop-eph-b.jp2 as 2 does. The large image
+   encodes the pattern the stress test computes again (tests/Shared/Jpeg2000Conformance.cs, Pattern).
+
+The PGM files under Expected/ are reference planes derived from the samples (see manifest.txt).

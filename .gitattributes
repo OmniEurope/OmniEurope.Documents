@@ -13,3 +13,7 @@ docs/third-party-licenses/** -text
 *.xlsx binary
 *.jbig2 binary
 *.pbm binary
+*.jp2 binary
+*.jpf binary
+*.j2k binary
+*.pgm binary
