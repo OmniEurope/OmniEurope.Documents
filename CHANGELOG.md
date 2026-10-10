@@ -6,6 +6,13 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- Fraction number formats are shown as fractions (they were shown as decimals): `# ?/?`, `# ??/??` and more
+  placeholders take the fraction closest to the value whose denominator has at most that many digits (up to nine),
+  a written denominator (`# ?/8`, `# ??/100`) is kept and the numerator rounded half away from zero, without an
+  integer part the fraction is improper (`?/?` shows `3/2`). A zero integer part is left to its placeholders
+  (`# ?/?` shows ` 1/2`), a zero fraction becomes spaces of its width (`2    `), a value rounding to zero shows
+  `0` without a sign, `?` pads the numerator on the left and the denominator on the right; grouping, literals,
+  percent and sections apply as for other numbers.
 - PDF images with the `JBIG2Decode` filter (scanned pages) are decoded, read and rendered: the JBIG2 page their data
   holds, after the segments of their `JBIG2Globals`. Generic regions (arithmetic with typical prediction and adaptive
   pixels, or MMR), refinement regions (with typical prediction), text regions (arithmetic or Huffman, every reference

@@ -7,8 +7,8 @@ namespace OmniEurope.Documents.Excel;
 /// <summary>
 /// Renders values the way Excel displays them under a number format: sections (positive; negative; zero;
 /// text), digit placeholders <c>0 # ?</c>, grouping and scaling commas, percent, scientific notation,
-/// literals, currency brackets, dates and times (including elapsed <c>[h]</c> and AM/PM). Fractions
-/// (<c># ?/?</c>) are shown as decimals. The culture gives the decimal and group separators and the month
+/// literals, currency brackets, dates and times (including elapsed <c>[h]</c> and AM/PM), fractions
+/// (<c># ?/?</c>, <c># ??/??</c>, <c># ?/8</c>, see <see cref="FractionSection"/>). The culture gives the decimal and group separators and the month
 /// and day names.
 /// </summary>
 public static class NumberFormatter
@@ -36,7 +36,7 @@ public static class NumberFormatter
             return DateFormatter.Format(value, tokens, culture, date1904);
         }
 
-        return NumberSection.Format(value, tokens, culture, autoMinus);
+        return FractionSection.TryFormat(value, tokens, culture, autoMinus) ?? NumberSection.Format(value, tokens, culture, autoMinus);
     }
 
     /// <summary>Formats text with the text section of a format (<c>@</c>); other formats leave text unchanged.</summary>

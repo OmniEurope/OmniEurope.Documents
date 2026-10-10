@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 # PLAN-004 : Fonctionnalités suivantes
 
-> Statut : **en cours** (2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
+> Statut : **en cours** (2026-10-10 : lot 12 fractions Excel fait ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
 > propriétaire ; l'ordre des lots est celui de la valeur attendue. Un lot ne commence qu'après accord du
 > propriétaire.
 
@@ -132,7 +132,18 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
 
 ## Lot 12 : fractions Excel
 
-- [ ] Formats `# ?/?`, `# ??/??` et dénominateurs fixes affichés en fraction comme Excel.
+- [x] Formats `# ?/?`, `# ??/??` et dénominateurs fixes affichés en fraction comme Excel.
+  - Fait (2026-10-10) : `FractionSection`, appelé par `NumberFormatter.Format`. Fraction la plus proche dont le
+    dénominateur a au plus autant de chiffres que de signes (fractions continues, réduites et dernière fraction
+    intermédiaire, la plus petite en cas d'égalité ; neuf chiffres au plus), dénominateur écrit gardé et
+    numérateur arrondi, fraction impropre sans partie entière, nombres mixtes, signe, partie entière nulle laissée
+    aux signes, fraction nulle remplacée par des espaces de sa largeur, `?` complété d'espaces (numérateur à gauche,
+    dénominateur à droite), groupement, littéraux, sections. 61 cas dans `FractionFormatTests`, attendus établis à
+    la main d'après les règles des codes de format (ECMA-376 partie 1, 18.8.30 et 18.8.31, formats intégrés 12 et
+    13) et les fractions continues des valeurs, dont un classeur enregistré puis relu. Limites : attendus non
+    confrontés à Excel lui-même (pas d'Excel disponible) ; l'égalité entre deux fractions également proches, le
+    signe devant une partie entière nulle (`- 1/2`) et le `0` d'un dénominateur sont des choix déduits, non
+    documentés ; une section avec point décimal ou exposant n'est pas lue comme une fraction.
 - Contrôle : table de valeurs et de textes attendus pour chaque forme de format.
 
 ## Lot 13 : signature électronique PDF
