@@ -38,23 +38,24 @@ public static class CcittFaxDecoder
             throw new ArgumentOutOfRangeException(nameof(options), "Columns must be between 1 and 65536.");
         }
 
-        // The declared size is bounded like every other decoder's, before the output is allocated; rows read from
-        // the data (Rows = 0) stop at the same limit.
-        var maxRows = RasterImage.MaxPixels / options.Columns;
-        if (options.Rows > maxRows)
+        // The declared size is bounded before the output is allocated, and rows read from the data (Rows = 0) stop
+        // at the same limit: the output, whose rows are whole bytes, holds at most MaxPixels / 8 bytes.
+        var sink = new FaxRows(options);
+        if (options.Rows > sink.MaxRows)
         {
             throw new InvalidDataException($"A fax image of {options.Columns} by {options.Rows} pixels is out of range.");
         }
 
-        var lines = new List<int[]>();
         var reader = new CcittBitReader(data.ToArray());
         var reference = new[] { options.Columns, options.Columns };
         complete = true;
+
+        // Each row is painted into the output as soon as it is read, so only the row above is kept.
         try
         {
-            while (options.Rows == 0 || lines.Count < options.Rows)
+            while (options.Rows == 0 || sink.Count < options.Rows)
             {
-                if (lines.Count >= maxRows)
+                if (sink.Count >= sink.MaxRows)
                 {
                     throw new InvalidDataException("The fax data holds more rows than the pixel limit allows.");
                 }
@@ -62,21 +63,21 @@ public static class CcittFaxDecoder
                 var changes = ReadRow(reader, options, reference, out var endOfData);
                 if (endOfData)
                 {
-                    complete = options.Rows == 0 || lines.Count >= options.Rows;
+                    complete = options.Rows == 0 || sink.Count >= options.Rows;
                     break;
                 }
 
-                lines.Add(changes);
+                sink.Add(changes);
                 reference = changes;
             }
         }
-        catch (InvalidDataException) when (lines.Count > 0)
+        catch (InvalidDataException) when (sink.Count > 0)
         {
             complete = false;
         }
 
-        rows = options.Rows > 0 ? options.Rows : lines.Count;
-        return Pack(lines, rows, options);
+        rows = options.Rows > 0 ? options.Rows : sink.Count;
+        return sink.ToArray(rows);
     }
 
     private static int[] ReadRow(CcittBitReader reader, CcittOptions options, int[] reference, out bool endOfData)
@@ -140,30 +141,76 @@ public static class CcittFaxDecoder
         return reader.AtEnd || reader.PeekEndOfBlock();
     }
 
-    private static byte[] Pack(List<int[]> lines, int rows, CcittOptions options)
+    // The packed rows under construction: the declared rows are allocated white at once, rows read from the data make
+    // the buffer grow by doubling, never beyond MaxRows.
+    private sealed class FaxRows
     {
-        var stride = (options.Columns + 7) / 8;
-        var output = new byte[(long)stride * rows];
-        var white = options.BlackIs1 ? (byte)0 : (byte)0xFF;
-        Array.Fill(output, white);
-        for (var y = 0; y < Math.Min(rows, lines.Count); y++)
+        private const int FirstRows = 16;
+
+        private readonly int _columns;
+        private readonly int _stride;
+        private readonly bool _blackIs1;
+        private readonly byte _white;
+        private byte[] _output;
+
+        public FaxRows(CcittOptions options)
         {
-            var changes = lines[y];
-            for (var i = 0; i + 1 < changes.Length; i += 2)
+            _columns = options.Columns;
+            _stride = (options.Columns + 7) / 8;
+            _blackIs1 = options.BlackIs1;
+            _white = options.BlackIs1 ? (byte)0 : (byte)0xFF;
+            MaxRows = (int)(RasterImage.MaxPixels / 8 / _stride);
+            _output = [];
+            if (options.Rows <= MaxRows)
             {
-                // Pairs of changing elements bound the black runs.
-                var start = changes[i];
-                var end = Math.Min(changes[i + 1], options.Columns);
-                for (var x = start; x < end; x++)
-                {
-                    var index = (y * stride) + (x >> 3);
-                    var mask = (byte)(0x80 >> (x & 7));
-                    output[index] = options.BlackIs1 ? (byte)(output[index] | mask) : (byte)(output[index] & ~mask);
-                }
+                _output = White(options.Rows > 0 ? options.Rows : FirstRows);
             }
         }
 
-        return output;
+        /// <summary>The most rows the output may hold: its size in bytes stays within MaxPixels / 8, which also keeps
+        /// rows times columns within MaxPixels.</summary>
+        public int MaxRows { get; }
+
+        public int Count { get; private set; }
+
+        public void Add(int[] changes)
+        {
+            if ((Count + 1L) * _stride > _output.Length)
+            {
+                var rows = (int)Math.Min(MaxRows, Math.Max(FirstRows, (long)_output.Length / _stride * 2));
+                var grown = White(rows);
+                Buffer.BlockCopy(_output, 0, grown, 0, _output.Length);
+                _output = grown;
+            }
+
+            Paint(changes, Count * _stride);
+            Count++;
+        }
+
+        /// <summary>The first <paramref name="rows"/> rows, the ones not read white.</summary>
+        public byte[] ToArray(int rows) => _output.Length == rows * _stride ? _output : _output[..(rows * _stride)];
+
+        private byte[] White(int rows)
+        {
+            var bytes = new byte[(long)rows * _stride];
+            Array.Fill(bytes, _white);
+            return bytes;
+        }
+
+        // Pairs of changing elements bound the black runs.
+        private void Paint(int[] changes, int offset)
+        {
+            for (var i = 0; i + 1 < changes.Length; i += 2)
+            {
+                var end = Math.Min(changes[i + 1], _columns);
+                for (var x = changes[i]; x < end; x++)
+                {
+                    var index = offset + (x >> 3);
+                    var mask = (byte)(0x80 >> (x & 7));
+                    _output[index] = _blackIs1 ? (byte)(_output[index] | mask) : (byte)(_output[index] & ~mask);
+                }
+            }
+        }
     }
 }
 

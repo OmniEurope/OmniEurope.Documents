@@ -133,6 +133,33 @@ public sealed class CcittFaxTests
         Assert.Equal(count * 8192, output.Length);
     }
 
+    // A narrow row still takes a whole byte in the output, so the output size, not only the pixel count, is bounded.
+    [Fact]
+    public void Narrow_rows_are_bounded_by_the_size_of_the_output()
+    {
+        const int MaxNarrowRows = 1 << 25;
+
+        var atTheLimit = CcittFaxDecoder.Decode([], new CcittOptions { K = -1, Columns = 1, Rows = MaxNarrowRows }, out _, out var complete);
+
+        Assert.False(complete);
+        Assert.Equal(MaxNarrowRows, atTheLimit.Length);
+        Assert.Throws<InvalidDataException>(() => CcittFaxDecoder.Decode([], new CcittOptions { K = -1, Columns = 1, Rows = MaxNarrowRows + 1 }, out _, out _));
+    }
+
+    [Fact]
+    public void Rows_derived_from_the_data_are_kept_beyond_the_first_growth_of_the_output()
+    {
+        var data = Bits(string.Concat(Enumerable.Repeat(White2D, 100)) + TwoBlack2D + Eol + Eol);
+
+        var output = CcittFaxDecoder.Decode(data, new CcittOptions { K = -1, Columns = 8 }, out var count, out var complete);
+
+        Assert.True(complete);
+        Assert.Equal(101, count);
+        Assert.Equal(101, output.Length);
+        Assert.All(output.Take(100), b => Assert.Equal(0xFF, b));
+        Assert.Equal(0x3F, output[100]);
+    }
+
     [Fact]
     public void Row_width_must_be_positive()
     {
