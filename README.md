@@ -28,7 +28,9 @@ verifies signatures (byte range, digest, signature, signing certificate; certifi
 
 `PdfRedactor.Redact` truly redacts (the text and image pixels under an area are removed from the new file, not covered), and refuses (`PdfRedactionException`, no
 document produced) a page whose text is shown with a font it cannot resolve, since it could not tell whether that text
-lies under an area.
+lies under an area. What it cannot rewrite under an area is removed whole and reported in its gaps (forms nested too
+deep or undecodable, tiling patterns whose cell shows text or images); vector graphics and shadings under an area are
+painted over, not removed.
 
 Charts (`Chart`, read from `XlsxWorksheet.Charts` and from `WordChart`) are read with their series, titles, legend
 and colours, and drawn as vector graphics in the PDF of a Word or Excel conversion: clustered, stacked, percent

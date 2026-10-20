@@ -30,7 +30,16 @@ Notable changes to this project are documented here, following the Keep a Change
   points; `c:gapWidth` stays within 0 and 500, `c:holeSize` within 1 and 90, `c:firstSliceAng` within 0 and 360; a
   colour value must be six hexadecimal digits. A chart, drawing or theme part that cannot be read (not well-formed, or
   past a package limit) is skipped and reported ("unreadable chart skipped", "unreadable drawing skipped", "unreadable
-  theme skipped"; for a workbook, in the gaps of Excel to PDF) instead of failing the load.
+  theme skipped"; for a workbook, in `XlsxWorkbook.Gaps` and the gaps of Excel to PDF) instead of failing the load.
+  A pie or doughnut without a `c:varyColors` element draws every slice in its series colour (no normative source
+  states that Office reads the absent element as true; the editors write it explicitly).
+
+- `XlsxWorkbook.Gaps` lists the parts of a loaded workbook that were skipped because they could not be read, as
+  `WordDocument.Gaps` does for a Word document.
+- `XlsxRecalculationOptions.MaxMatrixCells` (default 1,048,576, one whole column) and `MaxFormulaCells` (default
+  8,388,608) set the memory budget of the formula engine, at 32 bytes per cell: a workbook summing ranges larger than
+  one column (`SUM(A:T)` over 60,000 rows) can be calculated by raising them. They must be positive and the formula
+  budget at least the matrix budget (`ArgumentOutOfRangeException`). The nesting limit (256) stays fixed.
 
 - Word to PDF wraps text around floating shapes, lays out right-to-left text and unequal columns (ECMA-376 part 1,
   §20.4.2 and §20.4.3, §17.3.1.6, §17.3.2.30, §17.6.4). Floating shapes anchored in body paragraphs are placed with
@@ -358,6 +367,26 @@ Notable changes to this project are documented here, following the Keep a Change
 - PDF stream filters: the decoded size ceiling (512 MiB) is checked before every append in RunLengthDecode, ASCII85
   (the `z` shortcut included), ASCIIHexDecode, FlateDecode and LZWDecode, and on the output of each stage of a filter
   chain, so a small stream can no longer expand past it before it is refused.
+- `PdfRedactor.Redact` and form XObjects: a form starts from the text state in force at its `Do` (font, size,
+  spacing, scale, leading, rise), so text it shows without its own `Tf` is redacted instead of refused; a form with
+  its own `/Resources` stays self-contained (ISO 32000-2 §8.10.2) and a font missing there is still refused. The
+  rewritten form now keeps only the XObjects it draws: it used to carry the page's resources, whose entries still
+  pointed at the original, unredacted form, leaving the redacted text in the file.
+- CCITT fax images: rows times columns are checked against the pixel limit before the output is allocated
+  (`InvalidDataException`, the image decodes to nothing in a PDF), and rows read from the data without a declared
+  count stop at that limit, instead of an overflow or an exhaustion of memory on a forged `/Rows`. Rows are painted
+  into the output as they are read (only the row above is kept), and the output is held to `RasterImage.MaxPixels / 8`
+  bytes, so very narrow images (one column, millions of rows) are bounded too.
+- `PdfRedactor.Redact`: a tiling pattern whose cell shows text or images, painted (filled, stroked, or inherited by
+  a form) under an area, is removed from the redacted page's resources with the gap "tiling patterns showing text or
+  images under an area removed whole"; its text used to stay in the file under the painted-over area. The same holds
+  for a pattern painting glyphs removed under an area (fill or stroke, by text render mode) and for an image mask
+  painted with a pattern under an area. Vector-only patterns and patterns painted elsewhere are kept.
+- `PdfRedactor.Redact`: a Type 3 glyph is boxed by the font's `FontBBox` through its `FontMatrix` instead of a
+  default ascent and descent, so ink drawn above or below that default is no longer missed; with an unknown
+  `FontBBox` (absent or empty) the glyph is taken to reach one font size around its origin.
+- Word to PDF: a shape in front of the text anchored inside a text box is drawn within the box's clip, instead of
+  being painted after the page body over everything around the box.
 - `CsvReader.Open` and `OpenAsync`: a header that cannot be read no longer leaves the stream or text reader
   the reader owns open (and its file locked); with `leaveOpen` it stays open as asked.
 - `TextValueParser.TryParseDuration` returns false instead of throwing for a duration past what `TimeSpan`
