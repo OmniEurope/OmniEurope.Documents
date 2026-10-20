@@ -178,6 +178,23 @@ public sealed class ChartRobustnessTests
     }
 
     [Fact]
+    public void A_workbook_exposes_the_gap_of_a_chart_part_it_skipped()
+    {
+        var workbook = XlsxWorkbook.Load(Xlsx(string.Empty, "<c:chartSpace", TwoCell(3, 1, 9, 16)));
+
+        Assert.Equal(["unreadable chart skipped"], workbook.Gaps);
+    }
+
+    [Fact]
+    public void A_workbook_with_a_readable_chart_has_no_gap()
+    {
+        var workbook = XlsxWorkbook.Load(Xlsx(string.Empty, ChartSpace(Pie(Series(0, "P", Quarters, [1, 2, 3]))), TwoCell(3, 1, 9, 16)));
+
+        Assert.Single(workbook.Worksheets[0].Charts);
+        Assert.Empty(workbook.Gaps);
+    }
+
+    [Fact]
     public void A_drawing_part_that_is_not_well_formed_is_skipped_and_reported()
     {
         var good = Xlsx(string.Empty, ChartSpace(Pie(Series(0, "P", Quarters, [1, 2, 3]))), TwoCell(3, 1, 9, 16));
