@@ -347,10 +347,39 @@ public sealed class PdfRedactionTests
             "",
             HelveticaFont,
             RawPdf.Stream(TilingHead + " /Resources << /Font << /F1 5 0 R >> >>", RawPdf.Ascii(cell)),
-            RawPdf.Stream("/Type /XObject /Subtype /Form /BBox [0 0 200 200] /Resources << >>", RawPdf.Ascii("0 0 100 100 re f")));
+            RawPdf.Stream("/Type /XObject /Subtype /Form /BBox [0 0 200 200] /Resources << >>", RawPdf.Ascii("0 0 100 100 re f")),
+            RawPdf.Stream("/Type /XObject /Subtype /Image /Width 8 /Height 8 /ImageMask true /BitsPerComponent 1", new byte[8]));
     }
 
     private const string TextCell = "BT /F1 12 Tf 2 2 Td (SECRET_AUDIT) Tj ET";
+
+    // Glyphs and image masks are painted with the pattern colour in force, so a pattern whose cell shows text is
+    // exposed by them when they are under an area, whichever text render mode fills or strokes them.
+    [Theory]
+    [InlineData("/Pattern cs /P1 scn BT /F1 12 Tf 10 10 Td (hello) Tj ET", "")]
+    [InlineData("/Pattern CS /P1 SCN 1 Tr BT /F1 12 Tf 10 10 Td (hello) Tj ET", "")]
+    [InlineData("/Pattern cs /P1 scn 2 Tr BT /F1 12 Tf 10 10 Td [(he) -20 (llo)] TJ ET", "")]
+    [InlineData("/Pattern cs /P1 scn q 40 0 0 40 10 0 cm /Im1 Do Q", "/XObject << /Im1 8 0 R >>")]
+    public void A_pattern_that_paints_text_or_an_image_mask_under_an_area_is_removed_whole(string content, string xobjects)
+    {
+        var result = PdfRedactor.Redact(PdfDocument.Open(PatternPage(content, TextCell, xobjects)), [new PdfRedaction(1, SecretArea)]);
+
+        Assert.DoesNotContain("SECRET_AUDIT", Everything(result.Pdf), StringComparison.Ordinal);
+        Assert.Contains(PatternGap, result.Gaps);
+    }
+
+    [Theory]
+    [InlineData("/Pattern cs /P1 scn BT /F1 12 Tf 10 100 Td (hello) Tj ET", "")]
+    [InlineData("/Pattern cs /P1 scn 3 Tr BT /F1 12 Tf 10 10 Td (hello) Tj ET", "")]
+    [InlineData("/Pattern CS /P1 SCN BT /F1 12 Tf 10 10 Td (hello) Tj ET", "")]
+    [InlineData("/Pattern cs /P1 scn q 40 0 0 40 120 120 cm /Im1 Do Q", "/XObject << /Im1 8 0 R >>")]
+    public void A_pattern_that_paints_nothing_under_an_area_is_kept(string content, string xobjects)
+    {
+        var result = PdfRedactor.Redact(PdfDocument.Open(PatternPage(content, TextCell, xobjects)), [new PdfRedaction(1, SecretArea)]);
+
+        Assert.Contains("SECRET_AUDIT", Everything(result.Pdf), StringComparison.Ordinal);
+        Assert.DoesNotContain(PatternGap, result.Gaps);
+    }
 
     [Theory]
     [InlineData("/Pattern cs /P1 scn 0 0 100 100 re f")]

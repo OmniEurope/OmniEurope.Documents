@@ -308,6 +308,11 @@ internal sealed class RedactionRewriter
         }
 
         Flush(kept, segment, ref skipped);
+        if (removed)
+        {
+            RemoveShowingPatterns(_state.TextPatterns());
+        }
+
         return removed;
     }
 
@@ -384,6 +389,13 @@ internal sealed class RedactionRewriter
         }
 
         _changed = true;
+
+        // A stencil mask is painted with the fill colour in force, which may be a pattern.
+        if (_context.Store.Get(image, "ImageMask") is PdfBoolean { Value: true } && _state.FillPattern is { } fill)
+        {
+            RemoveShowingPatterns([fill]);
+        }
+
         if (_context.Covers(bounds) || RedactionImages.Blank(_context, image, _resources, _state.Ctm) is not { } blanked)
         {
             _context.RemovedImages++;
@@ -617,6 +629,17 @@ internal sealed record RedactionState
 
     public double MiterLimit { get; set; } = 10;
 
+    /// <summary>The text rendering mode (Tr): 0 fill, 1 stroke, 2 both, 3 invisible, 4 to 7 as 0 to 3 and clip.</summary>
+    public int RenderMode { get; set; }
+
+    /// <summary>The pattern colours the glyphs shown now are painted with, by the rendering mode.</summary>
+    public IEnumerable<string> TextPatterns()
+    {
+        var fills = RenderMode is 0 or 2 or 4 or 6;
+        var strokes = RenderMode is 1 or 2 or 5 or 6;
+        return new[] { fills ? FillPattern : null, strokes ? StrokePattern : null }.OfType<string>();
+    }
+
     public void MoveLine(double tx, double ty)
     {
         Tlm = new Matrix(1, 0, 0, 1, tx, ty).Multiply(Tlm);
@@ -681,6 +704,10 @@ internal sealed record RedactionState
         else if (o.Count > 0 && op == "M")
         {
             MiterLimit = RedactionRewriter.Number(o[0]);
+        }
+        else if (o.Count > 0 && op == "Tr")
+        {
+            RenderMode = (int)RedactionRewriter.Number(o[0]);
         }
         else
         {
