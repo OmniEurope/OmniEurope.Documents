@@ -333,6 +333,108 @@ public sealed class PdfRedactionTests
         Assert.Throws<PdfRedactionException>(() => PdfRedactor.Redact(PdfDocument.Open(source), [new PdfRedaction(1, SecretArea)]));
     }
 
+    private const string PatternGap = "tiling patterns showing text or images under an area removed whole";
+
+    private const string TilingHead = "/Type /Pattern /PatternType 1 /PaintType 1 /TilingType 1 /BBox [0 0 100 20] /XStep 100 /YStep 20";
+
+    // Page content that fills (or strokes) a rectangle with pattern /P1 whose cell shows SECRET_AUDIT; object 5 is
+    // the font, 6 the pattern, 7 a form that fills with the pattern it inherits.
+    private static byte[] PatternPage(string content, string cell, string xobjects = "")
+    {
+        return RawPdf.Page(
+            content,
+            "/Font << /F1 5 0 R >> /Pattern << /P1 6 0 R >> " + xobjects,
+            "",
+            HelveticaFont,
+            RawPdf.Stream(TilingHead + " /Resources << /Font << /F1 5 0 R >> >>", RawPdf.Ascii(cell)),
+            RawPdf.Stream("/Type /XObject /Subtype /Form /BBox [0 0 200 200] /Resources << >>", RawPdf.Ascii("0 0 100 100 re f")));
+    }
+
+    private const string TextCell = "BT /F1 12 Tf 2 2 Td (SECRET_AUDIT) Tj ET";
+
+    [Theory]
+    [InlineData("/Pattern cs /P1 scn 0 0 100 100 re f")]
+    [InlineData("/Pattern CS /P1 SCN 8 w 0 0 100 100 re S")]
+    [InlineData("/Pattern cs /P1 scn q 1 0 0 1 20 0 cm 0 0 50 30 re B Q")]
+    public void A_tiling_pattern_showing_text_under_an_area_is_removed_whole(string content)
+    {
+        var result = PdfRedactor.Redact(PdfDocument.Open(PatternPage(content, TextCell)), [new PdfRedaction(1, SecretArea)]);
+
+        Assert.DoesNotContain("SECRET_AUDIT", Everything(result.Pdf), StringComparison.Ordinal);
+        Assert.Contains(PatternGap, result.Gaps);
+    }
+
+    [Theory]
+    [InlineData("/Pattern cs /P1 scn 0 0 m 100 0 l 50 50 80 80 100 100 c 10 10 20 20 v 5 5 30 30 y f", "BT /F1 12 Tf 2 2 Td (SECRET_AUDIT) Tj ET")]
+    [InlineData("/Pattern cs /P1 scn 0 0 100 100 re f", "/Pattern cs /P1 scn 0 0 5 5 re f BT /F1 12 Tf (SECRET_AUDIT) Tj ET")]
+    [InlineData("/Pattern cs /P1 scn 0 0 100 100 re f", "q 5 0 0 5 0 0 cm BI /W 1 /H 1 /CS /G /BPC 8 ID \u0001\nEI Q BT /F1 12 Tf (SECRET_AUDIT) Tj ET")]
+    public void Path_shapes_and_cells_that_select_patterns_or_draw_images_are_followed(string content, string cell)
+    {
+        var result = PdfRedactor.Redact(PdfDocument.Open(PatternPage(content, cell)), [new PdfRedaction(1, SecretArea)]);
+
+        Assert.DoesNotContain("SECRET_AUDIT", Everything(result.Pdf), StringComparison.Ordinal);
+        Assert.Contains(PatternGap, result.Gaps);
+    }
+
+    [Fact]
+    public void A_pattern_whose_cell_cannot_be_read_is_removed_whole_when_painted_under_an_area()
+    {
+        var source = RawPdf.Page(
+            "/Pattern cs /P1 scn 0 0 100 100 re f",
+            "/Pattern << /P1 5 0 R >>",
+            "",
+            RawPdf.Stream(TilingHead + " /Filter /FlateDecode", [1, 2, 3, 4]));
+
+        var result = PdfRedactor.Redact(PdfDocument.Open(source), [new PdfRedaction(1, SecretArea)]);
+
+        Assert.Contains(PatternGap, result.Gaps);
+    }
+
+    // A Type 3 glyph is a drawing selected by its code in the shown string: removing the code from the string
+    // removes what the viewer would draw there, so the glyph procedures need no rewriting.
+    [Fact]
+    public void A_glyph_of_a_type_3_font_under_an_area_is_removed_from_the_shown_string()
+    {
+        var source = RawPdf.Page(
+            "BT /T3 10 Tf 10 10 Td (a) Tj ET BT /T3 10 Tf 10 100 Td (a) Tj ET",
+            "/Font << /T3 5 0 R >>",
+            "",
+            "<< /Type /Font /Subtype /Type3 /FontBBox [0 0 1000 1000] /FontMatrix [0.001 0 0 0.001 0 0] /CharProcs << /a 6 0 R >> "
+            + "/Encoding << /Type /Encoding /Differences [97 /a] >> /FirstChar 97 /LastChar 97 /Widths [1000] /Resources << >> >>",
+            RawPdf.Stream(string.Empty, RawPdf.Ascii("1000 0 0 0 800 800 d1 0 0 800 800 re f")));
+
+        var result = PdfRedactor.Redact(PdfDocument.Open(source), [new PdfRedaction(1, SecretArea)]);
+
+        Assert.Equal(1, result.RemovedGlyphs);
+        Assert.Equal("a", result.RemovedText);
+        Assert.Equal("a", PdfDocument.Open(result.Pdf).GetPage(1).Text.Trim());
+    }
+
+    [Fact]
+    public void A_tiling_pattern_inherited_by_a_form_drawn_under_an_area_is_removed_whole()
+    {
+        var source = PatternPage("/Pattern cs /P1 scn /Fm1 Do", TextCell, "/XObject << /Fm1 7 0 R >>");
+
+        var result = PdfRedactor.Redact(PdfDocument.Open(source), [new PdfRedaction(1, SecretArea)]);
+
+        Assert.DoesNotContain("SECRET_AUDIT", Everything(result.Pdf), StringComparison.Ordinal);
+        Assert.Contains(PatternGap, result.Gaps);
+    }
+
+    [Fact]
+    public void A_tiling_pattern_painted_elsewhere_or_without_text_is_kept()
+    {
+        var elsewhere = PatternPage("/Pattern cs /P1 scn 0 100 100 50 re f", TextCell);
+        var vectorOnly = PatternPage("/Pattern cs /P1 scn 0 0 100 100 re f", "0 0 10 10 re f");
+
+        var kept = PdfRedactor.Redact(PdfDocument.Open(elsewhere), [new PdfRedaction(1, SecretArea)]);
+        var plain = PdfRedactor.Redact(PdfDocument.Open(vectorOnly), [new PdfRedaction(1, SecretArea)]);
+
+        Assert.Contains("SECRET_AUDIT", Everything(kept.Pdf), StringComparison.Ordinal);
+        Assert.DoesNotContain(PatternGap, kept.Gaps);
+        Assert.DoesNotContain(PatternGap, plain.Gaps);
+    }
+
     [Fact]
     public void A_page_without_areas_never_raises_for_an_unresolvable_font()
     {

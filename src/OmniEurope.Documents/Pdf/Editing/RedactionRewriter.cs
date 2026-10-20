@@ -69,6 +69,8 @@ internal sealed class RedactionRewriter
     private readonly HashSet<string> _touchedXObjects = new(StringComparer.Ordinal);
     private RedactionState _state;
     private readonly Stack<RedactionState> _saved = new();
+    private readonly RedactionPatterns _patterns;
+    private readonly HashSet<string> _removedPatterns = new(StringComparer.Ordinal);
     private bool _changed;
 
     private RedactionRewriter(RedactionContext context, PdfDictionary? resources, Matrix ctm, int depth, RedactionState? inherited)
@@ -76,7 +78,10 @@ internal sealed class RedactionRewriter
         _context = context;
         _resources = resources;
         _depth = depth;
-        _state = inherited is null ? new RedactionState { Ctm = ctm } : inherited with { Ctm = ctm, Tm = Matrix.Identity, Tlm = Matrix.Identity };
+        _patterns = new RedactionPatterns(context);
+
+        // The pattern colours are named in the resources of the stream that set them: a form's own are not those.
+        _state = inherited is null ? new RedactionState { Ctm = ctm } : inherited with { Ctm = ctm, Tm = Matrix.Identity, Tlm = Matrix.Identity, FillPattern = null, StrokePattern = null };
     }
 
     // The rewritten content and resources; null when nothing under the areas was found. For a form, "inherited" is the
@@ -141,8 +146,37 @@ internal sealed class RedactionRewriter
                 _marked.TryPop(out _);
                 break;
             default:
-                _state.Apply(operation, this);
+                TrackPath(operation);
                 break;
+        }
+    }
+
+    // Path construction and painting, which tell where a pattern colour is used; the rest moves the state.
+    private void TrackPath(ContentOperation operation)
+    {
+        if (RedactionPatterns.Constructs(operation.Operator))
+        {
+            _patterns.Construct(operation, _state.Ctm);
+        }
+        else if (RedactionPatterns.Ends(operation.Operator))
+        {
+            RemoveShowingPatterns(_patterns.Painted(operation.Operator, _state));
+        }
+        else
+        {
+            _state.Apply(operation, this);
+        }
+    }
+
+    // A tiling pattern that shows text or images and is painted under an area leaves the page resources, for it is
+    // redrawn by the viewer in every cell and cannot be rewritten with the page: the area is painted over its place.
+    private void RemoveShowingPatterns(IEnumerable<string> names)
+    {
+        foreach (var name in names.Where(n => !_removedPatterns.Contains(n) && _patterns.ShowsContent(_resources, n)))
+        {
+            _removedPatterns.Add(name);
+            _context.Gaps.Add("tiling patterns showing text or images under an area removed whole");
+            _changed = true;
         }
     }
 
@@ -358,6 +392,9 @@ internal sealed class RedactionRewriter
             return false;
         }
 
+        // What the form paints with the pattern colour in force at the Do cannot be followed into its own resources.
+        RemoveShowingPatterns(new[] { _state.FillPattern, _state.StrokePattern }.OfType<string>());
+
         if (_depth >= MaxFormDepth || !_context.ActiveForms.Add(form))
         {
             _context.Gaps.Add("forms nested too deep or drawing themselves under an area removed whole");
@@ -433,12 +470,23 @@ internal sealed class RedactionRewriter
         _output.Add(new ContentOperation("Do", [PdfName.Of(fresh)]));
     }
 
+    private PdfDictionary WithoutRemovedPatterns()
+    {
+        var patterns = new PdfDictionary();
+        foreach (var (key, value) in (_context.Store.Get<PdfDictionary>(_resources, "Pattern")?.Entries ?? []).Where(e => !_removedPatterns.Contains(e.Key)))
+        {
+            patterns.Set(key, value);
+        }
+
+        return patterns;
+    }
+
     private PdfDictionary? PatchedResources()
     {
         // A drawing replaced or removed everywhere it was used leaves the resources, so its original is not written.
         var stillUsed = _output.Where(o => o.Operator == "Do" && o.Operands.Count > 0 && o.Operands[0] is PdfName).Select(o => ((PdfName)o.Operands[0]).Value).ToHashSet(StringComparer.Ordinal);
         var unused = _touchedXObjects.Where(n => !stillUsed.Contains(n)).ToList();
-        if (_newXObjects.Count == 0 && unused.Count == 0)
+        if (_newXObjects.Count == 0 && unused.Count == 0 && _removedPatterns.Count == 0)
         {
             return _resources;
         }
@@ -447,6 +495,11 @@ internal sealed class RedactionRewriter
         foreach (var (key, value) in _resources?.Entries ?? [])
         {
             resources.Set(key, value);
+        }
+
+        if (_removedPatterns.Count > 0)
+        {
+            resources.Set("Pattern", WithoutRemovedPatterns());
         }
 
         var xobjects = new PdfDictionary();
@@ -540,6 +593,15 @@ internal sealed record RedactionState
 
     public double Rise { get; set; }
 
+    /// <summary>The tiling pattern named in the resources as the fill (or stroke) colour, when that is a pattern.</summary>
+    public string? FillPattern { get; set; }
+
+    public string? StrokePattern { get; set; }
+
+    public double LineWidth { get; set; } = 1;
+
+    public double MiterLimit { get; set; } = 10;
+
     public void MoveLine(double tx, double ty)
     {
         Tlm = new Matrix(1, 0, 0, 1, tx, ty).Multiply(Tlm);
@@ -575,10 +637,46 @@ internal sealed record RedactionState
                 MoveLine(0, -Leading);
                 break;
             default:
-                ApplySpacing(operation.Operator, o);
+                if (!ApplyPaint(operation.Operator, o))
+                {
+                    ApplySpacing(operation.Operator, o);
+                }
+
                 break;
         }
     }
+
+    // Colours (a pattern is named by the last operand of scn or SCN, any other colour operator ends it) and the
+    // line settings that widen a stroke.
+    private bool ApplyPaint(string op, IReadOnlyList<PdfObject> o)
+    {
+        var pattern = o.Count > 0 && o[^1] is PdfName name ? name.Value : null;
+        if (op == "scn" || FillColours.Contains(op))
+        {
+            FillPattern = op == "scn" ? pattern : null;
+        }
+        else if (op == "SCN" || StrokeColours.Contains(op))
+        {
+            StrokePattern = op == "SCN" ? pattern : null;
+        }
+        else if (o.Count > 0 && op == "w")
+        {
+            LineWidth = RedactionRewriter.Number(o[0]);
+        }
+        else if (o.Count > 0 && op == "M")
+        {
+            MiterLimit = RedactionRewriter.Number(o[0]);
+        }
+        else
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static readonly HashSet<string> FillColours = new(StringComparer.Ordinal) { "cs", "sc", "g", "rg", "k" };
+    private static readonly HashSet<string> StrokeColours = new(StringComparer.Ordinal) { "CS", "SC", "G", "RG", "K" };
 
     private void ApplySpacing(string op, IReadOnlyList<PdfObject> o)
     {
