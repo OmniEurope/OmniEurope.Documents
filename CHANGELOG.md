@@ -38,8 +38,9 @@ Notable changes to this project are documented here, following the Keep a Change
   `WordDocument.Gaps` does for a Word document.
 - `XlsxRecalculationOptions.MaxMatrixCells` (default 1,048,576, one whole column) and `MaxFormulaCells` (default
   8,388,608) set the memory budget of the formula engine, at 32 bytes per cell: a workbook summing ranges larger than
-  one column (`SUM(A:T)` over 60,000 rows) can be calculated by raising them. They must be positive and the formula
-  budget at least the matrix budget (`ArgumentOutOfRangeException`). The nesting limit (256) stays fixed.
+  one column (`SUM(A:T)` over 60,000 rows) can be calculated by raising them. They must be positive, and a formula
+  budget that is set must be at least the matrix budget (`ArgumentOutOfRangeException`); left unset, it follows a
+  matrix budget raised past it. The nesting limit (256) stays fixed.
 
 - Word to PDF wraps text around floating shapes, lays out right-to-left text and unequal columns (ECMA-376 part 1,
   §20.4.2 and §20.4.3, §17.3.1.6, §17.3.2.30, §17.6.4). Floating shapes anchored in body paragraphs are placed with
@@ -369,8 +370,9 @@ Notable changes to this project are documented here, following the Keep a Change
   chain, so a small stream can no longer expand past it before it is refused.
 - `PdfRedactor.Redact` and form XObjects: a form starts from the text state in force at its `Do` (font, size,
   spacing, scale, leading, rise), so text it shows without its own `Tf` is redacted instead of refused; a form with
-  its own `/Resources` stays self-contained (ISO 32000-2 §8.10.2) and a font missing there is still refused. The
-  rewritten form now keeps only the XObjects it draws: it used to carry the page's resources, whose entries still
+  its own `/Resources` stays self-contained (ISO 32000-2 §8.10.2): a `Tf` naming a font missing there is still
+  refused, as is text with no font in force at the `Do`; a form without `/Resources` takes the page's. The rewritten
+  form now keeps only the XObjects it draws: it used to carry the page's resources, whose entries still
   pointed at the original, unredacted form, leaving the redacted text in the file.
 - CCITT fax images: rows times columns are checked against the pixel limit before the output is allocated
   (`InvalidDataException`, the image decodes to nothing in a PDF), and rows read from the data without a declared
@@ -384,7 +386,11 @@ Notable changes to this project are documented here, following the Keep a Change
   painted with a pattern under an area. Vector-only patterns and patterns painted elsewhere are kept.
 - `PdfRedactor.Redact`: a Type 3 glyph is boxed by the font's `FontBBox` through its `FontMatrix` instead of a
   default ascent and descent, so ink drawn above or below that default is no longer missed; with an unknown
-  `FontBBox` (absent or empty) the glyph is taken to reach one font size around its origin.
+  `FontBBox` (absent or empty) the glyph is taken to reach one font size around its origin. The box each glyph
+  procedure declares with `d1` widens that box, so a too small `FontBBox` no longer lets a glyph drawn outside it
+  escape an area.
+- `PdfRedactor.Redact`: the line width (`LW`) and miter limit (`ML`) set by an ExtGState (`gs`) now count in the reach
+  of a stroke painted with a tiling pattern, so a wide stroke just outside an area that reaches it removes the pattern.
 - Word to PDF: a shape in front of the text anchored inside a text box is drawn within the box's clip, instead of
   being painted after the page body over everything around the box.
 - `CsvReader.Open` and `OpenAsync`: a header that cannot be read no longer leaves the stream or text reader

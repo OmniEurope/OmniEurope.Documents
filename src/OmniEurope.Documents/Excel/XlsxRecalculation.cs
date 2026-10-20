@@ -24,14 +24,15 @@ public sealed record XlsxRecalculationOptions
     /// <summary>
     /// Most cells of all the matrices one formula allocates, counted as they are created whether or not an earlier
     /// one is still alive. Defaults to eight times 1 048 576 (about 268 MB at 32 bytes per cell), however many
-    /// operands the formula has. It must not be below <see cref="MaxMatrixCells"/>, which
-    /// <see cref="XlsxWorkbook.Recalculate"/> checks. A formula over it is not calculated, as for
-    /// <see cref="MaxMatrixCells"/>. The nesting depth (256 levels) is not configurable: it protects the stack.
+    /// operands the formula has, or to <see cref="MaxMatrixCells"/> when only that one is raised past it. Set, it
+    /// must not be below <see cref="MaxMatrixCells"/>, which <see cref="XlsxWorkbook.Recalculate"/> checks. A
+    /// formula over it is not calculated, as for <see cref="MaxMatrixCells"/>. The nesting depth (256 levels) is
+    /// not configurable: it protects the stack.
     /// </summary>
     /// <exception cref="ArgumentOutOfRangeException">The value is not positive.</exception>
     public long MaxFormulaCells
     {
-        get => _maxFormulaCells ?? DefaultMaxFormulaCells;
+        get => _maxFormulaCells ?? Math.Max(DefaultMaxFormulaCells, MaxMatrixCells);
         init => _maxFormulaCells = value > 0 ? value : throw new ArgumentOutOfRangeException(nameof(value), value, "The formula budget must be positive.");
     }
 

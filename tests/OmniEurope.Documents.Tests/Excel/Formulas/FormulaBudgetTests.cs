@@ -39,10 +39,18 @@ public sealed class FormulaBudgetTests
         Assert.Equal(17.0, value); // 1 + 2 + 4 and the two 5 of the shared fixture
     }
 
+    // Raising only the matrix budget past the default formula budget raises the formula budget with it: the caller
+    // did not set the formula budget, so it cannot be "below" anything they asked for.
     [Fact]
-    public void A_matrix_budget_above_the_formula_budget_is_refused() =>
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
-            SumOfTwentyColumnsOver60000Rows(new XlsxRecalculationOptions { MaxMatrixCells = 10_000_000 }));
+    public void A_matrix_budget_raised_alone_past_the_default_formula_budget_carries_the_formula_budget()
+    {
+        var options = new XlsxRecalculationOptions { MaxMatrixCells = 10_000_000 };
+
+        Assert.Equal(10_000_000, options.MaxFormulaCells);
+        var (result, value) = SumOfTwentyColumnsOver60000Rows(options);
+        Assert.Empty(result.Unsupported);
+        Assert.Equal(17.0, value);
+    }
 
     [Fact]
     public void A_lowered_matrix_budget_refuses_a_smaller_range()

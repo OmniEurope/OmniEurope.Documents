@@ -27,6 +27,7 @@ internal sealed class PdfFontDecoder
     private readonly TrueTypeFont? _standardMetrics;
     private readonly bool _ucs2Encoding;
     private readonly Dictionary<int, string> _names = [];
+    private readonly Lazy<(double X0, double Y0, double X1, double Y1)?>? _glyphBounds;
 
     public PdfFontDecoder(PdfObjectStore store, PdfDictionary font)
     {
@@ -56,7 +57,7 @@ internal sealed class PdfFontDecoder
             }
 
             IsType3 = subtype == "Type3";
-            GlyphBounds = Type3Bounds(store, font, IsType3);
+            _glyphBounds = new Lazy<(double, double, double, double)?>(() => Type3Bounds(store, font, IsType3));
 
             if (store.Get(font, "Widths") is null)
             {
@@ -73,9 +74,10 @@ internal sealed class PdfFontDecoder
     /// <summary>True for a Type 3 font, whose glyphs are drawings of any size.</summary>
     public bool IsType3 { get; }
 
-    /// <summary>For a Type 3 font, the bounds of its glyphs in text space per unit of font size (FontBBox through
-    /// FontMatrix); null when FontBBox is absent, malformed or empty (all zeros is legal and means unknown).</summary>
-    public (double X0, double Y0, double X1, double Y1)? GlyphBounds { get; }
+    /// <summary>For a Type 3 font, the bounds of its glyphs in text space per unit of font size (FontBBox widened by the
+    /// d1 box of each glyph procedure, through FontMatrix); null when FontBBox is absent, malformed or empty (all zeros
+    /// is legal and means unknown) or a glyph procedure cannot be read. Read on first use: the procedures are decoded.</summary>
+    public (double X0, double Y0, double X1, double Y1)? GlyphBounds => _glyphBounds?.Value;
 
     private static (double X0, double Y0, double X1, double Y1)? Type3Bounds(PdfObjectStore store, PdfDictionary font, bool isType3)
     {
@@ -86,9 +88,38 @@ internal sealed class PdfFontDecoder
 
         var v = box.Items.Select(i => store.Resolve(i) is PdfNumber n ? n.Value : 0).ToArray();
         var matrix = store.Get<PdfArray>(font, "FontMatrix") is { Count: 6 } array ? Matrix.FromArray(array) : new Matrix(0.001, 0, 0, 0.001, 0, 0);
-        var corners = new[] { matrix.Transform(v[0], v[1]), matrix.Transform(v[2], v[1]), matrix.Transform(v[0], v[3]), matrix.Transform(v[2], v[3]) };
-        var bounds = (X0: corners.Min(c => c.X), Y0: corners.Min(c => c.Y), X1: corners.Max(c => c.X), Y1: corners.Max(c => c.Y));
-        return bounds.X1 > bounds.X0 && bounds.Y1 > bounds.Y0 ? bounds : null;
+        var bounds = TransformedBox(matrix, v[0], v[1], v[2], v[3]);
+        if (bounds.X1 <= bounds.X0 || bounds.Y1 <= bounds.Y0)
+        {
+            return null;
+        }
+
+        // FontBBox is a promise the glyph procedures need not keep: the box each declares in d1 widens the bounds.
+        try
+        {
+            foreach (var proc in (store.Get<PdfDictionary>(font, "CharProcs")?.Entries ?? []).Select(e => store.Resolve(e.Value)).OfType<PdfStream>())
+            {
+                foreach (var d1 in ContentStreamReader.Read(store.DecodeBytes(proc)).Where(o => o.Operator == "d1" && o.Operands.Count >= 6).Take(1))
+                {
+                    var ink = TransformedBox(matrix, Number(d1.Operands[2]), Number(d1.Operands[3]), Number(d1.Operands[4]), Number(d1.Operands[5]));
+                    bounds = (Math.Min(bounds.X0, ink.X0), Math.Min(bounds.Y0, ink.Y0), Math.Max(bounds.X1, ink.X1), Math.Max(bounds.Y1, ink.Y1));
+                }
+            }
+        }
+        catch (Exception exception) when (exception is InvalidDataException or NotSupportedException)
+        {
+            return null;
+        }
+
+        return bounds;
+    }
+
+    private static double Number(PdfObject value) => value is PdfNumber n ? n.Value : 0;
+
+    private static (double X0, double Y0, double X1, double Y1) TransformedBox(Matrix matrix, double x0, double y0, double x1, double y1)
+    {
+        var corners = new[] { matrix.Transform(x0, y0), matrix.Transform(x1, y0), matrix.Transform(x0, y1), matrix.Transform(x1, y1) };
+        return (corners.Min(c => c.X), corners.Min(c => c.Y), corners.Max(c => c.X), corners.Max(c => c.Y));
     }
 
     public bool IsComposite { get; }

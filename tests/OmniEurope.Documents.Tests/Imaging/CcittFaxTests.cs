@@ -146,6 +146,20 @@ public sealed class CcittFaxTests
         Assert.Throws<InvalidDataException>(() => CcittFaxDecoder.Decode([], new CcittOptions { K = -1, Columns = 1, Rows = MaxNarrowRows + 1 }, out _, out _));
     }
 
+    // One bit makes a one-column row in group 4, so a small stream with no declared count yields many rows: the rows
+    // are painted as they are read, one byte each, and the output holds nothing more.
+    [Fact]
+    public void One_column_rows_derived_from_a_long_stream_keep_only_the_output()
+    {
+        const int Rows = 8 * 200_000;
+        var data = Enumerable.Repeat((byte)0xFF, Rows / 8).ToArray();
+
+        var output = CcittFaxDecoder.Decode(data, new CcittOptions { K = -1, Columns = 1 }, out var count, out _);
+
+        Assert.Equal(Rows, count);
+        Assert.Equal(Rows, output.Length);
+    }
+
     [Fact]
     public void Rows_derived_from_the_data_are_kept_beyond_the_first_growth_of_the_output()
     {

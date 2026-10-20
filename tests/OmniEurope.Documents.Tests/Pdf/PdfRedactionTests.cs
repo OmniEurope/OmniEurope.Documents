@@ -393,6 +393,33 @@ public sealed class PdfRedactionTests
         Assert.Contains(PatternGap, result.Gaps);
     }
 
+    // The line width and miter limit that widen a stroke may be set by an ExtGState (gs) as well as by w and M: a path
+    // 20 units above the area is reached by a stroke of width 20 (miter factor 10), or of width 2 with a miter limit of 100.
+    [Theory]
+    [InlineData("/Pattern CS /P1 SCN /GS1 gs 0 60 100 10 re S", "/LW 20")]
+    [InlineData("/Pattern CS /P1 SCN 2 w /GS1 gs 0 60 100 10 re S", "/ML 100")]
+    [InlineData("/Pattern CS /P1 SCN 20 w 0 60 100 10 re S", "/LW 20")]
+    public void A_stroke_widened_by_an_ext_g_state_reaches_the_area_and_removes_the_pattern(string content, string state)
+    {
+        var source = PatternPage(content, TextCell, "/ExtGState << /GS1 << " + state + " >> >>");
+
+        var result = PdfRedactor.Redact(PdfDocument.Open(source), [new PdfRedaction(1, SecretArea)]);
+
+        Assert.DoesNotContain("SECRET_AUDIT", Everything(result.Pdf), StringComparison.Ordinal);
+        Assert.Contains(PatternGap, result.Gaps);
+    }
+
+    [Fact]
+    public void A_stroke_narrowed_by_an_ext_g_state_that_cannot_reach_the_area_keeps_the_pattern()
+    {
+        var source = PatternPage("/Pattern CS /P1 SCN 20 w /GS1 gs 0 60 100 10 re S", TextCell, "/ExtGState << /GS1 << /LW 2 >> >>");
+
+        var result = PdfRedactor.Redact(PdfDocument.Open(source), [new PdfRedaction(1, SecretArea)]);
+
+        Assert.Contains("SECRET_AUDIT", Everything(result.Pdf), StringComparison.Ordinal);
+        Assert.DoesNotContain(PatternGap, result.Gaps);
+    }
+
     [Theory]
     [InlineData("/Pattern cs /P1 scn 0 0 m 100 0 l 50 50 80 80 100 100 c 10 10 20 20 v 5 5 30 30 y f", "BT /F1 12 Tf 2 2 Td (SECRET_AUDIT) Tj ET")]
     [InlineData("/Pattern cs /P1 scn 0 0 100 100 re f", "/Pattern cs /P1 scn 0 0 5 5 re f BT /F1 12 Tf (SECRET_AUDIT) Tj ET")]
@@ -462,6 +489,24 @@ public sealed class PdfRedactionTests
         var result = PdfRedactor.Redact(PdfDocument.Open(Type3Page("[0 0 1000 5000]")), [new PdfRedaction(1, new PdfRectangle(0, 90, 100, 99))]);
 
         Assert.Equal(0, result.RemovedGlyphs);
+    }
+
+    // A FontBBox that is too small does not shrink the glyph: the box each glyph procedure declares in d1 is part of the
+    // bounds, so ink 5 em above the baseline is found although the FontBBox stops at 10 units.
+    [Fact]
+    public void A_type_3_glyph_whose_d1_box_exceeds_the_font_bbox_is_boxed_by_the_d1_box()
+    {
+        var source = RawPdf.Page(
+            "BT /T3 10 Tf 10 10 Td (a) Tj ET",
+            "/Font << /T3 5 0 R >>",
+            "",
+            "<< /Type /Font /Subtype /Type3 /FontBBox [0 0 10 10] /FontMatrix [0.001 0 0 0.001 0 0] /CharProcs << /a 6 0 R >> "
+            + "/Encoding << /Type /Encoding /Differences [97 /a] >> /FirstChar 97 /LastChar 97 /Widths [1000] /Resources << >> >>",
+            RawPdf.Stream(string.Empty, RawPdf.Ascii("1000 0 0 0 500 500 d1 0 0 500 500 re f")));
+
+        var result = PdfRedactor.Redact(PdfDocument.Open(source), [new PdfRedaction(1, new PdfRectangle(14, 14, 16, 16))]);
+
+        Assert.Equal(1, result.RemovedGlyphs);
     }
 
     // A FontBBox of zeros means unknown: the glyph counts as under any area within a font size of its origin.

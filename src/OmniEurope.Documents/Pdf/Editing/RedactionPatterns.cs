@@ -96,6 +96,19 @@ internal sealed class RedactionPatterns(RedactionContext context)
         }
     }
 
+    /// <summary>Takes the line width (LW) and miter limit (ML) of the ExtGState <paramref name="name"/> into the state.</summary>
+    public void ApplyExtGState(PdfDictionary? resources, PdfName? name, RedactionState state)
+    {
+        var store = context.Store;
+        if (name is null || store.Get(store.Get<PdfDictionary>(resources, "ExtGState"), name.Value) is not PdfDictionary gs)
+        {
+            return;
+        }
+
+        state.LineWidth = store.Get(gs, "LW") is PdfNumber width ? width.Value : state.LineWidth;
+        state.MiterLimit = store.Get(gs, "ML") is PdfNumber limit ? limit.Value : state.MiterLimit;
+    }
+
     // Half the line width, widened for a miter join or a square cap, in the larger scale of the current matrix.
     private static double StrokeMargin(RedactionState state)
     {
