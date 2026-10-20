@@ -42,11 +42,13 @@ internal static class WordDocumentReader
     public static WordDocument Read(OpcPackage package)
     {
         var main = MainPart(package);
-        var context = new WordReadContext(package);
         var relationships = package.Relationships(main);
+        var context = new WordReadContext(package);
+        var theme = Theme(context, relationships);
+        context.Palette = Charts.ChartPalette.FromTheme(theme);
         var document = new WordDocument(empty: true)
         {
-            Styles = WordPartsReader.Styles(Part(package, relationships, StylesType), Part(package, relationships, ThemeType)),
+            Styles = WordPartsReader.Styles(Part(package, relationships, StylesType), theme),
             Settings = WordPartsReader.Settings(Part(package, relationships, SettingsType)),
             Information = WordPartsReader.Information(Part(package, package.Relationships(string.Empty), CorePropertiesType)),
         };
@@ -57,6 +59,21 @@ internal static class WordDocumentReader
         ReadBody(context, main, document);
         document.Gaps.AddRange(context.Gaps);
         return document;
+    }
+
+    // The theme part, or null when there is none or it cannot be read (the document then has no theme colours or fonts;
+    // reported as a gap): an optional part costs what it gives, not the document.
+    private static XDocument? Theme(WordReadContext context, List<OpcRelationship> relationships)
+    {
+        try
+        {
+            return Part(context.Package, relationships, ThemeType);
+        }
+        catch (Exception exception) when (Charts.ChartReader.IsUnreadable(exception))
+        {
+            context.Gaps.Add("unreadable theme skipped");
+            return null;
+        }
     }
 
     internal static XDocument? Part(OpcPackage package, List<OpcRelationship> relationships, string type)

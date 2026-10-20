@@ -343,6 +343,28 @@ public sealed class WordTextBox(double width, double height) : WordShape(width, 
     public bool FitsText { get; set; }
 }
 
+/// <summary>A chart (DrawingML, ECMA-376 part 1, §21.2) read from the document: its series, titles and legend in
+/// <see cref="Chart"/>. Saving the document writes the chart part back as it was read, without the embedded workbook
+/// its data may link to.</summary>
+public sealed class WordChart : WordShape
+{
+    internal WordChart(Charts.Chart chart, double width, double height, System.Xml.Linq.XElement part)
+        : base(width, height)
+    {
+        Chart = chart;
+        Part = part;
+    }
+
+    /// <summary>The chart.</summary>
+    public Charts.Chart Chart { get; }
+
+    /// <summary>The chart part as read (<c>c:chartSpace</c>), written back on save.</summary>
+    internal System.Xml.Linq.XElement Part { get; }
+
+    /// <summary>The culture numbers are shown in (invariant when null).</summary>
+    internal System.Globalization.CultureInfo? Culture { get; init; }
+}
+
 /// <summary>Image data with its media type.</summary>
 public sealed class WordImage
 {

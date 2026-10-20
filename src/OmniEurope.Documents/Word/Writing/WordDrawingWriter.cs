@@ -17,12 +17,27 @@ internal sealed class WordWriteContext
     /// <summary>Media parts by name with their bytes and content type, in creation order.</summary>
     public List<(string Name, byte[] Data, string ContentType)> Media { get; } = [];
 
+    /// <summary>Chart parts by name with their content, in creation order.</summary>
+    public List<(string Name, XElement Root)> Charts { get; } = [];
+
     /// <summary>Text width of the section being written, for tables without explicit columns.</summary>
     public double ContentWidth { get; set; } = WordPageSetup.A4.ContentWidth;
 
     public int NextDrawingId() => ++_drawingId;
 
     public int NextRevisionId() => _revisionId++;
+
+    /// <summary>A new chart part holding the chart as it was read, without the parts it linked to (the embedded workbook,
+    /// drawings over the chart): their relationships are not written.</summary>
+    public string ChartPart(WordChart chart)
+    {
+        var name = "word/charts/chart" + (Charts.Count + 1).ToString(CultureInfo.InvariantCulture) + ".xml";
+        var root = new XElement(chart.Part);
+        root.Elements().Where(e => e.Name.LocalName is "externalData" or "userShapes").Remove();
+        root.Descendants().Attributes().Where(a => a.Name.Namespace == R).Remove();
+        Charts.Add((name, root));
+        return name;
+    }
 
     /// <summary>The media part of an image; identical bytes share one part.</summary>
     public string ImagePart(WordImage image)
@@ -63,6 +78,16 @@ internal static class WordDrawingWriter
                     new XElement(Pic + "blipFill", new XElement(A + "blip", new XAttribute(R + "embed", relationshipId)), new XElement(A + "stretch", new XElement(A + "fillRect"))),
                     new XElement(Pic + "spPr", Transform(cx, cy), Rectangle()))));
         return Frame(picture, id, "Picture", graphic, new XElement(Wp + "cNvGraphicFramePr", new XElement(A + "graphicFrameLocks", new XAttribute("noChangeAspect", "1"))));
+    }
+
+    /// <summary>A chart frame naming its chart part.</summary>
+    public static XElement Chart(WordContentWriter writer, WordChart chart, string relationshipId)
+    {
+        var id = writer.Context.NextDrawingId();
+        var graphic = new XElement(
+            A + "graphic",
+            new XElement(A + "graphicData", new XAttribute("uri", ChartUri), new XElement(C + "chart", new XAttribute(XNamespace.Xmlns + "c", C), new XAttribute(R + "id", relationshipId))));
+        return Frame(chart, id, "Chart", graphic, new XElement(Wp + "cNvGraphicFramePr"));
     }
 
     /// <summary>A text box, wrapped in alternate content because the shape namespace is a Word 2010 extension.</summary>

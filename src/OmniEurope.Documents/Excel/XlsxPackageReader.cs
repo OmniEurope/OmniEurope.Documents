@@ -39,6 +39,8 @@ internal static class XlsxPackageReader
         var relationships = OpcRelationships.Read(zip, workbookPath);
         var shared = ReadSharedStrings(zip, relationships.Find(r => r.Type.EndsWith("/sharedStrings", StringComparison.Ordinal))?.Target);
         var styles = XlsxStyleReader.Read(zip, relationships.Find(r => r.Type.EndsWith("/styles", StringComparison.Ordinal))?.Target);
+        // Read only if a chart needs it: a damaged theme costs the charts their theme colours, nothing else.
+        var palette = new Lazy<Charts.ChartPalette>(() => ReadPalette(zip, relationships, workbook));
         foreach (var (name, relationshipId) in ReadWorkbook(zip, workbookPath, workbook))
         {
             var target = relationships.Find(r => r.Id == relationshipId);
@@ -49,7 +51,10 @@ internal static class XlsxPackageReader
 
             var sheet = workbook.AddWorksheet(name);
             new XlsxSheetReader(sheet, shared, styles).Read(zip, target.Target);
+            XlsxChartReader.Read(zip, target.Target, sheet, palette);
         }
+
+        XlsxChartReader.Fill(workbook);
 
         if (workbook.Worksheets.Count == 0)
         {
@@ -57,6 +62,21 @@ internal static class XlsxPackageReader
         }
 
         return workbook;
+    }
+
+    // The colours of the workbook theme; the Office ones when there is none or it cannot be read (reported as a gap).
+    private static Charts.ChartPalette ReadPalette(SafeZip zip, List<OpcRelationship> relationships, XlsxWorkbook workbook)
+    {
+        var theme = relationships.Find(r => r.Type.EndsWith("/theme", StringComparison.Ordinal) && !r.External)?.Target;
+        try
+        {
+            return Charts.ChartPalette.FromTheme(theme is not null && zip.ReadBytes(theme) is { } bytes ? OpcPackage.ParseXml(theme, bytes, System.Xml.Linq.LoadOptions.None) : null);
+        }
+        catch (Exception exception) when (Charts.ChartReader.IsUnreadable(exception))
+        {
+            workbook.Gaps.Add("unreadable theme skipped");
+            return Charts.ChartPalette.Default;
+        }
     }
 
     private static List<(string Name, string RelationshipId)> ReadWorkbook(SafeZip zip, string path, XlsxWorkbook workbook)

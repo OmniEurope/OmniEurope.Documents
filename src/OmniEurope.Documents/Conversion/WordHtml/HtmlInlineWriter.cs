@@ -111,6 +111,9 @@ internal sealed class HtmlInlineWriter(HtmlContext context, HtmlOutput output, W
                 Floating(box);
                 TextBoxes.Add(box);
                 break;
+            case WordChart:
+                context.Gaps.Add("charts are left out");
+                break;
         }
     }
 

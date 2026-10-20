@@ -16,13 +16,14 @@ public readonly record struct XlsxRange(int FirstRow, int FirstColumn, int LastR
             : throw new FormatException($"'{range}' is not a cell range.");
 }
 
-/// <summary>A worksheet: cells, column widths, merged ranges, frozen panes and an auto-filter.</summary>
+/// <summary>A worksheet: cells, column widths, merged ranges, frozen panes, an auto-filter and, once loaded, its charts.</summary>
 public sealed class XlsxWorksheet
 {
     private static readonly char[] ForbiddenNameChars = ['[', ']', ':', '*', '?', '/', '\\'];
     private readonly SortedDictionary<(int Row, int Column), XlsxCell> _cells = new();
     private readonly SortedDictionary<int, double> _columnWidths = new();
     private readonly List<XlsxRange> _merges = [];
+    private readonly List<XlsxChart> _charts = [];
 
     internal XlsxWorksheet(XlsxWorkbook workbook, string name)
     {
@@ -44,6 +45,10 @@ public sealed class XlsxWorksheet
 
     /// <summary>Merged ranges.</summary>
     public IReadOnlyList<XlsxRange> MergedRanges => _merges;
+
+    /// <summary>The charts of the sheet's drawing, read from a loaded workbook (bar, line, pie and doughnut charts are
+    /// read in full; others keep their frame and title). Saving a workbook does not write them.</summary>
+    public IReadOnlyList<XlsxChart> Charts => _charts;
 
     /// <summary>Rows frozen at the top.</summary>
     public int FrozenRows { get; private set; }
@@ -151,6 +156,15 @@ public sealed class XlsxWorksheet
     }
 
     internal void AddLoadedMerge(XlsxRange range) => _merges.Add(range);
+
+    internal void AddLoadedChart(XlsxChart chart) => _charts.Add(chart);
+
+    /// <summary>The height of a row in points: Excel's default for the default font (row heights are not read).</summary>
+    internal const double DefaultRowHeight = 15;
+
+    /// <summary>The width of a 1-based column in Excel pixels: <c>7w + 5</c> for a width of <c>w</c> characters (8.43 by
+    /// default), 7 pixels being the widest digit of the default font and 5 the cell padding.</summary>
+    internal double ColumnPixels(int column) => ((_columnWidths.TryGetValue(column, out var width) ? width : 8.43) * 7) + 5;
 
     private static double EstimateWidth(XlsxCell cell)
     {

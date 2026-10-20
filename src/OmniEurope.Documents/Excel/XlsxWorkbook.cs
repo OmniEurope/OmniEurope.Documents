@@ -14,6 +14,10 @@ public sealed class XlsxWorkbook
     /// <summary>The worksheets, in tab order.</summary>
     public IReadOnlyList<XlsxWorksheet> Worksheets => _worksheets;
 
+    /// <summary>Parts of the loaded file that were skipped because they could not be read (a damaged chart, drawing or
+    /// theme); the conversions report them with their own gaps.</summary>
+    internal List<string> Gaps { get; } = [];
+
     /// <summary>The document title (core properties).</summary>
     public string? Title { get; set; }
 

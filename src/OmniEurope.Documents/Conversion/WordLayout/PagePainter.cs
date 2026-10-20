@@ -25,6 +25,7 @@ internal sealed class PagePainter(LayoutContext context, bool bookmarks)
             };
             Stack(paint, page.Header, page.BodyLeft, page.Setup.HeaderDistance, page.BodyWidth);
             Stack(paint, page.Footer, page.BodyLeft, page.Setup.Height - page.Setup.FooterDistance - page.FooterHeight, page.BodyWidth);
+            paint.Front = [];
             foreach (var placement in page.Placements)
             {
                 paint.Column = (placement.X, placement.Width);
@@ -34,6 +35,10 @@ internal sealed class PagePainter(LayoutContext context, bool bookmarks)
                     context.Builder.AddBookmark(title, canvas, placement.Y);
                 }
             }
+
+            var front = paint.Front;
+            paint.Front = null;
+            front.ForEach(shape => shape());
 
             PaintFootnotes(paint, page);
             PaintSeparators(paint, page);

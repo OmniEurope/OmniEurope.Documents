@@ -17,6 +17,9 @@ internal sealed class WordReadContext(OpcPackage package)
 
     public SortedSet<string> Gaps { get; } = new(StringComparer.Ordinal);
 
+    /// <summary>The theme colours charts take their automatic colours from.</summary>
+    public Charts.ChartPalette Palette { get; set; } = Charts.ChartPalette.Default;
+
     /// <summary>The editor address (<c>part#index</c>) of a paragraph element of <paramref name="part"/>, counted
     /// as <see cref="Editing.WordEditor.Paragraphs"/> counts them; null when the editor does not see it.</summary>
     public string? Address(string part, XElement paragraph)

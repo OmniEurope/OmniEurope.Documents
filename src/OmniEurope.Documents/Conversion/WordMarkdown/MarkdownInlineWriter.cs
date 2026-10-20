@@ -92,6 +92,9 @@ internal sealed class MarkdownInlineWriter(MarkdownContext context, WordParagrap
             case WordCommentReference:
                 context.Gaps.Add("comments are left out");
                 break;
+            case WordChart:
+                context.Gaps.Add("charts are left out");
+                break;
         }
     }
 

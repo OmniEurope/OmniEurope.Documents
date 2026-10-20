@@ -15,7 +15,6 @@ namespace OmniEurope.Documents.Conversion;
 /// </summary>
 internal sealed class ExcelSheetTable
 {
-    private const double DefaultColumnWidth = 8.43;
     private const double DigitPixels = 7;
     private const double PaddingPixels = 5;
 
@@ -30,6 +29,7 @@ internal sealed class ExcelSheetTable
     private readonly FontLibrary _fonts;
     private readonly double _digitPoints;
     private readonly List<double> _pixels = [];
+    private readonly ExcelSheetCharts _charts;
 
     public ExcelSheetTable(XlsxWorksheet sheet, XlsxRange range, ExcelPdfOptions options)
     {
@@ -38,10 +38,15 @@ internal sealed class ExcelSheetTable
         _digitPoints = _fonts.Resolve(XlsxStyle.Default.FontName).MeasureText("0", XlsxStyle.Default.FontSize);
         for (var c = range.FirstColumn; c <= range.LastColumn; c++)
         {
-            var characters = sheet.ColumnWidths.TryGetValue(c, out var width) ? width : DefaultColumnWidth;
-            _pixels.Add((characters * DigitPixels) + PaddingPixels);
+            _pixels.Add(sheet.ColumnPixels(c));
         }
+
+        _charts = new ExcelSheetCharts(sheet, range, options, _pixels);
     }
+
+    /// <summary>The page a sheet's table of <paramref name="width"/> points is printed on: portrait A4, or landscape
+    /// when it is wider than a portrait page.</summary>
+    public static WordPageSetup Page(double width) => width > WordPageSetup.A4.ContentWidth ? WordPageSetup.A4.ToLandscape() : WordPageSetup.A4;
 
     public WordTable Build()
     {
@@ -78,6 +83,13 @@ internal sealed class ExcelSheetTable
         var cell = _sheet.FindCell(r, segment.Owner);
         var style = cell?.Style ?? XlsxStyle.Default;
         var properties = CellProperties(style, segment.Merge, r);
+        var charts = _charts.At(r, segment.First);
+        if (charts.Count > 0)
+        {
+            // The charts' anchor stands at the top of the cell, where their offsets are measured from.
+            properties = properties with { VerticalAlignment = WordCellAlignment.Top };
+        }
+
         var result = new WordTableCell { Properties = Gridless(properties, segment, runs.Values, style) };
         if (properties.VerticalMerge == WordVerticalMerge.Continue)
         {
@@ -102,6 +114,11 @@ internal sealed class ExcelSheetTable
         if (text.Length > 0)
         {
             paragraph.AddText(text, Run(style));
+        }
+
+        foreach (var chart in charts)
+        {
+            paragraph.Add(chart);
         }
 
         result.Blocks.Add(paragraph);

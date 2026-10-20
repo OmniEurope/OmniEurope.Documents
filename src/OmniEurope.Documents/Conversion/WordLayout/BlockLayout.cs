@@ -106,7 +106,7 @@ internal sealed class BlockLayout
     }
 }
 
-/// <summary>Paint actions for pictures and text boxes.</summary>
+/// <summary>Paint actions for pictures, text boxes and charts.</summary>
 internal sealed class ShapeFactory(LayoutContext context, BlockLayout blocks)
 {
     private const double BoxInsetX = 7.2;
@@ -122,6 +122,8 @@ internal sealed class ShapeFactory(LayoutContext context, BlockLayout blocks)
             case WordTextBox box:
                 var (paintBox, height) = TextBox(box);
                 return (paintBox, height);
+            case WordChart chart:
+                return ((paint, x, y) => new Charts.ChartPainter(context, chart.Chart, chart.Culture ?? System.Globalization.CultureInfo.InvariantCulture).Paint(paint.Canvas, x, y, chart.Width, chart.Height), chart.Height);
             default:
                 return ((_, _, _) => { }, shape.Height);
         }

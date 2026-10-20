@@ -156,6 +156,7 @@ internal static class WordDocumentWriter
 
     private static void Package(WordDocument document, WordWriteContext context, PartRelationships relationships, List<(string Name, XElement Root, string ContentType)> parts, Stream stream)
     {
+        parts.AddRange(context.Charts.Select(c => (c.Name, c.Root, ChartContentType)));
         AddRelationshipsPart(parts, relationships);
         var packageRelationships = new PartRelationships(string.Empty);
         packageRelationships.Add(OfficeDocumentType, DocumentPart);

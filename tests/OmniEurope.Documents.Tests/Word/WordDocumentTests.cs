@@ -255,7 +255,7 @@ public sealed class WordDocumentTests
 
         var document = WordDocument.Load(DocxFactory.Build(body));
 
-        Assert.Equal(["chart skipped", "imported content (altChunk) skipped"], document.Gaps);
+        Assert.Equal(["imported content (altChunk) skipped", "linked or missing chart skipped"], document.Gaps);
     }
 
     [Theory]

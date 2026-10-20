@@ -29,7 +29,15 @@ internal static class FragmentPainter
                 break;
             case AnchorToken anchor:
                 var (left, top) = context.Floats.TryGetValue(anchor, out var placed) ? placed : FloatPosition(context, anchor, x, lineY);
-                anchor.Paint(context, left, top);
+                if (context.Front is { } front && !anchor.Shape.Floating!.BehindText)
+                {
+                    front.Add(() => anchor.Paint(context, left, top));
+                }
+                else
+                {
+                    anchor.Paint(context, left, top);
+                }
+
                 break;
         }
     }

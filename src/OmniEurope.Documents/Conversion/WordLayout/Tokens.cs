@@ -29,6 +29,10 @@ internal sealed class PaintContext(PdfCanvas canvas, LayoutContext layout)
     /// <summary>The page size, for floating shapes.</summary>
     public (double Width, double Height) PageSize { get; init; }
 
+    /// <summary>While the page body is painted: the floating shapes in front of the text, drawn once the body is (as Word
+    /// draws them, over the text and the tables placed after their anchor); null elsewhere.</summary>
+    public List<Action>? Front { get; set; }
+
     /// <summary>Where the floating shapes of the page body were placed, by anchor.</summary>
     public IReadOnlyDictionary<AnchorToken, (double X, double Y)> Floats { get; init; } = new Dictionary<AnchorToken, (double X, double Y)>();
 

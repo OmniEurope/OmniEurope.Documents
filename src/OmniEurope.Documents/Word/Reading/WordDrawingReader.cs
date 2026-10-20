@@ -6,9 +6,10 @@ using static OmniEurope.Documents.Word.WordXml;
 namespace OmniEurope.Documents.Word.Reading;
 
 /// <summary>
-/// Reads DrawingML (<c>w:drawing</c>) and VML (<c>w:pict</c>, <c>w:object</c>) objects into pictures and text
-/// boxes. Charts, diagrams, grouped and geometric shapes have no model: they are skipped and reported as gaps.
-/// Linked (not embedded) pictures are skipped too: nothing is ever fetched.
+/// Reads DrawingML (<c>w:drawing</c>) and VML (<c>w:pict</c>, <c>w:object</c>) objects into pictures, text
+/// boxes and charts (the chart part a <c>c:chart</c> names, read by <see cref="Charts.ChartReader"/>). Diagrams, grouped
+/// and geometric shapes and the chart types introduced by Office 2016 have no model: they are skipped and reported as
+/// gaps. Linked (not embedded) pictures and charts are skipped too: nothing is ever fetched.
 /// </summary>
 internal sealed class WordDrawingReader(WordContentReader owner)
 {
@@ -26,12 +27,7 @@ internal sealed class WordDrawingReader(WordContentReader owner)
         var width = Measure((string?)extent?.Attribute("cx"), EmuPerPoint) ?? 0;
         var height = Measure((string?)extent?.Attribute("cy"), EmuPerPoint) ?? 0;
         var data = frame.Element(A + "graphic")?.Element(A + "graphicData");
-        var shape = (string?)data?.Attribute("uri") switch
-        {
-            PictureUri => Picture(data!.Descendants(A + "blip").FirstOrDefault()?.Attribute(R + "embed")?.Value, width, height),
-            ShapeUri => Fitted(TextBox(data!.Descendants(W + "txbxContent").FirstOrDefault(), width, height, "shape without text"), data!.Descendants(A + "spAutoFit").Any()),
-            var uri => Unsupported(uri),
-        };
+        var shape = GraphicData(data, width, height);
         if (shape is null)
         {
             return null;
@@ -42,6 +38,14 @@ internal sealed class WordDrawingReader(WordContentReader owner)
         shape.Floating = frame.Name.LocalName == "anchor" ? Floating(frame) : null;
         return shape;
     }
+
+    private WordShape? GraphicData(XElement? data, double width, double height) => (string?)data?.Attribute("uri") switch
+    {
+        PictureUri => Picture(data!.Descendants(A + "blip").FirstOrDefault()?.Attribute(R + "embed")?.Value, width, height),
+        ChartUri => Chart(data!, width, height),
+        ShapeUri => Fitted(TextBox(data!.Descendants(W + "txbxContent").FirstOrDefault(), width, height, "shape without text"), data!.Descendants(A + "spAutoFit").Any()),
+        var uri => Unsupported(uri),
+    };
 
     private static WordTextBox? Fitted(WordTextBox? box, bool fitsText)
     {
@@ -153,6 +157,30 @@ internal sealed class WordDrawingReader(WordContentReader owner)
         return image is null ? null : new WordPicture(image, width, height);
     }
 
+    // The chart part a c:chart element names, read with the document theme's colours.
+    private WordChart? Chart(XElement data, double width, double height)
+    {
+        var id = data.Elements().FirstOrDefault(e => e.Name.LocalName == "chart")?.Attribute(R + "id")?.Value;
+        var relationship = owner.Relationship(id);
+        try
+        {
+            var part = relationship is null || relationship.External ? null : owner.Context.Package.GetXml(relationship.Target)?.Root;
+            if (part is not null)
+            {
+                return new WordChart(Charts.ChartReader.Read(part, owner.Context.Palette), width, height, part);
+            }
+
+            owner.Context.Gaps.Add("linked or missing chart skipped");
+        }
+        catch (Exception exception) when (Charts.ChartReader.IsUnreadable(exception))
+        {
+            // A chart part that cannot be read costs the chart, not the document.
+            owner.Context.Gaps.Add("unreadable chart skipped");
+        }
+
+        return null;
+    }
+
     private WordTextBox? TextBox(XElement? content, double width, double height, string gap)
     {
         if (content is null)
@@ -171,6 +199,7 @@ internal sealed class WordDrawingReader(WordContentReader owner)
         var name = kind switch
         {
             null => "drawing",
+            _ when kind.Contains("chartex", StringComparison.OrdinalIgnoreCase) => "chart of a type introduced by Office 2016 (waterfall, treemap, funnel...)",
             _ when kind.Contains("chart", StringComparison.OrdinalIgnoreCase) => "chart",
             _ when kind.Contains("diagram", StringComparison.OrdinalIgnoreCase) => "diagram",
             _ when kind.Contains("Group", StringComparison.OrdinalIgnoreCase) => "group of shapes",

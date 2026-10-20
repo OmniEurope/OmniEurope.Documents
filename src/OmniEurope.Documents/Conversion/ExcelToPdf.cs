@@ -30,7 +30,8 @@ public sealed record ExcelPdfOptions
 /// <summary>
 /// A workbook to PDF: each sheet's used range becomes a table in its own section (landscape when it is wider
 /// than a portrait page), with the displayed values, fonts, colours, fills, alignment, borders, merged cells
-/// and column widths of the sheet. Frozen rows repeat at the top of each page. A number too wide for its
+/// and column widths of the sheet, and its charts drawn over the cells they are anchored to (the printed range grows
+/// to hold them; rows count at Excel's default height of 15 points for their placement). Frozen rows repeat at the top of each page. A number too wide for its
 /// column is shortened or filled with '#', and text that does not wrap stays on one line, running on into
 /// empty neighbouring cells (a fill or a border does not stop it) and is clipped at the first one holding a
 /// value; text that would pass the edge of the printed range wraps in its cell instead, so nothing is lost.
@@ -49,7 +50,7 @@ public static class ExcelToPdf
     {
         ArgumentNullException.ThrowIfNull(workbook);
         options ??= new ExcelPdfOptions();
-        var ranges = workbook.Worksheets.Select(s => s.UsedRange).ToList();
+        var ranges = workbook.Worksheets.Select(PrintedRange).ToList();
         var cells = ranges.Sum(r => r is { } used ? (long)(used.LastRow - used.FirstRow + 1) * (used.LastColumn - used.FirstColumn + 1) : 0);
         if (cells > options.MaxCells)
         {
@@ -57,13 +58,13 @@ public static class ExcelToPdf
         }
 
         var document = new WordDocument { Information = new WordInformation { Title = workbook.Title, Author = workbook.Author } };
+        document.Gaps.AddRange(workbook.Gaps.Distinct(StringComparer.Ordinal));
         document.Styles.DefaultParagraphProperties = new WordParagraphProperties { SpacingAfter = 0, LineSpacing = 1, LineSpacingRule = WordLineSpacingRule.Multiple };
         for (var i = 0; i < workbook.Worksheets.Count; i++)
         {
             var sheet = workbook.Worksheets[i];
             var table = ranges[i] is { } range ? new ExcelSheetTable(sheet, range, options).Build() : null;
-            var width = table?.Columns.Sum() ?? 0;
-            var page = width > WordPageSetup.A4.ContentWidth ? WordPageSetup.A4.ToLandscape() : WordPageSetup.A4;
+            var page = ExcelSheetTable.Page(table?.Columns.Sum() ?? 0);
             if (i == 0)
             {
                 document.Sections[0].Page = page;
@@ -85,5 +86,17 @@ public static class ExcelToPdf
         }
 
         return document;
+    }
+
+    // The used range, grown to hold the cells the sheet's charts lie over (as Excel prints them).
+    private static XlsxRange? PrintedRange(XlsxWorksheet sheet)
+    {
+        var range = sheet.UsedRange;
+        foreach (var cells in sheet.Charts.Select(c => c.Cells))
+        {
+            range = range is not { } r ? cells : new XlsxRange(Math.Min(r.FirstRow, cells.FirstRow), Math.Min(r.FirstColumn, cells.FirstColumn), Math.Max(r.LastRow, cells.LastRow), Math.Max(r.LastColumn, cells.LastColumn));
+        }
+
+        return range;
     }
 }
