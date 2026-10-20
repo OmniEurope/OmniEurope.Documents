@@ -248,9 +248,28 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
     des colonnes, équilibrage), 9 de lecture et écriture, 68 cas UAX #9 tirés à la main de la spécification. Parité avec Word sur un
     corpus de dix documents comparés aux PDF que Word en a faits (avant → après) : guide de 155 pages, premières lignes
     de page identiques 73 → 80, dernières 155 → 155, mots manquants 0,067 → 0,064 (156 pages, Word 155) ; guide de 133
-    pages, premières 30 → 59, dernières 34 → 65, manquants 0,031 → 0,029 (136 pages) ; les huit autres inchangés. Deux règles mesurées contre Word en chemin : une
-    tabulation ne grandit pas sa ligne (tables des matières), une ligne qui ne tient qu'un saut de page ou le
-    paragraphe vide qui finit une section avant une nouvelle page reste en bas de la page qu'il finit.
+    pages, premières 30 → 59, dernières 34 → 65, manquants 0,031 → 0,029 (136 pages) ; les huit autres inchangés.
+  - Quatre règles de mise en page gardées (décision du propriétaire, 2026-10-20), chacune avec un test qui échoue
+    quand son code est retiré (code désactivé à la main, test rouge, code remis, test vert). Les trois premières ont
+    été mesurées contre les PDF que Word a faits du corpus de dix documents ci-dessus (la part de chaque règle dans le
+    gain des deux guides n'a pas été chiffrée à part, et le document de chaque mesure n'a pas été consigné) ; la
+    quatrième est un comportement de Word observé, sans mesure propre.
+    1. Une tabulation ne grandit pas sa ligne (`LineBreaker.Measure`) : la hauteur d'une ligne vient de son texte, la
+       tabulation est écartée dès que la ligne porte autre chose. Constat : dans Word, les entrées de tables des
+       matières, dont la tabulation est dans une taille plus grande que l'entrée, gardent la hauteur de ligne de
+       l'entrée. Test : `WordColumnLayoutTests.A_tab_does_not_make_its_line_taller`.
+    2. Une ligne qui ne tient qu'un saut de page ou de colonne reste en bas de la page ou colonne qu'elle finit, même
+       si elle dépasse son bas (`Paginator.StaysAtTheEnd`, première condition) : Word n'ouvre pas de page blanche pour
+       ce saut. Test : `WordColumnLayoutTests.A_page_break_at_the_end_of_a_full_page_does_not_leave_a_blank_page`.
+    3. Le paragraphe vide qui finit une section avant une nouvelle page reste en bas de la page qu'il finit
+       (`Paginator.StaysAtTheEnd`, seconde condition : dernier élément de la section, section suivante qui ne démarre
+       pas en continu, contenu vide ou espaces). Test :
+       `WordColumnLayoutTests.The_empty_paragraph_ending_a_full_page_before_a_new_page_section_does_not_leave_a_blank_page`.
+    4. Un objet flottant habillé, positionné depuis son paragraphe ou sa ligne, qui chevaucherait un objet habillé placé
+       avant lui descend sous lui (`FloatLayout.BelowOthers` ; un objet positionné depuis la page ou la marge reste où
+       il est). Comportement de Word observé, non spécifié par ECMA-376 et sans mesure propre : approximation à
+       reprendre si une mesure le contredit. Test :
+       `WordFloatWrapTests.A_shape_positioned_from_its_paragraph_moves_below_a_wrapping_shape_it_would_overlap`.
   - Non fait (limites) : habillage serré et traversant suivi par la boîte englobante (le polygone n'est pas lu,
     signalé) ; seuil de 18 pt sous lequel un tronçon n'est pas rempli (celui de Word n'est pas publié) ; objets des
     tableaux, en-têtes et pieds sans habillage (signalé) ; un objet placé depuis la page n'écarte que les lignes posées
