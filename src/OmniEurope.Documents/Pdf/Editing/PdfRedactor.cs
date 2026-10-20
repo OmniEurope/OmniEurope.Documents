@@ -37,6 +37,11 @@ public static class PdfRedactor
     private static readonly HashSet<string> PathOperators = new(StringComparer.Ordinal) { "m", "l", "c", "v", "y", "re", "sh" };
 
     /// <summary>Redacts the areas; the document itself is left unchanged.</summary>
+    /// <exception cref="PdfRedactionException">A page that has areas (or a form drawn there under an area) shows a
+    /// non-empty string with a font that cannot be resolved: no <c>Tf</c> before it, or a <c>Tf</c> naming a font absent
+    /// from the resources in force. Where such glyphs lie cannot be computed, so the text could stay under an area; the
+    /// redaction is refused rather than returning a document that looks redacted and is not. Pages without areas are
+    /// copied as they are and never raise it.</exception>
     public static PdfRedactionResult Redact(PdfDocument document, IEnumerable<PdfRedaction> redactions, PdfRedactionOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(document);
@@ -71,6 +76,7 @@ public static class PdfRedactor
         return new PdfRedactionResult(output.ToArray(), totals.Glyphs, totals.Text.ToString(), totals.RemovedImages, totals.BlankedImages, totals.Annotations, totals.Gaps.ToList());
     }
 
+    /// <exception cref="PdfRedactionException">See <see cref="Redact"/>.</exception>
     private static PdfReference RedactPage(PdfPage page, List<PdfRectangle> areas, PdfRedactionOptions options, PdfObjectTable table, PdfObjectCopier copier, PdfReference tree, ISet<int> numbers, Totals totals)
     {
         var store = page.Store;

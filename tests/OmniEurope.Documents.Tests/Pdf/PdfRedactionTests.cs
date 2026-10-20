@@ -238,4 +238,47 @@ public sealed class PdfRedactionTests
         Assert.Contains("SECRET42", PdfDocument.Open(result.Pdf).GetPage(1).Text, StringComparison.Ordinal);
         Assert.Throws<ArgumentOutOfRangeException>(() => PdfRedactor.Redact(PdfDocument.Open(Source()), [new PdfRedaction(2, LineArea)]));
     }
+
+    private static readonly PdfRectangle SecretArea = new(0, 0, 100, 40);
+
+    [Theory]
+    [InlineData("BT /Missing 12 Tf 1 0 0 1 10 10 Tm (SECRET_AUDIT) Tj ET", "/Font << /F1 5 0 R >>")]
+    [InlineData("BT /Missing 12 Tf 1 0 0 1 10 10 Tm (SECRET_AUDIT) Tj ET", "")]
+    [InlineData("BT 1 0 0 1 10 10 Tm (SECRET_AUDIT) Tj ET", "/Font << /F1 5 0 R >>")]
+    [InlineData("BT /F1 12 Tf 1 0 0 1 10 10 Tm [(SECRET_AUDIT)] TJ ET", "/Font << /F9 5 0 R >>")]
+    public void Text_shown_with_an_unresolvable_font_is_refused_not_kept(string content, string fonts)
+    {
+        var source = RawPdf.Page(content, fonts, "", "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+
+        var exception = Assert.Throws<PdfRedactionException>(() => PdfRedactor.Redact(PdfDocument.Open(source), [new PdfRedaction(1, SecretArea)]));
+
+        Assert.DoesNotContain("SECRET_AUDIT", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Text_in_a_form_whose_font_is_missing_is_refused_not_kept()
+    {
+        var source = RawPdf.Page(
+            "/Fm1 Do",
+            "/XObject << /Fm1 5 0 R >>",
+            "",
+            RawPdf.Stream("/Type /XObject /Subtype /Form /BBox [0 0 200 200] /Resources << >>", RawPdf.Ascii("BT /Missing 12 Tf 1 0 0 1 10 10 Tm (SECRET_AUDIT) Tj ET")));
+
+        Assert.Throws<PdfRedactionException>(() => PdfRedactor.Redact(PdfDocument.Open(source), [new PdfRedaction(1, SecretArea)]));
+    }
+
+    [Fact]
+    public void Text_with_a_resolvable_font_is_still_redacted()
+    {
+        var source = RawPdf.Page(
+            "BT /F1 12 Tf 1 0 0 1 10 10 Tm (SECRET_AUDIT) Tj ET",
+            "/Font << /F1 5 0 R >>",
+            "",
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
+
+        var result = PdfRedactor.Redact(PdfDocument.Open(source), [new PdfRedaction(1, SecretArea)]);
+
+        Assert.Equal("SECRET_AUDIT", result.RemovedText);
+        Assert.DoesNotContain("SECRET_AUDIT", Everything(result.Pdf), StringComparison.Ordinal);
+    }
 }

@@ -233,8 +233,15 @@ internal sealed class RedactionRewriter
     {
         if (_state.Font is not { } font)
         {
-            kept.Add(text);
-            return false;
+            // Without the font the glyph boxes cannot be computed, so what lies under an area cannot be told from
+            // what does not: keeping the text would give a document that looks redacted and is not.
+            if (text.Bytes.Length == 0)
+            {
+                kept.Add(text);
+                return false;
+            }
+
+            throw new PdfRedactionException("Text is shown with a font that cannot be resolved (no Tf before it, or a Tf naming a font missing from the resources), so it cannot be checked against the redaction areas; the redaction is refused.");
         }
 
         var removed = false;
