@@ -55,6 +55,9 @@ internal sealed class PdfFontDecoder
                 _scale = a.Value;
             }
 
+            IsType3 = subtype == "Type3";
+            GlyphBounds = Type3Bounds(store, font, IsType3);
+
             if (store.Get(font, "Widths") is null)
             {
                 _standardMetrics = StandardFace(BaseFont);
@@ -66,6 +69,27 @@ internal sealed class PdfFontDecoder
     }
 
     public string BaseFont { get; }
+
+    /// <summary>True for a Type 3 font, whose glyphs are drawings of any size.</summary>
+    public bool IsType3 { get; }
+
+    /// <summary>For a Type 3 font, the bounds of its glyphs in text space per unit of font size (FontBBox through
+    /// FontMatrix); null when FontBBox is absent, malformed or empty (all zeros is legal and means unknown).</summary>
+    public (double X0, double Y0, double X1, double Y1)? GlyphBounds { get; }
+
+    private static (double X0, double Y0, double X1, double Y1)? Type3Bounds(PdfObjectStore store, PdfDictionary font, bool isType3)
+    {
+        if (!isType3 || store.Get<PdfArray>(font, "FontBBox") is not { Count: 4 } box)
+        {
+            return null;
+        }
+
+        var v = box.Items.Select(i => store.Resolve(i) is PdfNumber n ? n.Value : 0).ToArray();
+        var matrix = store.Get<PdfArray>(font, "FontMatrix") is { Count: 6 } array ? Matrix.FromArray(array) : new Matrix(0.001, 0, 0, 0.001, 0, 0);
+        var corners = new[] { matrix.Transform(v[0], v[1]), matrix.Transform(v[2], v[1]), matrix.Transform(v[0], v[3]), matrix.Transform(v[2], v[3]) };
+        var bounds = (X0: corners.Min(c => c.X), Y0: corners.Min(c => c.Y), X1: corners.Max(c => c.X), Y1: corners.Max(c => c.Y));
+        return bounds.X1 > bounds.X0 && bounds.Y1 > bounds.Y0 ? bounds : null;
+    }
 
     public bool IsComposite { get; }
 

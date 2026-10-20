@@ -287,7 +287,7 @@ internal sealed class RedactionRewriter
         {
             var trm = new Matrix(_state.FontSize * _state.HorizontalScale, 0, 0, _state.FontSize, 0, _state.Rise).Multiply(_state.Tm).Multiply(_state.Ctm);
             var advance = ((glyph.Advance * _state.FontSize) + _state.CharSpacing + (glyph.IsWordSpace ? _state.WordSpacing : 0)) * _state.HorizontalScale;
-            var box = RedactionContext.Bounds(trm, Math.Max(glyph.Advance, 0), font.Ascent - font.Descent, 0, font.Descent);
+            var box = GlyphBox(font, glyph, trm);
             if (_context.Touches(box))
             {
                 removed = true;
@@ -309,6 +309,21 @@ internal sealed class RedactionRewriter
 
         Flush(kept, segment, ref skipped);
         return removed;
+    }
+
+    // Where a glyph can draw. A Type 3 glyph is a drawing of any size: its box is the font's FontBBox through its
+    // FontMatrix, and when that is unknown (absent, malformed or all zeros) the glyph is taken to reach a font size
+    // away from its origin in every direction, so that an area near it removes it rather than leaving ink behind.
+    private static PdfRectangle GlyphBox(PdfFontDecoder font, DecodedGlyph glyph, Matrix trm)
+    {
+        if (!font.IsType3)
+        {
+            return RedactionContext.Bounds(trm, Math.Max(glyph.Advance, 0), font.Ascent - font.Descent, 0, font.Descent);
+        }
+
+        return font.GlyphBounds is { } b
+            ? RedactionContext.Bounds(trm, b.X1 - b.X0, b.Y1 - b.Y0, b.X0, b.Y0)
+            : RedactionContext.Bounds(trm, Math.Max(glyph.Advance, 0) + 2, 2, -1, -1);
     }
 
     // The kept codes so far, then the room the removed glyphs took, as a TJ adjustment in thousandths of the font size.

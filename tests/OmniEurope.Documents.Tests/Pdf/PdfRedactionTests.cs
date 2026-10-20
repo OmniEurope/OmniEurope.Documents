@@ -410,6 +410,44 @@ public sealed class PdfRedactionTests
         Assert.Equal("a", PdfDocument.Open(result.Pdf).GetPage(1).Text.Trim());
     }
 
+    private static byte[] Type3Page(string fontBox) => RawPdf.Page(
+        "BT /T3 10 Tf 10 10 Td (a) Tj ET",
+        "/Font << /T3 5 0 R >>",
+        "",
+        "<< /Type /Font /Subtype /Type3 /FontBBox " + fontBox + " /FontMatrix [0.001 0 0 0.001 0 0] /CharProcs << /a 6 0 R >> "
+        + "/Encoding << /Type /Encoding /Differences [97 /a] >> /FirstChar 97 /LastChar 97 /Widths [1000] /Resources << >> >>",
+        RawPdf.Stream(string.Empty, RawPdf.Ascii("1000 0 0 0 800 5000 d1 0 0 800 5000 re f")));
+
+    // The ink of this glyph reaches 5 em above the baseline (FontBBox through FontMatrix), far above the default box.
+    [Fact]
+    public void A_type_3_glyph_is_boxed_by_the_font_bbox_not_the_default_ascent()
+    {
+        var result = PdfRedactor.Redact(PdfDocument.Open(Type3Page("[0 0 1000 5000]")), [new PdfRedaction(1, new PdfRectangle(0, 30, 100, 40))]);
+
+        Assert.Equal(1, result.RemovedGlyphs);
+    }
+
+    [Fact]
+    public void A_type_3_glyph_outside_its_font_bbox_is_kept()
+    {
+        var result = PdfRedactor.Redact(PdfDocument.Open(Type3Page("[0 0 1000 5000]")), [new PdfRedaction(1, new PdfRectangle(0, 90, 100, 99))]);
+
+        Assert.Equal(0, result.RemovedGlyphs);
+    }
+
+    // A FontBBox of zeros means unknown: the glyph counts as under any area within a font size of its origin.
+    [Theory]
+    [InlineData("[0 0 0 0]")]
+    [InlineData("[0 0 0]")]
+    public void A_type_3_font_with_an_unknown_bbox_is_removed_when_an_area_is_within_a_font_size_of_the_glyph(string fontBox)
+    {
+        var near = PdfRedactor.Redact(PdfDocument.Open(Type3Page(fontBox)), [new PdfRedaction(1, new PdfRectangle(0, 18, 100, 25))]);
+        var far = PdfRedactor.Redact(PdfDocument.Open(Type3Page(fontBox)), [new PdfRedaction(1, new PdfRectangle(0, 60, 100, 70))]);
+
+        Assert.Equal(1, near.RemovedGlyphs);
+        Assert.Equal(0, far.RemovedGlyphs);
+    }
+
     [Fact]
     public void A_tiling_pattern_inherited_by_a_form_drawn_under_an_area_is_removed_whole()
     {
