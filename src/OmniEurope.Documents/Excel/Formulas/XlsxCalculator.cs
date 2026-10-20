@@ -8,7 +8,7 @@ namespace OmniEurope.Documents.Excel.Formulas;
 /// reference, syntax it does not read) or that goes past a limit of <see cref="FormulaLimits"/> (nesting, cells held
 /// in memory) keeps its stored result, and is reported.
 /// </summary>
-internal sealed class XlsxCalculator(XlsxWorkbook workbook, DateTime now)
+internal sealed class XlsxCalculator(XlsxWorkbook workbook, DateTime now, long maxMatrixCells, long maxFormulaCells)
 {
     // Functions whose references are built at run time: their dependencies cannot be known in advance.
     private static readonly HashSet<string> Dynamic = new(StringComparer.Ordinal) { "INDIRECT", "OFFSET" };
@@ -38,7 +38,7 @@ internal sealed class XlsxCalculator(XlsxWorkbook workbook, DateTime now)
     private int Compute(List<(XlsxCell Cell, FormulaNode Node)> formulas, List<string> unsupported)
     {
         var computed = 0;
-        var evaluator = new FormulaEvaluator(workbook, now);
+        var evaluator = new FormulaEvaluator(workbook, now, maxMatrixCells, maxFormulaCells);
         foreach (var index in Order(formulas))
         {
             var (cell, node) = formulas[index];

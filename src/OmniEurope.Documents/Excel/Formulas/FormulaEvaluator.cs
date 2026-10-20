@@ -6,7 +6,11 @@ namespace OmniEurope.Documents.Excel.Formulas;
 /// evaluated in dependency order by <see cref="XlsxCalculator"/>. Operations on ranges or arrays apply element by
 /// element (a single row or column is spread over the other operand); a cell keeps the top-left element.
 /// </summary>
-internal sealed class FormulaEvaluator(XlsxWorkbook workbook, DateTime now)
+internal sealed class FormulaEvaluator(
+    XlsxWorkbook workbook,
+    DateTime now,
+    long maxMatrixCells = FormulaLimits.MaxMatrixCells,
+    long maxFormulaCells = FormulaLimits.MaxFormulaCells)
 {
     private readonly Dictionary<XlsxWorksheet, (int Cells, XlsxRange? Used)> _extents = [];
     private long _allocated;
@@ -70,14 +74,14 @@ internal sealed class FormulaEvaluator(XlsxWorkbook workbook, DateTime now)
     private FormulaValue[,] Allocate(long rows, long columns)
     {
         var cells = rows * columns;
-        if (cells > FormulaLimits.MaxMatrixCells)
+        if (cells > maxMatrixCells)
         {
-            throw FormulaLimitException.Cells(cells, FormulaLimits.MaxMatrixCells);
+            throw FormulaLimitException.Cells(cells, maxMatrixCells);
         }
 
-        if (_allocated + cells > FormulaLimits.MaxFormulaCells)
+        if (_allocated + cells > maxFormulaCells)
         {
-            throw FormulaLimitException.Cells(_allocated + cells, FormulaLimits.MaxFormulaCells);
+            throw FormulaLimitException.Cells(_allocated + cells, maxFormulaCells);
         }
 
         _allocated += cells;

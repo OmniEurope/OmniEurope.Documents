@@ -60,8 +60,13 @@ public sealed class XlsxWorkbook
     /// its own cell only. Call it before exporting to PDF or CSV after changing values.
     /// </summary>
     /// <exception cref="XlsxCircularReferenceException">Formulas depend on their own result.</exception>
-    public XlsxRecalculation Recalculate(XlsxRecalculationOptions? options = null) =>
-        new Formulas.XlsxCalculator(this, options?.Now ?? DateTime.Now).Run();
+    /// <exception cref="ArgumentOutOfRangeException">The formula budget of the options is below the matrix budget.</exception>
+    public XlsxRecalculation Recalculate(XlsxRecalculationOptions? options = null)
+    {
+        options ??= new XlsxRecalculationOptions();
+        options.Validate();
+        return new Formulas.XlsxCalculator(this, options.Now ?? DateTime.Now, options.MaxMatrixCells, options.MaxFormulaCells).Run();
+    }
 
     /// <summary>Removes a worksheet.</summary>
     public void RemoveWorksheet(XlsxWorksheet worksheet) => _worksheets.Remove(worksheet);
