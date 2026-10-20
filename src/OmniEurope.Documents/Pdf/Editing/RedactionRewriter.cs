@@ -71,18 +71,20 @@ internal sealed class RedactionRewriter
     private readonly Stack<RedactionState> _saved = new();
     private bool _changed;
 
-    private RedactionRewriter(RedactionContext context, PdfDictionary? resources, Matrix ctm, int depth)
+    private RedactionRewriter(RedactionContext context, PdfDictionary? resources, Matrix ctm, int depth, RedactionState? inherited)
     {
         _context = context;
         _resources = resources;
         _depth = depth;
-        _state = new RedactionState { Ctm = ctm };
+        _state = inherited is null ? new RedactionState { Ctm = ctm } : inherited with { Ctm = ctm, Tm = Matrix.Identity, Tlm = Matrix.Identity };
     }
 
-    /// <summary>The rewritten content and resources; null when nothing under the areas was found.</summary>
-    public static (byte[] Content, PdfDictionary? Resources)? Rewrite(RedactionContext context, byte[] content, PdfDictionary? resources, Matrix ctm, int depth)
+    // The rewritten content and resources; null when nothing under the areas was found. For a form, "inherited" is the
+    // graphics state in force at its Do, whose text state (font, size, spacing, scale, leading, rise) the form's
+    // content starts with (ISO 32000-1 8.10.1).
+    public static (byte[] Content, PdfDictionary? Resources)? Rewrite(RedactionContext context, byte[] content, PdfDictionary? resources, Matrix ctm, int depth, RedactionState? inherited = null)
     {
-        var rewriter = new RedactionRewriter(context, resources, ctm, depth);
+        var rewriter = new RedactionRewriter(context, resources, ctm, depth, inherited);
         foreach (var operation in ContentStreamReader.Read(content))
         {
             rewriter.Step(operation);
@@ -365,8 +367,12 @@ internal sealed class RedactionRewriter
 
         try
         {
-            var resources = store.Get<PdfDictionary>(form, "Resources") ?? _resources;
-            if (Rewrite(_context, store.DecodeBytes(form), resources, matrix, _depth + 1) is not { } rewritten)
+            // Resources (ISO 32000-1 8.10.1, ISO 32000-2 8.10.2): a form with its own /Resources is self-contained, so
+            // a name its dictionaries lack is not looked up in the page's (the text is then refused, never guessed at);
+            // only a form without /Resources (PDF 1.1 and earlier) takes those of the page that draws it. The text
+            // state, font included, is part of the graphics state the form inherits at the Do.
+            var own = store.Get<PdfDictionary>(form, "Resources");
+            if (Rewrite(_context, store.DecodeBytes(form), own ?? _resources, matrix, _depth + 1, _state) is not { } rewritten)
             {
                 return false;
             }
@@ -377,7 +383,7 @@ internal sealed class RedactionRewriter
                 copy.Set(key, value);
             }
 
-            copy.Set("Resources", rewritten.Resources);
+            copy.Set("Resources", own is null ? DrawnOnly(rewritten.Resources, rewritten.Content) : rewritten.Resources);
             _changed = true;
             Replace(name, _context.Register(copy));
             return true;
@@ -392,6 +398,32 @@ internal sealed class RedactionRewriter
         {
             _context.ActiveForms.Remove(form);
         }
+    }
+
+    // The page resources a form without its own inherited, keeping only the XObjects the rewritten form draws: the
+    // page's entries for the form itself and for drawings the page replaced would otherwise carry the originals,
+    // with the text and pixels that were removed, into the output.
+    private PdfDictionary? DrawnOnly(PdfDictionary? resources, byte[] content)
+    {
+        if (_context.Store.Get<PdfDictionary>(resources, "XObject") is not { } xobjects)
+        {
+            return resources;
+        }
+
+        var drawn = ContentStreamReader.Read(content).Where(o => o.Operator == "Do" && o.Operands.Count > 0 && o.Operands[0] is PdfName).Select(o => ((PdfName)o.Operands[0]).Value).ToHashSet(StringComparer.Ordinal);
+        var kept = new PdfDictionary();
+        foreach (var (key, value) in xobjects.Entries.Where(e => drawn.Contains(e.Key)))
+        {
+            kept.Set(key, value);
+        }
+
+        var copy = new PdfDictionary();
+        foreach (var (key, value) in resources!.Entries)
+        {
+            copy.Set(key, value);
+        }
+
+        return copy.Set("XObject", kept);
     }
 
     private void Replace(PdfName name, PdfObject placeholder)

@@ -246,6 +246,8 @@ public sealed class PdfRedactionTests
     [InlineData("BT /Missing 12 Tf 1 0 0 1 10 10 Tm (SECRET_AUDIT) Tj ET", "")]
     [InlineData("BT 1 0 0 1 10 10 Tm (SECRET_AUDIT) Tj ET", "/Font << /F1 5 0 R >>")]
     [InlineData("BT /F1 12 Tf 1 0 0 1 10 10 Tm [(SECRET_AUDIT)] TJ ET", "/Font << /F9 5 0 R >>")]
+    [InlineData("BT /Missing 12 Tf 14 TL 1 0 0 1 10 30 Tm (SECRET_AUDIT) ' ET", "/Font << /F1 5 0 R >>")]
+    [InlineData("BT /Missing 12 Tf 14 TL 1 0 0 1 10 30 Tm 2 1 (SECRET_AUDIT) \" ET", "/Font << /F1 5 0 R >>")]
     public void Text_shown_with_an_unresolvable_font_is_refused_not_kept(string content, string fonts)
     {
         var source = RawPdf.Page(content, fonts, "", "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
@@ -265,6 +267,82 @@ public sealed class PdfRedactionTests
             RawPdf.Stream("/Type /XObject /Subtype /Form /BBox [0 0 200 200] /Resources << >>", RawPdf.Ascii("BT /Missing 12 Tf 1 0 0 1 10 10 Tm (SECRET_AUDIT) Tj ET")));
 
         Assert.Throws<PdfRedactionException>(() => PdfRedactor.Redact(PdfDocument.Open(source), [new PdfRedaction(1, SecretArea)]));
+    }
+
+    private const string HelveticaFont = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
+
+    // ISO 32000-1 8.10.1: a form XObject runs in the graphics state in force at its Do, which includes the text font.
+    [Fact]
+    public void A_form_showing_text_without_its_own_tf_uses_the_font_set_before_its_do()
+    {
+        var source = RawPdf.Page(
+            "/F1 12 Tf /Fm1 Do",
+            "/Font << /F1 5 0 R >> /XObject << /Fm1 6 0 R >>",
+            "",
+            HelveticaFont,
+            RawPdf.Stream("/Type /XObject /Subtype /Form /BBox [0 0 200 200] /Resources << >>", RawPdf.Ascii("BT 1 0 0 1 10 10 Tm (SECRET_AUDIT) Tj ET")));
+
+        var result = PdfRedactor.Redact(PdfDocument.Open(source), [new PdfRedaction(1, SecretArea)]);
+
+        Assert.Equal("SECRET_AUDIT", result.RemovedText);
+        Assert.DoesNotContain("SECRET_AUDIT", Everything(result.Pdf), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_form_showing_text_with_no_font_in_force_at_its_do_is_refused()
+    {
+        var source = RawPdf.Page(
+            "/Fm1 Do",
+            "/Font << /F1 5 0 R >> /XObject << /Fm1 6 0 R >>",
+            "",
+            HelveticaFont,
+            RawPdf.Stream("/Type /XObject /Subtype /Form /BBox [0 0 200 200] /Resources << >>", RawPdf.Ascii("BT 1 0 0 1 10 10 Tm (SECRET_AUDIT) Tj ET")));
+
+        Assert.Throws<PdfRedactionException>(() => PdfRedactor.Redact(PdfDocument.Open(source), [new PdfRedaction(1, SecretArea)]));
+    }
+
+    // A form without /Resources (PDF 1.1 and earlier) takes the resources of the page that draws it.
+    [Fact]
+    public void A_form_without_resources_takes_the_fonts_of_the_page()
+    {
+        var source = RawPdf.Page(
+            "/Fm1 Do",
+            "/Font << /F1 5 0 R >> /XObject << /Fm1 6 0 R >>",
+            "",
+            HelveticaFont,
+            RawPdf.Stream("/Type /XObject /Subtype /Form /BBox [0 0 200 200]", RawPdf.Ascii("BT /F1 12 Tf 1 0 0 1 10 10 Tm (SECRET_AUDIT) Tj ET")));
+
+        var result = PdfRedactor.Redact(PdfDocument.Open(source), [new PdfRedaction(1, SecretArea)]);
+
+        Assert.Equal("SECRET_AUDIT", result.RemovedText);
+        Assert.DoesNotContain("SECRET_AUDIT", Everything(result.Pdf), StringComparison.Ordinal);
+    }
+
+    // A form with its own /Resources must be self-contained (ISO 32000-1 8.10.1, ISO 32000-2 8.10.2): the page's
+    // fonts are not looked up for a name its own resources lack, so that text is refused rather than guessed at.
+    [Fact]
+    public void A_form_with_resources_but_no_font_entry_does_not_borrow_the_fonts_of_the_page()
+    {
+        var source = RawPdf.Page(
+            "/Fm1 Do",
+            "/Font << /F1 5 0 R >> /XObject << /Fm1 6 0 R >>",
+            "",
+            HelveticaFont,
+            RawPdf.Stream("/Type /XObject /Subtype /Form /BBox [0 0 200 200] /Resources << >>", RawPdf.Ascii("BT /F1 12 Tf 1 0 0 1 10 10 Tm (SECRET_AUDIT) Tj ET")));
+
+        Assert.Throws<PdfRedactionException>(() => PdfRedactor.Redact(PdfDocument.Open(source), [new PdfRedaction(1, SecretArea)]));
+    }
+
+    [Fact]
+    public void A_page_without_areas_never_raises_for_an_unresolvable_font()
+    {
+        var source = RawPdf.Page("BT /Missing 12 Tf 1 0 0 1 10 10 Tm (SECRET_AUDIT) Tj ET", "", "");
+
+        var untouched = PdfRedactor.Redact(PdfDocument.Open(source), []);
+        var metadataOnly = PdfRedactor.Redact(PdfDocument.Open(source), [], new PdfRedactionOptions { RemoveMetadata = true });
+
+        Assert.Equal(0, untouched.RemovedGlyphs);
+        Assert.Equal(0, metadataOnly.RemovedGlyphs);
     }
 
     [Fact]
