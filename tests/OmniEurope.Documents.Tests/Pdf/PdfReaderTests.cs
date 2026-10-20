@@ -86,6 +86,21 @@ public sealed class PdfReaderTests
     }
 
     [Fact]
+    public void A_fax_image_declaring_a_huge_row_count_gives_no_pixels_instead_of_exhausting_memory()
+    {
+        var pdf = RawPdf.Page(
+            "q 8 0 0 2 0 0 cm /Im1 Do Q",
+            "/XObject << /Im1 5 0 R >>",
+            string.Empty,
+            RawPdf.Stream("/Type /XObject /Subtype /Image /Width 8 /Height 2 /ColorSpace /DeviceGray /BitsPerComponent 1 /Filter /CCITTFaxDecode /DecodeParms << /K -1 /Columns 65536 /Rows 2000000000 >>", [0x93, 0x5E]));
+
+        var images = PdfDocument.Open(pdf).GetPage(1).Images;
+
+        Assert.Single(images);
+        Assert.Null(images[0].Decode());
+    }
+
+    [Fact]
     public void Reads_a_pdf_printed_by_a_browser()
     {
         var document = PdfDocument.Open(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Pdf", "browser.pdf")));

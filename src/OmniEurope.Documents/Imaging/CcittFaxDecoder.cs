@@ -38,6 +38,14 @@ public static class CcittFaxDecoder
             throw new ArgumentOutOfRangeException(nameof(options), "Columns must be between 1 and 65536.");
         }
 
+        // The declared size is bounded like every other decoder's, before the output is allocated; rows read from
+        // the data (Rows = 0) stop at the same limit.
+        var maxRows = RasterImage.MaxPixels / options.Columns;
+        if (options.Rows > maxRows)
+        {
+            throw new InvalidDataException($"A fax image of {options.Columns} by {options.Rows} pixels is out of range.");
+        }
+
         var lines = new List<int[]>();
         var reader = new CcittBitReader(data.ToArray());
         var reference = new[] { options.Columns, options.Columns };
@@ -46,6 +54,11 @@ public static class CcittFaxDecoder
         {
             while (options.Rows == 0 || lines.Count < options.Rows)
             {
+                if (lines.Count >= maxRows)
+                {
+                    throw new InvalidDataException("The fax data holds more rows than the pixel limit allows.");
+                }
+
                 var changes = ReadRow(reader, options, reference, out var endOfData);
                 if (endOfData)
                 {

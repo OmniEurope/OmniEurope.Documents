@@ -113,6 +113,27 @@ public sealed class CcittFaxTests
     }
 
     [Fact]
+    public void A_declared_size_beyond_the_pixel_limit_is_refused_before_anything_is_allocated()
+    {
+        var options = new CcittOptions { K = -1, Columns = 65536, Rows = 2_000_000_000 };
+
+        Assert.Throws<InvalidDataException>(() => CcittFaxDecoder.Decode(Bits(White2D), options, out _, out _));
+    }
+
+    [Fact]
+    public void Rows_derived_from_the_data_stop_at_the_pixel_limit()
+    {
+        // 5000 white rows of 65536 pixels exceed the limit (4096 rows at that width): the decode ends there, incomplete.
+        var data = Enumerable.Repeat((byte)0xFF, 625).ToArray();
+
+        var output = CcittFaxDecoder.Decode(data, new CcittOptions { K = -1, Columns = 65536 }, out var count, out var complete);
+
+        Assert.False(complete);
+        Assert.Equal((int)(RasterImage.MaxPixels / 65536), count);
+        Assert.Equal(count * 8192, output.Length);
+    }
+
+    [Fact]
     public void Row_width_must_be_positive()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => CcittFaxDecoder.Decode([0], new CcittOptions { Columns = 0 }, out _, out _));
