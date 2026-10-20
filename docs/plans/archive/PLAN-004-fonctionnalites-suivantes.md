@@ -2,7 +2,7 @@
 # PLAN-004 : Fonctionnalités suivantes
 
 > Statut : **terminé** (2026-10-20). Lots 1 à 14 faits ; le lot 15 (OCR) est transféré dans
-> [PLAN-006](../PLAN-006-ocr.md). Feuille de route proposée au propriétaire ; l'ordre des lots est celui de
+> [PLAN-006](PLAN-006-ocr.md). Feuille de route proposée au propriétaire ; l'ordre des lots est celui de
 > la valeur attendue. Un lot ne commence qu'après accord du propriétaire.
 
 ## Objectif
@@ -433,4 +433,4 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
 
 ## Lot 15 : OCR
 
-Transféré dans [PLAN-006](../PLAN-006-ocr.md) (2026-10-20).
+Transféré dans [PLAN-006](PLAN-006-ocr.md) (2026-10-20).

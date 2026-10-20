@@ -14,12 +14,13 @@ un plan décrit un travail, pas l'état du produit.
 
 | Plan | Travail | ADR |
 |---|---|---|
-| [PLAN-006](PLAN-006-ocr.md) | OCR : reconnaissance de texte des PDF scannés, forme (paquet séparé ou non) à décider par le propriétaire | Aucun |
+| Aucun | | |
 
 ## Plans archivés
 
 | Plan | Travail | ADR |
 |---|---|---|
+| [PLAN-006](archive/PLAN-006-ocr.md) | OCR : abandonné par décision du propriétaire (2026-10-20), aucun code ; le paquet reste sans OCR | Aucun |
 | [PLAN-005](archive/PLAN-005-robustesse-et-fidelite.md) | Robustesse et fidélité : fichiers forgés refusés (16 tests), rendus et écritures conformes (9), contrats tenus (6) | Aucun |
 | [PLAN-004](archive/PLAN-004-fonctionnalites-suivantes.md) | Fonctionnalités suivantes : édition Excel sans perte, formules, formulaires PDF, PDF/A-2, signature PAdES B-B, conversions, fidélité du rendu, graphiques ; le lot OCR est devenu PLAN-006 | Aucun |
 | [PLAN-003](archive/PLAN-003-tests-integration.md) | Tests d'intégration : parcours complets, robustesse, volume, parallélisme ; suite rapide à 96,95 % des lignes et 87,71 % des branches | Aucun |
