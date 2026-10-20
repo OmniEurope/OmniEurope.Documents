@@ -158,6 +158,10 @@ internal sealed class ShapeFactory(LayoutContext context, BlockLayout blocks)
             var canvas = paint.Canvas;
             canvas.SaveState();
             canvas.ClipRectangle(x, y, box.Width, height);
+            // The shapes in front of the text are deferred to the end of the page body; those anchored in the box are
+            // drawn in place instead, or they would come out of its clip.
+            var deferred = paint.Front;
+            paint.Front = null;
             var top = y + BoxInsetY;
             foreach (var item in items)
             {
@@ -166,6 +170,7 @@ internal sealed class ShapeFactory(LayoutContext context, BlockLayout blocks)
                 top += item.Height + item.SpaceAfter;
             }
 
+            paint.Front = deferred;
             canvas.RestoreState();
         }, height);
     }
