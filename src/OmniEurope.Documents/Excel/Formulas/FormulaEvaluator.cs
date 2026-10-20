@@ -9,6 +9,7 @@ namespace OmniEurope.Documents.Excel.Formulas;
 internal sealed class FormulaEvaluator(XlsxWorkbook workbook, DateTime now)
 {
     private readonly Dictionary<XlsxWorksheet, (int Cells, XlsxRange? Used)> _extents = [];
+    private long _allocated;
 
     /// <summary>The sheet of the formula being evaluated.</summary>
     public XlsxWorksheet Sheet { get; set; } = null!;
@@ -22,16 +23,66 @@ internal sealed class FormulaEvaluator(XlsxWorkbook workbook, DateTime now)
 
     public bool Date1904 => workbook.Date1904;
 
+    /// <summary>
+    /// Evaluates a whole formula: the cells of the matrices it allocates are counted from zero.
+    /// </summary>
+    /// <exception cref="FormulaLimitException">The formula needs more cells than <see cref="FormulaLimits"/> allow.</exception>
+    public FormulaValue Calculate(FormulaNode formula)
+    {
+        _allocated = 0;
+        return Evaluate(formula);
+    }
+
     public FormulaValue Evaluate(FormulaNode node) => node switch
     {
         ConstantNode constant => constant.Value,
         ReferenceNode reference => Read(reference.Area),
         UnaryNode unary => Map(Evaluate(unary.Operand), v => Arithmetic(v, FormulaValue.Of(-1), (a, b) => a * b)),
         PercentNode percent => Map(Evaluate(percent.Operand), v => Arithmetic(v, FormulaValue.Of(100), (a, b) => a / b)),
-        BinaryNode binary => Binary(binary.Operator, Evaluate(binary.Left), Evaluate(binary.Right)),
+        BinaryNode binary => EvaluateChain(binary),
         CallNode call => FormulaFunctions.Call(this, call),
         _ => FormulaValue.Name,
     };
+
+    // 1+2+3+... is a tree leaning to the left, as long as the formula: its left operands are evaluated in a loop,
+    // so that its length does not use the stack.
+    private FormulaValue EvaluateChain(BinaryNode last)
+    {
+        var chain = new Stack<BinaryNode>();
+        FormulaNode first = last;
+        while (first is BinaryNode binary)
+        {
+            chain.Push(binary);
+            first = binary.Left;
+        }
+
+        var value = Evaluate(first);
+        while (chain.Count > 0)
+        {
+            var binary = chain.Pop();
+            value = Binary(binary.Operator, value, Evaluate(binary.Right));
+        }
+
+        return value;
+    }
+
+    // A matrix of rows x columns: counted in long (two sizes of int multiply past int) before it is allocated.
+    private FormulaValue[,] Allocate(long rows, long columns)
+    {
+        var cells = rows * columns;
+        if (cells > FormulaLimits.MaxMatrixCells)
+        {
+            throw FormulaLimitException.Cells(cells, FormulaLimits.MaxMatrixCells);
+        }
+
+        if (_allocated + cells > FormulaLimits.MaxFormulaCells)
+        {
+            throw FormulaLimitException.Cells(_allocated + cells, FormulaLimits.MaxFormulaCells);
+        }
+
+        _allocated += cells;
+        return new FormulaValue[rows, columns];
+    }
 
     /// <summary>The worksheet an area belongs to, or null when the workbook has no sheet of that name.</summary>
     public XlsxWorksheet? SheetOf(FormulaArea area) =>
@@ -56,8 +107,8 @@ internal sealed class FormulaEvaluator(XlsxWorkbook workbook, DateTime now)
         var (cells, used) = Extent(sheet);
         var bottom = Math.Min(area.Bottom, Math.Max(area.Top, used?.LastRow ?? area.Top));
         var right = Math.Min(area.Right, Math.Max(area.Left, used?.LastColumn ?? area.Left));
-        var values = new FormulaValue[bottom - area.Top + 1, right - area.Left + 1];
-        if ((long)values.Length <= cells)
+        var values = Allocate((long)bottom - area.Top + 1, (long)right - area.Left + 1);
+        if (values.LongLength <= cells)
         {
             for (var r = area.Top; r <= bottom; r++)
             {
@@ -91,7 +142,7 @@ internal sealed class FormulaEvaluator(XlsxWorkbook workbook, DateTime now)
     }
 
     /// <summary>Applies an operation to a value, or to each element of an array.</summary>
-    public static FormulaValue Map(FormulaValue value, Func<FormulaValue, FormulaValue> operation)
+    public FormulaValue Map(FormulaValue value, Func<FormulaValue, FormulaValue> operation)
     {
         if (value.Kind != ValueKind.Array)
         {
@@ -99,7 +150,7 @@ internal sealed class FormulaEvaluator(XlsxWorkbook workbook, DateTime now)
         }
 
         var source = value.Array;
-        var result = new FormulaValue[source.GetLength(0), source.GetLength(1)];
+        var result = Allocate(source.GetLength(0), source.GetLength(1));
         for (var r = 0; r < result.GetLength(0); r++)
         {
             for (var c = 0; c < result.GetLength(1); c++)
@@ -115,7 +166,7 @@ internal sealed class FormulaEvaluator(XlsxWorkbook workbook, DateTime now)
     /// Applies an operation element by element: the result has the larger size of the two; a single row or
     /// column (or a single value) is repeated, and elements that neither operand covers are #N/A.
     /// </summary>
-    public static FormulaValue Zip(FormulaValue left, FormulaValue right, Func<FormulaValue, FormulaValue, FormulaValue> operation)
+    public FormulaValue Zip(FormulaValue left, FormulaValue right, Func<FormulaValue, FormulaValue, FormulaValue> operation)
     {
         if (left.Kind != ValueKind.Array && right.Kind != ValueKind.Array)
         {
@@ -126,7 +177,7 @@ internal sealed class FormulaEvaluator(XlsxWorkbook workbook, DateTime now)
         var b = right.Kind == ValueKind.Array ? right.Array : new[,] { { right } };
         var rows = Math.Max(a.GetLength(0), b.GetLength(0));
         var columns = Math.Max(a.GetLength(1), b.GetLength(1));
-        var result = new FormulaValue[rows, columns];
+        var result = Allocate(rows, columns);
         for (var r = 0; r < rows; r++)
         {
             for (var c = 0; c < columns; c++)
@@ -145,7 +196,7 @@ internal sealed class FormulaEvaluator(XlsxWorkbook workbook, DateTime now)
         return r < array.GetLength(0) && c < array.GetLength(1) ? array[r, c] : null;
     }
 
-    private static FormulaValue Binary(string op, FormulaValue left, FormulaValue right) => op switch
+    private FormulaValue Binary(string op, FormulaValue left, FormulaValue right) => op switch
     {
         "+" => Zip(left, right, (a, b) => Arithmetic(a, b, (x, y) => x + y)),
         "-" => Zip(left, right, (a, b) => Arithmetic(a, b, (x, y) => x - y)),

@@ -150,7 +150,7 @@ internal static class MathFunctions
     }
 
     private static FormulaValue Unary(FormulaEvaluator evaluator, IReadOnlyList<FormulaNode> arguments, Func<double, double> compute) =>
-        FormulaEvaluator.Map(evaluator.Evaluate(arguments[0]), v => v.ToNumber() is { IsError: false } n ? FormulaValue.Of(compute(n.Number)) : v.ToNumber());
+        evaluator.Map(evaluator.Evaluate(arguments[0]), v => v.ToNumber() is { IsError: false } n ? FormulaValue.Of(compute(n.Number)) : v.ToNumber());
 
     private static FormulaValue Binary(FormulaEvaluator evaluator, FormulaNode first, FormulaNode? second, double fallback, Func<double, double, double> compute)
     {

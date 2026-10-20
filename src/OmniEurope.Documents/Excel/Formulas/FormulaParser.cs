@@ -18,9 +18,14 @@ internal sealed class FormulaParser
     private static readonly string[] Concatenations = ["&"];
     private static readonly string[] Powers = ["^"];
     private static readonly string[] Percents = ["%"];
+
+    // Binary operators from the loosest level to the tightest: comparison, concatenation, addition,
+    // multiplication, power.
+    private static readonly string[][] Levels = [Comparisons, Concatenations, Additions, Multiplications, Powers];
     private static readonly string[] FunctionPrefixes = ["_XLFN._XLWS.", "_XLFN.", "_XLWS."];
 
     private readonly FormulaCursor _cursor;
+    private int _nesting;
 
     private FormulaParser(string text)
     {
@@ -29,52 +34,76 @@ internal sealed class FormulaParser
 
     /// <summary>The tree of <paramref name="formula"/> (with or without its leading <c>=</c>).</summary>
     /// <exception cref="FormatException">The formula is not well formed.</exception>
+    /// <exception cref="FormulaLimitException">The formula nests more than <see cref="FormulaLimits.MaxNesting"/>
+    /// levels, or holds an array constant larger than <see cref="FormulaLimits.MaxMatrixCells"/>.</exception>
     public static FormulaNode Parse(string formula)
     {
         var parser = new FormulaParser(formula.StartsWith('=') ? formula[1..] : formula);
-        var node = parser.Comparison();
+        var node = parser.Expression(0);
         parser._cursor.SkipSpaces();
         return parser._cursor.AtEnd ? node : throw parser._cursor.Error("unexpected text");
     }
 
-    private FormulaNode Comparison() => LeftAssociative(Comparisons, Concatenation);
-
-    private FormulaNode Concatenation() => LeftAssociative(Concatenations, Additive);
-
-    private FormulaNode Additive() => LeftAssociative(Additions, Multiplicative);
-
-    private FormulaNode Multiplicative() => LeftAssociative(Multiplications, Power);
-
-    private FormulaNode Power() => LeftAssociative(Powers, Unary);
-
-    // operand (op operand)*, grouped from the left: 2^3^2 is (2^3)^2, as in Excel.
-    private FormulaNode LeftAssociative(string[] operators, Func<FormulaNode> operand)
+    // operand (op operand)*, grouped from the left (2^3^2 is (2^3)^2, as in Excel), taking the operators of the
+    // given level and the tighter ones. One recursive call per operator level would cost a dozen stack frames for
+    // each parenthesis: this recurses only for the right operand of an operator.
+    private FormulaNode Expression(int level)
     {
-        var left = operand();
-        while (_cursor.Match(operators) is { } op)
+        var left = Unary();
+        while (NextOperator(level) is var (op, found))
         {
-            left = new BinaryNode(op, left, operand());
+            left = Within(new BinaryNode(op, left, Expression(found + 1)));
         }
 
         return left;
+    }
+
+    // The operator after the cursor and its level, among the levels from `level` (the tighter ones included).
+    private (string Operator, int Level)? NextOperator(int level)
+    {
+        for (; level < Levels.Length; level++)
+        {
+            if (_cursor.Match(Levels[level]) is { } op)
+            {
+                return (op, level);
+            }
+        }
+
+        return null;
     }
 
     private FormulaNode Unary()
     {
         if (_cursor.Match(Additions) is { } op)
         {
+            Enter();
             var operand = Unary();
-            return op == "-" ? new UnaryNode('-', operand) : operand;
+            _nesting--;
+            return op == "-" ? Within(new UnaryNode('-', operand)) : operand;
         }
 
         var node = Primary();
         while (_cursor.Match(Percents) is not null)
         {
-            node = new PercentNode(node);
+            node = Within(new PercentNode(node));
         }
 
         return node;
     }
+
+    // The parser recurses for every parenthesis, function call and sign, and the evaluator for every level of the
+    // tree: both are bounded, a deeper formula is refused before the stack is.
+    private void Enter()
+    {
+        if (++_nesting > FormulaLimits.MaxNesting)
+        {
+            throw FormulaLimitException.Nesting();
+        }
+    }
+
+    private static T Within<T>(T node)
+        where T : FormulaNode =>
+        node.Depth > FormulaLimits.MaxNesting ? throw FormulaLimitException.Nesting() : node;
 
     private FormulaNode Primary()
     {
@@ -99,7 +128,9 @@ internal sealed class FormulaParser
     private FormulaNode Parenthesized()
     {
         _cursor.Position++;
-        var inner = Comparison();
+        Enter();
+        var inner = Expression(0);
+        _nesting--;
         _cursor.Expect(')');
         return inner;
     }
@@ -152,7 +183,10 @@ internal sealed class FormulaParser
         _cursor.SkipSpaces();
         if (_cursor.Skip('('))
         {
-            return new CallNode(FunctionName(name), Arguments());
+            Enter();
+            var call = Within(new CallNode(FunctionName(name), Arguments()));
+            _nesting--;
+            return call;
         }
 
         return _cursor.Is('[') ? StructuredReference(start) : NamedConstant(name);
@@ -227,7 +261,7 @@ internal sealed class FormulaParser
         {
             _cursor.SkipSpaces();
             // An omitted argument (IF(A1,,2)) is a blank.
-            arguments.Add(_cursor.Current is ',' or ')' ? new ConstantNode(FormulaValue.Blank) : Comparison());
+            arguments.Add(_cursor.Current is ',' or ')' ? new ConstantNode(FormulaValue.Blank) : Expression(0));
             _cursor.SkipSpaces();
         }
         while (_cursor.Skip(','));
@@ -311,6 +345,11 @@ internal sealed class FormulaParser
         if (rows.Any(r => r.Count != width))
         {
             throw _cursor.Error("array rows of different lengths");
+        }
+
+        if ((long)rows.Count * width > FormulaLimits.MaxMatrixCells)
+        {
+            throw FormulaLimitException.Cells((long)rows.Count * width, FormulaLimits.MaxMatrixCells);
         }
 
         var array = new FormulaValue[rows.Count, width];

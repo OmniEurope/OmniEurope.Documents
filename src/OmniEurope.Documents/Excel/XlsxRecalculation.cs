@@ -10,8 +10,9 @@ public sealed record XlsxRecalculationOptions
 
 /// <summary>What a recalculation did.</summary>
 /// <param name="Computed">Formulas computed and stored.</param>
-/// <param name="Unsupported">Formulas the engine does not compute, as <c>Sheet!A1: reason</c>; they keep the
-/// result the file held.</param>
+/// <param name="Unsupported">Formulas the engine does not compute, or that nest more than 256 levels or hold
+/// more cells in memory than it allows (a range or array over about a million cells), as <c>Sheet!A1: reason</c>;
+/// they keep the result the file held.</param>
 public sealed record XlsxRecalculation(int Computed, IReadOnlyList<string> Unsupported);
 
 /// <summary>Formulas that depend on their own result: recalculation refuses them.</summary>

@@ -5,7 +5,8 @@ namespace OmniEurope.Documents.Excel.Formulas;
 /// Recalculates every formula of a workbook: each formula is parsed, its references give the formula cells it
 /// depends on, and cells are computed in dependency order (no recursion, so chains of any length are safe). A
 /// cycle is refused. A formula the engine cannot compute (unknown function, defined name, structured or dynamic
-/// reference, syntax it does not read) keeps its stored result, and is reported.
+/// reference, syntax it does not read) or that goes past a limit of <see cref="FormulaLimits"/> (nesting, cells held
+/// in memory) keeps its stored result, and is reported.
 /// </summary>
 internal sealed class XlsxCalculator(XlsxWorkbook workbook, DateTime now)
 {
@@ -29,16 +30,32 @@ internal sealed class XlsxCalculator(XlsxWorkbook workbook, DateTime now)
             }
         }
 
+        return new XlsxRecalculation(Compute(formulas, unsupported), unsupported);
+    }
+
+    // Evaluates the formulas in dependency order; the count of those stored. A formula over a limit of
+    // FormulaLimits keeps its stored value and is reported, the others go on.
+    private int Compute(List<(XlsxCell Cell, FormulaNode Node)> formulas, List<string> unsupported)
+    {
+        var computed = 0;
         var evaluator = new FormulaEvaluator(workbook, now);
         foreach (var index in Order(formulas))
         {
             var (cell, node) = formulas[index];
             evaluator.Sheet = cell.Worksheet;
             evaluator.Current = (cell.Row, cell.Column);
-            Store(cell, evaluator.Evaluate(node));
+            try
+            {
+                Store(cell, evaluator.Calculate(node));
+                computed++;
+            }
+            catch (FormulaLimitException exception)
+            {
+                unsupported.Add($"{Name(cell)}: {exception.Message}");
+            }
         }
 
-        return new XlsxRecalculation(formulas.Count, unsupported);
+        return computed;
     }
 
     private static FormulaNode? Parse(string formula, out string? reason)
@@ -48,7 +65,7 @@ internal sealed class XlsxCalculator(XlsxWorkbook workbook, DateTime now)
             reason = null;
             return FormulaParser.Parse(formula);
         }
-        catch (FormatException exception)
+        catch (Exception exception) when (exception is FormatException or FormulaLimitException)
         {
             reason = exception.Message;
             return null;
@@ -56,14 +73,13 @@ internal sealed class XlsxCalculator(XlsxWorkbook workbook, DateTime now)
     }
 
     // The first thing of the tree the engine does not compute, or null.
-    private static string? Unsupported(FormulaNode node) => node switch
+    private static string? Unsupported(FormulaNode root) =>
+        FormulaTree.PreOrder(root).Select(Reason).FirstOrDefault(r => r is not null);
+
+    private static string? Reason(FormulaNode node) => node switch
     {
         UnsupportedNode unsupported => $"'{unsupported.Text}' is not computed",
         CallNode call when !FormulaFunctions.IsKnown(call.Name) || Dynamic.Contains(call.Name) => $"function {call.Name} is not computed",
-        CallNode call => call.Arguments.Select(Unsupported).FirstOrDefault(r => r is not null),
-        UnaryNode unary => Unsupported(unary.Operand),
-        PercentNode percent => Unsupported(percent.Operand),
-        BinaryNode binary => Unsupported(binary.Left) ?? Unsupported(binary.Right),
         _ => null,
     };
 
@@ -152,15 +168,8 @@ internal sealed class XlsxCalculator(XlsxWorkbook workbook, DateTime now)
         return low;
     }
 
-    private static IEnumerable<FormulaArea> Areas(FormulaNode node) => node switch
-    {
-        ReferenceNode reference => [reference.Area],
-        CallNode call => call.Arguments.SelectMany(Areas),
-        UnaryNode unary => Areas(unary.Operand),
-        PercentNode percent => Areas(percent.Operand),
-        BinaryNode binary => Areas(binary.Left).Concat(Areas(binary.Right)),
-        _ => [],
-    };
+    private static IEnumerable<FormulaArea> Areas(FormulaNode node) =>
+        FormulaTree.PreOrder(node).OfType<ReferenceNode>().Select(reference => reference.Area);
 
     // The result goes into the cell; a cell that showed a date keeps showing one.
     private void Store(XlsxCell cell, FormulaValue result)

@@ -139,7 +139,7 @@ internal static class LogicalFunctions
     }
 
     private static FormulaValue Is(FormulaEvaluator evaluator, IReadOnlyList<FormulaNode> arguments, Func<FormulaValue, bool> test) =>
-        FormulaEvaluator.Map(evaluator.Evaluate(arguments[0]), v => FormulaValue.Of(test(v)));
+        evaluator.Map(evaluator.Evaluate(arguments[0]), v => FormulaValue.Of(test(v)));
 
     private static FormulaValue Parity(FormulaEvaluator evaluator, IReadOnlyList<FormulaNode> arguments, bool even)
     {
