@@ -14,6 +14,8 @@ internal static class PdfFilters
 {
     public const long MaxDecodedSize = 512L << 20;
 
+    public const string TooLargeMessage = "A PDF stream decodes to more data than allowed.";
+
     public static readonly HashSet<string> ImageFilters = new(StringComparer.Ordinal)
     {
         "DCTDecode", "DCT", "CCITTFaxDecode", "CCF", "JBIG2Decode", "JPXDecode",
@@ -21,23 +23,23 @@ internal static class PdfFilters
 
     // The filters decoded here, by full and abbreviated (inline image) name. Crypt is applied when the object
     // is read, so it passes the data through.
-    private static readonly Dictionary<string, Func<byte[], PdfDictionary?, byte[]>> StreamFilters = new(StringComparer.Ordinal)
+    private static readonly Dictionary<string, Func<byte[], PdfDictionary?, long, byte[]>> StreamFilters = new(StringComparer.Ordinal)
     {
-        ["FlateDecode"] = (data, parms) => Predict(Inflate(data), parms),
-        ["Fl"] = (data, parms) => Predict(Inflate(data), parms),
-        ["LZWDecode"] = (data, parms) => Predict(Lzw(data, EarlyChange(parms)), parms),
-        ["LZW"] = (data, parms) => Predict(Lzw(data, EarlyChange(parms)), parms),
-        ["ASCIIHexDecode"] = (data, _) => AsciiHex(data),
-        ["AHx"] = (data, _) => AsciiHex(data),
-        ["ASCII85Decode"] = (data, _) => Ascii85(data),
-        ["A85"] = (data, _) => Ascii85(data),
-        ["RunLengthDecode"] = (data, _) => RunLength(data),
-        ["RL"] = (data, _) => RunLength(data),
-        ["Crypt"] = (data, _) => data,
+        ["FlateDecode"] = (data, parms, max) => Predict(Inflate(data, max), parms),
+        ["Fl"] = (data, parms, max) => Predict(Inflate(data, max), parms),
+        ["LZWDecode"] = (data, parms, max) => Predict(Lzw(data, EarlyChange(parms), max), parms),
+        ["LZW"] = (data, parms, max) => Predict(Lzw(data, EarlyChange(parms), max), parms),
+        ["ASCIIHexDecode"] = (data, _, max) => AsciiHex(data, max),
+        ["AHx"] = (data, _, max) => AsciiHex(data, max),
+        ["ASCII85Decode"] = (data, _, max) => Ascii85(data, max),
+        ["A85"] = (data, _, max) => Ascii85(data, max),
+        ["RunLengthDecode"] = (data, _, max) => RunLength(data, max),
+        ["RL"] = (data, _, max) => RunLength(data, max),
+        ["Crypt"] = (data, _, _) => data,
     };
 
     /// <summary>Applies the non-image filters in order; returns the bytes and the first image filter met (null when none).</summary>
-    public static (byte[] Data, string? ImageFilter, PdfDictionary? ImageParameters) Decode(byte[] data, IReadOnlyList<string> filters, IReadOnlyList<PdfDictionary?> parameters)
+    public static (byte[] Data, string? ImageFilter, PdfDictionary? ImageParameters) Decode(byte[] data, IReadOnlyList<string> filters, IReadOnlyList<PdfDictionary?> parameters, long maxDecodedSize = MaxDecodedSize)
     {
         for (var i = 0; i < filters.Count; i++)
         {
@@ -49,14 +51,30 @@ internal static class PdfFilters
             }
 
             data = StreamFilters.TryGetValue(name, out var filter)
-                ? filter(data, parms)
+                ? filter(data, parms, maxDecodedSize)
                 : throw new NotSupportedException($"PDF filter '{name}' is not supported.");
+            if (data.Length > maxDecodedSize)
+            {
+                throw TooLarge();
+            }
         }
 
         return (data, null, null);
     }
 
-    public static byte[] Inflate(byte[] data)
+    // Reported as InvalidDataException like every other unreadable stream, so callers that skip unreadable
+    // content keep working; the Flate recovery below never swallows it (it is thrown only past the ceiling).
+    private static InvalidDataException TooLarge() => new(TooLargeMessage);
+
+    private static void Guard(long length, long add, long max)
+    {
+        if (length + add > max)
+        {
+            throw TooLarge();
+        }
+    }
+
+    public static byte[] Inflate(byte[] data, long max = MaxDecodedSize)
     {
         var skip = 0;
         if (data.Length >= 2 && (data[0] & 0x0F) == 8 && ((data[0] << 8) | data[1]) % 31 == 0)
@@ -65,7 +83,7 @@ internal static class PdfFilters
         }
 
         // Raw deflate after the header: a bad or missing Adler-32 checksum does not lose the data.
-        var output = Inflate(data, skip, 65536, out var damaged);
+        var output = Inflate(data, skip, 65536, max, out var damaged);
         if (!damaged)
         {
             return output;
@@ -74,11 +92,11 @@ internal static class PdfFilters
         // Corrupt data: keep what was decoded, as viewers do. A failing read loses what it had decoded, so the
         // data is read again one byte at a time (only the byte decoded by the failing read is lost); nothing
         // decoded at all is an error.
-        var kept = Inflate(data, skip, 1, out _);
+        var kept = Inflate(data, skip, 1, max, out _);
         return kept.Length > 0 ? kept : throw new InvalidDataException("Damaged FlateDecode data.");
     }
 
-    private static byte[] Inflate(byte[] data, int skip, int chunk, out bool damaged)
+    private static byte[] Inflate(byte[] data, int skip, int chunk, long max, out bool damaged)
     {
         using var input = new DeflateStream(new MemoryStream(data, skip, data.Length - skip), CompressionMode.Decompress);
         using var output = new MemoryStream();
@@ -89,14 +107,11 @@ internal static class PdfFilters
             int n;
             while ((n = input.Read(buffer, 0, buffer.Length)) > 0)
             {
+                Guard(output.Length, n, max);
                 output.Write(buffer, 0, n);
-                if (output.Length > MaxDecodedSize)
-                {
-                    throw new InvalidDataException("A PDF stream decodes to more data than allowed.");
-                }
             }
         }
-        catch (InvalidDataException) when (output.Length <= MaxDecodedSize)
+        catch (InvalidDataException exception) when (exception.Message != TooLargeMessage)
         {
             damaged = true;
         }
@@ -194,7 +209,7 @@ internal static class PdfFilters
         return output;
     }
 
-    private static byte[] Lzw(byte[] data, int earlyChange)
+    private static byte[] Lzw(byte[] data, int earlyChange, long max)
     {
         using var output = new MemoryStream();
         var table = new List<byte[]>(4096);
@@ -250,11 +265,8 @@ internal static class PdfFilters
                 break;
             }
 
+            Guard(output.Length, entry.Length, max);
             output.Write(entry);
-            if (output.Length > MaxDecodedSize)
-            {
-                throw new InvalidDataException("A PDF stream decodes to more data than allowed.");
-            }
 
             if (previous is not null && table.Count < 4096)
             {
@@ -272,7 +284,7 @@ internal static class PdfFilters
         return output.ToArray();
     }
 
-    private static byte[] AsciiHex(byte[] data)
+    private static byte[] AsciiHex(byte[] data, long max)
     {
         var output = new List<byte>(data.Length / 2);
         var high = -1;
@@ -294,6 +306,7 @@ internal static class PdfFilters
             }
             else
             {
+                Guard(output.Count, 1, max);
                 output.Add((byte)((high << 4) | PdfLexer.HexValue(b)));
                 high = -1;
             }
@@ -301,13 +314,14 @@ internal static class PdfFilters
 
         if (high >= 0)
         {
+            Guard(output.Count, 1, max);
             output.Add((byte)(high << 4));
         }
 
         return [.. output];
     }
 
-    private static byte[] Ascii85(byte[] data)
+    private static byte[] Ascii85(byte[] data, long max)
     {
         var output = new List<byte>(data.Length);
         Span<int> group = stackalloc int[5];
@@ -322,6 +336,7 @@ internal static class PdfFilters
 
             if (b == 'z' && count == 0)
             {
+                Guard(output.Count, 4, max);
                 output.AddRange([0, 0, 0, 0]);
                 continue;
             }
@@ -334,7 +349,7 @@ internal static class PdfFilters
             group[count++] = b - '!';
             if (count == 5)
             {
-                Emit(group, 4, output);
+                Emit(group, 4, output, max);
                 count = 0;
             }
         }
@@ -346,14 +361,15 @@ internal static class PdfFilters
                 group[i] = 84;
             }
 
-            Emit(group, count - 1, output);
+            Emit(group, count - 1, output, max);
         }
 
         return [.. output];
     }
 
-    private static void Emit(Span<int> group, int bytes, List<byte> output)
+    private static void Emit(Span<int> group, int bytes, List<byte> output, long max)
     {
+        Guard(output.Count, bytes, max);
         long value = 0;
         foreach (var digit in group)
         {
@@ -366,7 +382,7 @@ internal static class PdfFilters
         }
     }
 
-    private static byte[] RunLength(byte[] data)
+    private static byte[] RunLength(byte[] data, long max)
     {
         var output = new List<byte>(data.Length * 2);
         var i = 0;
@@ -381,11 +397,13 @@ internal static class PdfFilters
             if (length < 128)
             {
                 var count = Math.Min(length + 1, data.Length - i);
+                Guard(output.Count, count, max);
                 output.AddRange(data.AsSpan(i, count));
                 i += count;
             }
             else if (i < data.Length)
             {
+                Guard(output.Count, 257 - length, max);
                 output.AddRange(Enumerable.Repeat(data[i++], 257 - length));
             }
         }

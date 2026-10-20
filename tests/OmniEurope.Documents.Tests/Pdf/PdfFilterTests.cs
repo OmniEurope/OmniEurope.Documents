@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: EUPL-1.2
+using System.Text;
 using OmniEurope.Documents.Pdf.Objects;
 using OmniEurope.Documents.Pdf.Reading;
 
@@ -120,6 +121,123 @@ public sealed class PdfFilterTests
 
         Assert.Equal("Hell"u8.ToArray(), PdfFilters.Decode(data, ["FlateDecode"], []).Data);
         Assert.Throws<InvalidDataException>(() => PdfFilters.Decode(empty, ["FlateDecode"], []));
+    }
+
+    private const long Ceiling = 1000;
+
+    [Fact]
+    public void Run_length_bomb_is_refused()
+    {
+        // 129 then a byte repeats it 128 times: ten pairs are 1280 bytes, over the ceiling.
+        var data = Enumerable.Repeat<byte>(0, 10).SelectMany(_ => new byte[] { 129, 7 }).ToArray();
+
+        AssertTooLarge(() => PdfFilters.Decode(data, ["RunLengthDecode"], [], Ceiling));
+    }
+
+    [Fact]
+    public void Ascii85_zero_shortcut_bomb_is_refused()
+    {
+        // Each 'z' is four bytes: 300 of them are 1200 bytes.
+        var data = Encoding.ASCII.GetBytes(new string('z', 300));
+
+        AssertTooLarge(() => PdfFilters.Decode(data, ["ASCII85Decode"], [], Ceiling));
+    }
+
+    [Fact]
+    public void Ascii85_groups_bomb_is_refused()
+    {
+        var data = Encoding.ASCII.GetBytes(string.Concat(Enumerable.Repeat("87cUR", 300)));
+
+        AssertTooLarge(() => PdfFilters.Decode(data, ["A85"], [], Ceiling));
+    }
+
+    [Fact]
+    public void Ascii_hex_over_the_ceiling_is_refused()
+    {
+        var data = Encoding.ASCII.GetBytes(new string('A', 2400));
+
+        AssertTooLarge(() => PdfFilters.Decode(data, ["ASCIIHexDecode"], [], Ceiling));
+    }
+
+    [Fact]
+    public void Flate_over_the_ceiling_is_refused_and_not_recovered_as_damaged_data()
+    {
+        using var packed = new MemoryStream();
+        using (var deflate = new System.IO.Compression.ZLibStream(packed, System.IO.Compression.CompressionLevel.SmallestSize, true))
+        {
+            deflate.Write(new byte[5000]);
+        }
+
+        AssertTooLarge(() => PdfFilters.Decode(packed.ToArray(), ["FlateDecode"], [], Ceiling));
+    }
+
+    [Fact]
+    public void Lzw_over_the_ceiling_is_refused()
+    {
+        // A clear code then 200 literal codes of 9 bits (the table stays below the width change): 200 bytes.
+        var codes = new List<int> { 256 };
+        codes.AddRange(Enumerable.Repeat(97, 200));
+        codes.Add(257);
+
+        AssertTooLarge(() => PdfFilters.Decode(NineBitCodes(codes), ["LZWDecode"], [], 100));
+    }
+
+    [Fact]
+    public void A_chain_of_filters_is_refused_when_a_later_stage_expands_past_the_ceiling()
+    {
+        // ASCIIHex yields 20 bytes (10 run-length pairs), each stage within the ceiling; the run-length stage expands to 1280.
+        var pairs = string.Concat(Enumerable.Repeat("8107", 10));
+
+        AssertTooLarge(() =>
+            PdfFilters.Decode(Encoding.ASCII.GetBytes(pairs + ">"), ["ASCIIHexDecode", "RunLengthDecode"], [], Ceiling));
+    }
+
+    [Fact]
+    public void A_stage_output_over_the_ceiling_is_refused_even_by_a_pass_through_filter()
+    {
+        AssertTooLarge(() => PdfFilters.Decode(new byte[Ceiling + 1], ["Crypt"], [], Ceiling));
+    }
+
+    [Fact]
+    public void Data_exactly_at_the_ceiling_still_decodes()
+    {
+        // 7 pairs of 128 bytes plus a literal run of 104: exactly 1000 bytes.
+        byte[] runs = [.. Enumerable.Repeat<byte>(0, 7).SelectMany(_ => new byte[] { 129, 7 }), 103, .. new byte[104]];
+        var zeros = Encoding.ASCII.GetBytes(new string('z', 250));
+
+        Assert.Equal(Ceiling, PdfFilters.Decode(runs, ["RunLengthDecode"], [], Ceiling).Data.Length);
+        Assert.Equal(Ceiling, PdfFilters.Decode(zeros, ["ASCII85Decode"], [], Ceiling).Data.Length);
+        Assert.Equal(Ceiling, PdfFilters.Decode(Encoding.ASCII.GetBytes(new string('4', 2000)), ["ASCIIHexDecode"], [], Ceiling).Data.Length);
+        Assert.Equal(Ceiling, PdfFilters.Decode(new byte[Ceiling], ["Crypt"], [], Ceiling).Data.Length);
+    }
+
+    private static void AssertTooLarge(Action decode)
+    {
+        var error = Assert.Throws<InvalidDataException>(decode);
+        Assert.Equal(PdfFilters.TooLargeMessage, error.Message);
+    }
+
+    private static byte[] NineBitCodes(List<int> codes)
+    {
+        var bits = new System.Collections.BitArray(codes.Count * 9);
+        for (var i = 0; i < codes.Count; i++)
+        {
+            for (var b = 0; b < 9; b++)
+            {
+                bits[(i * 9) + b] = ((codes[i] >> (8 - b)) & 1) == 1;
+            }
+        }
+
+        var output = new byte[(bits.Length + 7) / 8];
+        for (var i = 0; i < bits.Length; i++)
+        {
+            if (bits[i])
+            {
+                output[i >> 3] |= (byte)(0x80 >> (i & 7));
+            }
+        }
+
+        return output;
     }
 
     [Fact]
