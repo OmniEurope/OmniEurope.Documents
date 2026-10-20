@@ -1,0 +1,67 @@
+name: Publish NuGet
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to (re)publish, for example v1.0.0
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    environment: release
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.event.release.tag_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || '' }}
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Resolve the successful CI run for the release commit
+        id: ci
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $releaseSha = (git rev-parse HEAD).Trim()
+          $response = gh api "/repos/$env:GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$releaseSha&status=success&per_page=20" | ConvertFrom-Json
+          $run = $response.workflow_runs |
+            Where-Object { $_.head_sha -ceq $releaseSha -and $_.event -eq 'push' -and $_.conclusion -eq 'success' } |
+            Sort-Object run_number -Descending |
+            Select-Object -First 1
+          if (-not $run) { throw "No successful push CI run found for release commit $releaseSha." }
+          "release_sha=$releaseSha" >> $env:GITHUB_OUTPUT
+          "run_id=$($run.id)" >> $env:GITHUB_OUTPUT
+          "run_attempt=$($run.run_attempt)" >> $env:GITHUB_OUTPUT
+      - name: Download the exact package validated by CI
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download '${{ steps.ci.outputs.run_id }}' --repo $env:GITHUB_REPOSITORY --name nuget-package --dir artifacts/package
+      - name: Verify provenance, version, content, and symbols
+        id: package
+        shell: pwsh
+        run: |
+          ./.github/scripts/test-package-provenance.ps1 -PackageDirectory artifacts/package -ExpectedCommit '${{ steps.ci.outputs.release_sha }}' -ExpectedRepository $env:GITHUB_REPOSITORY -ExpectedRunId '${{ steps.ci.outputs.run_id }}' -ExpectedRunAttempt '${{ steps.ci.outputs.run_attempt }}'
+          ./.github/scripts/verify-package.ps1 -Directory artifacts/package -Fonts src/OmniEurope.Documents/Fonts/Bundled -ExpectedVersion $env:RELEASE_TAG
+          $package = Get-ChildItem artifacts/package/*.nupkg | Where-Object Name -NotLike '*.snupkg' | Select-Object -First 1
+          if (-not $package) { throw 'The validated package artifact is incomplete.' }
+          "package_path=$($package.FullName)" >> $env:GITHUB_OUTPUT
+      - name: Authenticate to NuGet.org
+        id: login
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+      - name: Publish the validated package to NuGet.org
+        run: dotnet nuget push '${{ steps.package.outputs.package_path }}' --api-key '${{ steps.login.outputs.NUGET_API_KEY }}' --source https://api.nuget.org/v3/index.json --skip-duplicate

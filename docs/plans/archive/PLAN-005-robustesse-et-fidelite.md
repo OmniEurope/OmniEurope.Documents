@@ -18,7 +18,7 @@ Règles :
   fin, un épuisement de mémoire ni un dépassement de pile.
 - Une limite est vérifiée avant l'allocation qu'elle protège, et calculée sans débordement.
 
-Chaque lot se termine par un commit sur `develop` quand les deux suites (`.\ylaunch.ps1 -ta`) sont vertes.
+Chaque lot se termine par un commit sur `develop` quand les deux suites (rapide et intégration) sont vertes.
 
 ## Lot 1 : fichiers forgés
 

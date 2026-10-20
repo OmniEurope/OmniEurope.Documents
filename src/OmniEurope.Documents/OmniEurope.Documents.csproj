@@ -18,6 +18,9 @@
     <PackageProjectUrl>https://github.com/OmniEurope/OmniEurope.Documents</PackageProjectUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <IsPackable>true</IsPackable>
+    <!-- Portable PDB shipped as a separate .snupkg symbol package, never embedded in the .nupkg. -->
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
