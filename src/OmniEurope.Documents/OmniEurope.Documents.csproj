@@ -6,7 +6,7 @@
     <IsTrimmable>true</IsTrimmable>
     <IsAotCompatible>true</IsAotCompatible>
     <PackageId>OmniEurope.Documents</PackageId>
-    <Version>0.1.0</Version>
+    <Version>1.0.0</Version>
     <Authors>OmniEurope contributors</Authors>
     <Company>OmniEurope</Company>
     <Description>Create, edit, convert and read Word, Excel, PDF, Markdown and CSV documents, without OCR, without UI and without any dependency.</Description>

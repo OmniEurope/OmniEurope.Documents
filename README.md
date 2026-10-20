@@ -4,7 +4,7 @@
 A .NET library to **create, edit, convert and read documents**: Word, Excel, PDF, Markdown and CSV. One
 NuGet package, no user interface, no dependency, licensed under EUPL-1.2.
 
-> **Status: pre-release (0.1.0).** The work done and planned is tracked in [docs/plans](docs/plans/README.md).
+> **Status: 1.0.0.** The work done and planned is tracked in [docs/plans](docs/plans/README.md).
 
 ## What the package does
 

@@ -4,6 +4,8 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-20
+
 ### Added
 
 - Charts (ECMA-376 part 1, §21.2) are read from Excel and Word and drawn in the PDF of a conversion. The public API is
