@@ -10,8 +10,8 @@ NuGet package, no user interface, no dependency, licensed under EUPL-1.2.
 
 | Format | Create | Edit | Read | Convert |
 |---|---|---|---|---|
-| Word (`.docx`) | yes | yes, tracked changes accepted or rejected, fields and contents updated | text and structure, schema validation | to PDF, to HTML, to Markdown |
-| Excel (`.xlsx`) | yes | yes, in place without loss | cells and sheets | to PDF, to CSV, to HTML |
+| Word (`.docx`) | yes | yes, tracked changes accepted or rejected, fields and contents updated | text and structure, charts, schema validation | to PDF, to HTML, to Markdown |
+| Excel (`.xlsx`) | yes | yes, in place without loss | cells, sheets and charts | to PDF, to CSV, to HTML |
 | PDF | yes, AES-256 encryption, PDF/A-2b and PDF/A-2u | merge, split, compress, reorder, rotate, stamp, encrypt, redact, fill and flatten forms, sign (PAdES B-B) | text, form fields, signatures verified, **no OCR** | from Word, Excel, Markdown, HTML, images; to PNG |
 | Markdown | yes | yes | yes | to PDF, to Word, to HTML |
 | CSV | yes | yes | yes | to Excel |
@@ -25,6 +25,24 @@ keep the original bytes. `PdfDocumentBuilder.Conformance` and the conversion opt
 PDF/A-2u (sRGB output intent with a profile computed in code, XMP identification, no encryption). `PdfSigner`
 signs with an application certificate (PAdES baseline B-B, detached CMS written with `System.Formats.Asn1`) and
 verifies signatures (byte range, digest, signature, signing certificate; certificate trust is the application's).
+
+`PdfRedactor.Redact` truly redacts (the text and image pixels under an area are removed from the new file, not covered), and refuses (`PdfRedactionException`, no
+document produced) a page whose text is shown with a font it cannot resolve, since it could not tell whether that text
+lies under an area.
+
+Charts (`Chart`, read from `XlsxWorksheet.Charts` and from `WordChart`) are read with their series, titles, legend
+and colours, and drawn as vector graphics in the PDF of a Word or Excel conversion: clustered, stacked, percent
+stacked and horizontal bars, lines, pies and doughnuts. A chart of another type (3-D, area, scatter, radar, stock,
+surface, bubble) is drawn as its frame and title only, its type reported as a gap. A combination chart draws its first
+bar, line, pie or doughnut type with that type's series and reports the other types of its plot area as gaps. A chart
+of a type introduced by Office 2016 (waterfall, treemap, funnel...) is skipped and reported in a Word document, and
+drawn as an empty frame, reported, in an Excel sheet. Axes use an automatic scale, and Word to HTML and Markdown leave
+charts out (reported). A series holds at most 100,000 points and a chart at most 1,000,000 (its series times its
+longest series): the series past that are left out and the chart is reported. Sizes are those of the points a chart
+holds, not those it declares; a number that is not finite reads as missing, and the gap width, hole size and first
+slice angle are held to the ranges of the schema. A chart, drawing or theme part that cannot be read is skipped (a
+theme: the Office colours are used) and reported (for a workbook, in the gaps of Excel to PDF), and does not fail the
+load of the document or workbook.
 
 Word to HTML gives one standalone page (styles embedded, pictures as `data:` URIs, nothing fetched) in which
 every paragraph carries `data-address`, the address `WordEditor` gives the same paragraph, so a viewer can
@@ -40,7 +58,7 @@ Companion tools: HTML parsing and sanitising, text diff (lines and words).
   can use this package.
 - **Saving a loaded `XlsxWorkbook` is not lossless**: it keeps cells, styles, merges, panes and filters only.
   `XlsxEditor` edits cells in place and keeps everything else the file holds (charts, pictures, conditional
-  formats, validations, comments, pivot tables).
+  formats, validations, comments, pivot tables). Its charts are read (`XlsxWorksheet.Charts`) but not written.
 - **Formulas are recalculated only on request** (`XlsxWorkbook.Recalculate`) and only with the operators and
   common functions the engine computes; defined names, table and multi-sheet references, INDIRECT and OFFSET
   keep their last computed result and are reported.

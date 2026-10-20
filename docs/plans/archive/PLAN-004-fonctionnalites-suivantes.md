@@ -1,9 +1,9 @@
 <!-- SPDX-License-Identifier: EUPL-1.2 -->
 # PLAN-004 : Fonctionnalités suivantes
 
-> Statut : **en cours** (2026-10-10 : lot 10 fidélité de la mise en page Word, lot 11 fidélité du rendu PDF, lot 13 signature PAdES B-B, lot 4 PDF/A-2b et A-2u, lot 3 formulaires PDF, lot 8 caviardage PDF, lot 7 chiffrement PDF AES-256, lot 6 révisions, table des matières et champs Word, lot 5 Word vers Markdown, lots 9 Excel vers HTML et 12 fractions Excel faits ; 2026-10-08 : lot 1 édition Excel sans perte fait ; 2026-10-07 : Word vers HTML). Feuille de route proposée au
-> propriétaire ; l'ordre des lots est celui de la valeur attendue. Un lot ne commence qu'après accord du
-> propriétaire.
+> Statut : **terminé** (2026-10-20). Lots 1 à 14 faits ; le lot 15 (OCR) est transféré dans
+> [PLAN-006](../PLAN-006-ocr.md). Feuille de route proposée au propriétaire ; l'ordre des lots est celui de
+> la valeur attendue. Un lot ne commence qu'après accord du propriétaire.
 
 ## Objectif
 
@@ -382,10 +382,55 @@ Chaque lot se termine par un commit sur `develop` quand les deux suites et le co
 
 ## Lot 14 : graphiques
 
-- [ ] Lecture des graphiques Excel et Word (barres, lignes, secteurs) et rendu dans le PDF.
+- [x] Lecture des graphiques Excel et Word (barres, lignes, secteurs) et rendu dans le PDF.
+  - Fait (2026-10-20) : lecture dans `Charts/` (`Chart`, `ChartSeries`, `ChartKind`, `ChartGrouping`,
+    `ChartLegendPosition`, `ChartReader`, `ChartPalette`), d'après ECMA-376 partie 1, §21.2. Barres et colonnes
+    (groupées, empilées, empilées à 100 %, horizontales), lignes avec ou sans marqueurs, secteurs et anneaux ; séries,
+    catégories et valeurs lues du cache, ou des cellules que nomment les formules quand il manque ; titres, légende
+    (cinq positions), étiquettes de données, couleurs (couleurs données, couleurs du thème et leurs transformations,
+    teintes automatiques des accents du thème, assombries puis éclaircies après le sixième), fond et bordure de la
+    zone du graphique. Excel : `XlsxWorksheet.Charts` (`XlsxChart` : `Chart`, `Cells`, `OffsetX`, `OffsetY`, `Width`,
+    `Height`), lus par `XlsxChartReader` d'après l'ancrage du dessin (cellule et décalage, deux cellules, valeurs
+    absolues). Word : `WordChart` (`WordInlines.cs`), lu puis réécrit à l'enregistrement (le graphique se relit ;
+    classeur incorporé et `externalData` non réécrits). Rendu dans `Conversion/Charts/` (`ChartPainter`,
+    `CartesianPlot`, `ChartPlots`, `ValueScale`, `ChartText`) en vecteurs dans le PDF depuis Word et depuis Excel
+    (`Conversion/ExcelSheetCharts.cs` : chaque graphique ancré dans sa cellule, la plage imprimée s'étend jusqu'aux
+    graphiques, la feuille passe en paysage quand un graphique est plus large qu'une page portrait). Word vers HTML et
+    vers Markdown signalent la lacune « charts are left out ».
+    Mesure : `ChartReadingTests` (15 tests : séries, titres, légende, sens et regroupement des barres, lignes, secteurs,
+    anneaux, couleurs du thème, types non pris en charge, graphique sans cache, ancrages, relecture après
+    enregistrement), `ChartRenderingTests` (26 tests, pixels attendus calculés d'après les valeurs du graphique et lus
+    sur la page rendue par le moteur de rendu du paquet : position des barres, séries côte à côte ou empilées, ligne
+    coupée là où un point manque, secteurs et anneau, texte du titre, de la légende, des graduations et des étiquettes
+    dans le PDF) et `ChartGeometryTests` (21 tests : échelle des valeurs, pas de graduation 1, 2 ou 5 fois une
+    puissance de dix, empilements, angles des secteurs).
+    Corrigé à la fermeture : largeur des colonnes tronquée au pixel entier pour placer un graphique
+    (`XlsxChartReader.ColumnPoints`, comme la table imprimée), arrondi de la palette rendu déterministe
+    (`ChartPalette.Round`, `MidpointRounding.ToEven` après arrondi à 6 décimales, test
+    `ChartGeometryTests.A_channel_halfway_between_two_values_rounds_to_the_even_one_whatever_the_floating_point_noise`),
+    cellules d'un graphique au-delà des limites des formules lues comme vides
+    (`ChartReadingTests.A_cell_past_the_formula_limits_is_read_as_empty_not_thrown`).
+    Limites : lignes comptées à 15 pt fixes pour placer un graphique ; ni 3D, ni aires, ni nuages de points, radars,
+    cours, surfaces, ni bulles dessinés (type signalé « chart type not drawn: ... », seuls le cadre et le titre
+    gardés, sans légende puisque les séries ne sont pas lues) ; une combinaison dessine son premier type de barres,
+    lignes, secteurs ou anneaux avec ses séries et signale chaque autre type du graphique ; pas d'axe secondaire ;
+    minimum, maximum et échelle logarithmique des axes non lus (échelle automatique) ; position et format des
+    étiquettes non lus ; graphique Word rendu en culture invariante ; enregistrer un classeur n'écrit pas les
+    graphiques (`XlsxEditor` garde leurs parties intactes) ; graphiques d'Office 2016 (`chartex` : cascade, treemap,
+    entonnoir...) signalés, ignorés dans Word et dessinés comme un cadre vide dans Excel ; titre par défaut
+    « Chart Title » en anglais, comme les éditeurs ; rendu non confronté à celui d'Excel ou de Word (pas d'Office
+    disponible).
+    Bornes sur fichiers non fiables : au plus 100 000 points par série et 1 000 000 par graphique (séries fois série la
+    plus longue), les séries au-delà étant laissées de côté et le graphique signalé (« chart past the point limit ») ;
+    la taille d'une série est celle des points que son cache contient, jamais son `ptCount` déclaré ; une valeur en
+    cache, un décalage ou une étendue d'ancrage qui n'est pas un nombre fini est lu comme absent, et une longueur
+    d'ancrage est plafonnée à 100 000 000 points ; `gapWidth` borné à 0..500, `holeSize` à 1..90, `firstSliceAng` à
+    0..360 (schéma `dml-chart.xsd`) ; une couleur exige six chiffres hexadécimaux ; une partie graphique, dessin ou
+    thème illisible est ignorée et signalée (« unreadable chart skipped », « unreadable drawing skipped »,
+    « unreadable theme skipped ») au lieu de faire échouer le chargement ; les formules des cellules lues pour un
+    graphique ont chacune tout le budget de mémoire d'une formule. Tests : `ChartRobustnessTests`.
 - Contrôle : valeurs et légendes retrouvées dans le PDF, formes vérifiées au pixel sur des cas simples.
 
 ## Lot 15 : OCR
 
-- [ ] Reconnaissance de texte des PDF scannés, dans un paquet séparé si elle demande une dépendance lourde.
-- Contrôle : décision du propriétaire sur la forme (paquet séparé ou non) avant tout code.
+Transféré dans [PLAN-006](../PLAN-006-ocr.md) (2026-10-20).

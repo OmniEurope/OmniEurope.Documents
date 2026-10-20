@@ -6,6 +6,32 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- Charts (ECMA-376 part 1, §21.2) are read from Excel and Word and drawn in the PDF of a conversion. The public API is
+  `Chart` (kind, grouping, bar direction, series, categories, titles, legend, data labels, colours, fill and border),
+  `ChartSeries`, `ChartKind` (`Bar`, `Line`, `Pie`, `Doughnut`, `Unsupported`), `ChartGrouping` (`Standard`,
+  `Stacked`, `PercentStacked`) and `ChartLegendPosition`; `XlsxWorksheet.Charts` lists the `XlsxChart` of a sheet
+  (`Chart`, `Cells`, `OffsetX`, `OffsetY`, `Width`, `Height`); a chart of a Word document is a `WordChart`, read and
+  written back on save (the embedded workbook and `externalData` it linked to are dropped). Word to PDF and Excel to
+  PDF draw clustered, stacked, percent stacked and horizontal bars, lines with or without markers, pies and
+  doughnuts with their title, legend, axes, ticks and data labels as vector graphics; in Excel to PDF a chart stands
+  in the cell holding its top-left corner, the printed range grows to hold the charts and the sheet turns landscape
+  for a chart wider than a portrait page. Word to HTML and Word to Markdown report the gap "charts are left out".
+  Not drawn, and reported as "chart type not drawn: ...": 3-D, area, scatter, radar, stock, surface and bubble charts,
+  which keep their frame and title only. A combination chart draws its first bar, line, pie or doughnut type with its
+  series and reports each other type of its plot area. A chart of a type introduced by Office 2016 (`chartex`) is
+  skipped and reported in a Word document, and drawn as an empty frame, reported, in an Excel sheet.
+  Axis minimum, maximum and logarithmic scale, secondary axes, and the position and number format of data labels are
+  not read (automatic scale); rows count 15 pt to place a chart; saving a loaded `XlsxWorkbook` does not write its
+  charts (`XlsxEditor` keeps them untouched).
+  Limits on untrusted files: a series holds at most 100,000 points and a chart at most 1,000,000 (its series times its
+  longest series), the series past that being left out and the chart reported ("chart past the point limit"); the
+  size of a series is that of the points its cache holds, never its declared `ptCount`; a cached value, an anchor
+  offset or an extent that is not a finite number reads as missing, and an anchor length is capped at 100,000,000
+  points; `c:gapWidth` stays within 0 and 500, `c:holeSize` within 1 and 90, `c:firstSliceAng` within 0 and 360; a
+  colour value must be six hexadecimal digits. A chart, drawing or theme part that cannot be read (not well-formed, or
+  past a package limit) is skipped and reported ("unreadable chart skipped", "unreadable drawing skipped", "unreadable
+  theme skipped"; for a workbook, in the gaps of Excel to PDF) instead of failing the load.
+
 - Word to PDF wraps text around floating shapes, lays out right-to-left text and unequal columns (ECMA-376 part 1,
   §20.4.2 and §20.4.3, §17.3.1.6, §17.3.2.30, §17.6.4). Floating shapes anchored in body paragraphs are placed with
   the first line of their paragraph, from the page, the margins (left, right, top, bottom, inside, outside), the
@@ -272,6 +298,11 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Changed
 
+- The .NET SDK required is 10.0.401 or later (`global.json` sets it as the minimum and rolls forward to the latest
+  feature band installed); the test packages are `xunit.v3` 4.0.2 and `Microsoft.Testing.Extensions.TrxReport` 2.5.1.
+- A Word document whose theme part cannot be read now loads without theme colours and fonts, the gap "unreadable
+  theme skipped" listed in `WordDocument.Gaps`, instead of failing with `DocumentFormatException`.
+
 - Word to PDF measured against Word: a tab no longer makes its line taller (a table of contents entry keeps its own
   line height when its tab is set in a larger size), and a line holding nothing but a page or column break, or the
   empty paragraph ending a section before a new page, stays at the end of the page it ends instead of opening a
@@ -315,6 +346,18 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Fixed
 
+- `PdfRedactor.Redact` throws `PdfRedactionException` when text on a page that has redaction areas (or in a form
+  drawn there) is shown with a font that cannot be resolved (no `Tf` before it, or a `Tf` naming a font missing from
+  the resources in force): where its glyphs lie cannot be computed, and the text used to be kept silently under the
+  area, giving a falsely redacted document. No document is produced.
+- Excel formula engine: a formula nested more than 256 levels (parentheses, function calls, unary and percent signs,
+  right operands) or needing more than 1,048,576 cells in one matrix (one whole column) or 8,388,608 across one
+  formula (eight times that, about 268 MB) is no longer parsed or evaluated: it is not calculated, keeps its stored
+  value and is listed in `XlsxRecalculation.Unsupported`, instead of a stack overflow ending the process or an
+  unbounded allocation. Chains of operators leaning to the left (`1+1+1+...`) are evaluated in a loop and do not nest.
+- PDF stream filters: the decoded size ceiling (512 MiB) is checked before every append in RunLengthDecode, ASCII85
+  (the `z` shortcut included), ASCIIHexDecode, FlateDecode and LZWDecode, and on the output of each stage of a filter
+  chain, so a small stream can no longer expand past it before it is refused.
 - `CsvReader.Open` and `OpenAsync`: a header that cannot be read no longer leaves the stream or text reader
   the reader owns open (and its file locked); with `leaveOpen` it stays open as asked.
 - `TextValueParser.TryParseDuration` returns false instead of throwing for a duration past what `TimeSpan`
