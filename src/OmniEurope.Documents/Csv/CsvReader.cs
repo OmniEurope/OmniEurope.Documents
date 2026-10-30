@@ -21,7 +21,7 @@ public sealed class CsvReader : IDisposable, IAsyncDisposable
     private int _position;
     private int _length;
     private bool _endOfInput;
-    private CsvRecordParser _parser = null!;
+    private readonly CsvRecordParser _parser;
     private string?[] _cache = [];
     private Dictionary<string, int>? _ordinals;
     private bool _pendingReset;
@@ -32,6 +32,7 @@ public sealed class CsvReader : IDisposable, IAsyncDisposable
         _options = options;
         _leaveOpen = leaveOpen;
         Encoding = encoding;
+        _parser = new CsvRecordParser(options.Delimiter ?? ',', options.Quoting == CsvQuoting.Rfc4180, options.Quote, options.SkipEmptyLines, options.MaxRecordLength);
     }
 
     /// <summary>The field delimiter in use (configured or detected).</summary>
@@ -358,9 +359,21 @@ public sealed class CsvReader : IDisposable, IAsyncDisposable
     }
 
     // The first line must be in the buffer to detect the delimiter; the header row decides it.
-    private bool NeedsMoreForDetection() =>
-        _options.Delimiter is null && !_endOfInput && _buffer.AsSpan(0, _length).IndexOfAny('\r', '\n') < 0
-        && _length < _options.MaxRecordLength;
+    private bool NeedsMoreForDetection()
+    {
+        if (_options.Delimiter is not null) return false;
+        var first = 0;
+        while (_options.SkipEmptyLines && first < _length && _buffer[first] is '\r' or '\n') first++;
+        if (first > 0)
+        {
+            // Consume only skipped blank lines, preserving physical line numbers and CR/LF state without
+            // storing an unbounded prefix or charging it against the first actual record's budget.
+            _parser.Consume(_buffer.AsSpan(0, first));
+            _buffer.AsSpan(first, _length - first).CopyTo(_buffer);
+            _length -= first;
+        }
+        return !_endOfInput && _length < _options.MaxRecordLength && _buffer.AsSpan(0, _length).IndexOfAny('\r', '\n') < 0;
+    }
 
     private void GrowIfFull()
     {
@@ -379,7 +392,7 @@ public sealed class CsvReader : IDisposable, IAsyncDisposable
     private void CreateParser()
     {
         Delimiter = _options.Delimiter ?? CsvDelimiterDetector.Detect(_buffer.AsSpan(0, _length), _options);
-        _parser = new CsvRecordParser(Delimiter, _options.Quoting == CsvQuoting.Rfc4180, _options.Quote, _options.SkipEmptyLines, _options.MaxRecordLength);
+        _parser.Delimiter = Delimiter;
     }
 
     private void ReadHeader()

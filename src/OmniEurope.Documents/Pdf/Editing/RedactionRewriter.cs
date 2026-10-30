@@ -24,6 +24,8 @@ internal sealed class RedactionContext(PdfObjectStore store, IReadOnlyList<PdfRe
 
     public HashSet<PdfStream> ActiveForms { get; } = new(ReferenceEqualityComparer.Instance);
 
+    public HashSet<PdfDictionary> ReplacementProperties { get; } = new(ReferenceEqualityComparer.Instance);
+
     public System.Text.StringBuilder RemovedText { get; } = new();
 
     public int RemovedGlyphs { get; set; }
@@ -378,6 +380,7 @@ internal sealed class RedactionRewriter
         if (replaced)
         {
             _touchedXObjects.Add(name.Value);
+            _dirtyMarks.UnionWith(_marked);
         }
 
         return replaced;
@@ -576,10 +579,19 @@ internal sealed class RedactionRewriter
         return output.ToArray();
     }
 
-    private static IReadOnlyList<PdfObject> Cleaned(IReadOnlyList<PdfObject> operands) =>
-        operands.Select(o => o is PdfDictionary properties && ReplacementKeys.Any(properties.ContainsKey)
-            ? properties.Entries.Where(e => !ReplacementKeys.Contains(e.Key)).Aggregate(new PdfDictionary(), (d, e) => d.Set(e.Key, e.Value))
-            : o).ToList();
+    private IReadOnlyList<PdfObject> Cleaned(IReadOnlyList<PdfObject> operands)
+    {
+        if (operands.Count < 2) return operands;
+        var properties = operands[1] is PdfName name
+            ? _context.Store.Get<PdfDictionary>(_context.Store.Get<PdfDictionary>(_resources, "Properties"), name.Value)
+            : operands[1] as PdfDictionary;
+        if (properties is null || !ReplacementKeys.Any(properties.ContainsKey)) return operands;
+        _context.ReplacementProperties.Add(properties);
+        return [operands[0], WithoutReplacementText(properties)];
+    }
+
+    internal static PdfDictionary WithoutReplacementText(PdfDictionary properties) =>
+        properties.Entries.Where(e => !ReplacementKeys.Contains(e.Key)).Aggregate(new PdfDictionary(), (d, e) => d.Set(e.Key, e.Value));
 
     private static void WriteInline(Stream output, ContentOperation operation)
     {

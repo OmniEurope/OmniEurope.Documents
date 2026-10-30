@@ -15,6 +15,41 @@ internal enum ValueKind
 }
 
 /// <summary>
+/// An explicit range larger than the used cells of its sheet: only the used part is held, and the blank rest is
+/// allocated, under the formula budget, for an operation that really needs every element.
+/// </summary>
+internal sealed class FormulaPartialRange(FormulaValue[,] stored, int rows, int columns, Func<FormulaValue[,]> allocate)
+{
+    private FormulaValue[,]? _expanded;
+
+    public FormulaValue[,] Stored { get; } = stored;
+
+    public int Rows { get; } = rows;
+
+    public int Columns { get; } = columns;
+
+    public FormulaValue[,] Expanded
+    {
+        get
+        {
+            if (_expanded is null)
+            {
+                _expanded = allocate();
+                for (var r = 0; r < Stored.GetLength(0); r++)
+                {
+                    for (var c = 0; c < Stored.GetLength(1); c++)
+                    {
+                        _expanded[r, c] = Stored[r, c];
+                    }
+                }
+            }
+
+            return _expanded;
+        }
+    }
+}
+
+/// <summary>
 /// One value met while evaluating a formula: a number, a text, a boolean, an error code, a blank (an empty cell)
 /// or an array of values (a range read into memory, or the result of an operation on ranges).
 /// </summary>
@@ -32,9 +67,9 @@ internal readonly struct FormulaValue
     public static readonly FormulaValue Null = Fail("#NULL!");
 
     private readonly string? _text;
-    private readonly FormulaValue[,]? _array;
+    private readonly object? _array;
 
-    private FormulaValue(ValueKind kind, double number, string? text, FormulaValue[,]? array)
+    private FormulaValue(ValueKind kind, double number, string? text, object? array)
     {
         Kind = kind;
         Number = number;
@@ -50,7 +85,22 @@ internal readonly struct FormulaValue
 
     public bool Boolean => Number != 0;
 
-    public FormulaValue[,] Array => _array ?? new FormulaValue[1, 1];
+    /// <summary>Every element of an array, blanks included: a range read in part is expanded here, under the formula budget.</summary>
+    public FormulaValue[,] Array => _array switch
+    {
+        FormulaValue[,] array => array,
+        FormulaPartialRange range => range.Expanded,
+        _ => new FormulaValue[1, 1],
+    };
+
+    /// <summary>The elements held in memory: any element beyond them, up to <see cref="Rows"/> and <see cref="Columns"/>, is blank.</summary>
+    public FormulaValue[,] Stored => _array is FormulaPartialRange range ? range.Stored : Array;
+
+    /// <summary>The rows of the array as the formula sees them.</summary>
+    public int Rows => _array is FormulaPartialRange range ? range.Rows : Array.GetLength(0);
+
+    /// <summary>The columns of the array as the formula sees them.</summary>
+    public int Columns => _array is FormulaPartialRange range ? range.Columns : Array.GetLength(1);
 
     public bool IsError => Kind == ValueKind.Error;
 
@@ -61,6 +111,8 @@ internal readonly struct FormulaValue
     public static FormulaValue Of(bool value) => value ? True : False;
 
     public static FormulaValue Of(FormulaValue[,] array) => new(ValueKind.Array, 0, null, array);
+
+    public static FormulaValue Of(FormulaPartialRange range) => new(ValueKind.Array, 0, null, range);
 
     public static FormulaValue Fail(string code) => new(ValueKind.Error, 0, code, null);
 
@@ -75,7 +127,7 @@ internal readonly struct FormulaValue
     };
 
     /// <summary>A single value: the top-left element of an array, the value itself otherwise.</summary>
-    public FormulaValue Scalar() => Kind == ValueKind.Array ? Array[0, 0].Scalar() : this;
+    public FormulaValue Scalar() => Kind == ValueKind.Array ? Stored[0, 0].Scalar() : this;
 
     /// <summary>The number of a value for arithmetic (ECMA-376 part 1, §18.17.2.2): text is parsed, a boolean is 1 or 0.</summary>
     public FormulaValue ToNumber()

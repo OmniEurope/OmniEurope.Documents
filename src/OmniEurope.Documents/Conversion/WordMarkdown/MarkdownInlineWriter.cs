@@ -136,6 +136,10 @@ internal sealed class MarkdownInlineWriter(MarkdownContext context, WordParagrap
     // run formatting is not carried either.
     private void NoteLostFormatting(WordRunProperties properties)
     {
+        if (properties.Font is not null || properties.FontEastAsia is not null || properties.FontComplex is not null || properties.FontSize is not null || properties.FontSizeComplex is not null)
+            context.Gaps.Add("fonts and font sizes are not preserved");
+        if (properties.Color is not null || properties.Highlight is not null || properties.Shading is not null)
+            context.Gaps.Add("text colours, highlighting and shading are not preserved");
         if ((!_inLink && properties.Underline is { } underline and not WordUnderline.None) || properties.VerticalPosition is WordVerticalPosition.Superscript or WordVerticalPosition.Subscript)
         {
             context.Gaps.Add("underline, superscript and subscript are written as plain text");

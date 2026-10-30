@@ -14,7 +14,7 @@ un plan décrit un travail, pas l'état du produit.
 
 | Plan | Travail | ADR |
 |---|---|---|
-| Aucun | | |
+| [PLAN-007](PLAN-007-corrections-audit-coherence.md) | Treize corrections vérifiées localement, double contrôle ; CI distante non exécutée | Aucun |
 
 ## Plans archivés
 

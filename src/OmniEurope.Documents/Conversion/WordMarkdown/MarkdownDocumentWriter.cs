@@ -84,6 +84,7 @@ internal sealed class MarkdownDocumentWriter(MarkdownContext context)
 
     private (string Text, List<WordTextBox> Boxes) Content(WordParagraph paragraph, WordParagraphProperties resolved, string indent, bool singleLine)
     {
+        NoteParagraphFormatting(resolved);
         var baseline = singleLine ? WordResolution.Run(context.Document.Styles, resolved, WordRunProperties.Empty, null) : null;
         var writer = new MarkdownInlineWriter(context, resolved, indent, singleLine, baseline);
         var text = writer.Write(paragraph.Inlines);
@@ -200,6 +201,7 @@ internal sealed class MarkdownDocumentWriter(MarkdownContext context)
     private string Line(WordParagraph paragraph)
     {
         var resolved = WordResolution.Paragraph(context.Document, paragraph, null);
+        NoteParagraphFormatting(resolved);
         if (resolved.NumberingId is > 0)
         {
             context.Gaps.Add("list items inside table cells and notes are written as plain paragraphs");
@@ -213,6 +215,12 @@ internal sealed class MarkdownDocumentWriter(MarkdownContext context)
         }
 
         return text;
+    }
+
+    private void NoteParagraphFormatting(WordParagraphProperties properties)
+    {
+        var lost = properties with { StyleId = null, OutlineLevel = null, NumberingId = null, NumberingLevel = null, MarkProperties = null };
+        if (lost != WordParagraphProperties.Empty) context.Gaps.Add("paragraph formatting is not preserved");
     }
 
     // Notes referred to inside other notes are numbered as they are met, so the loop runs to the end of a

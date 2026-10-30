@@ -93,8 +93,8 @@ internal sealed class FormulaEvaluator(
         area.Sheet is null ? Sheet : workbook.Worksheets.FirstOrDefault(s => s.Name.Equals(area.Sheet, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>
-    /// The values of an area: one value for a cell, an array otherwise. Whole rows and columns stop at the last
-    /// used row and column of the sheet; every cell beyond is blank.
+    /// The values of an area: one value for a cell, an array otherwise. Only the used cells are held. Whole rows
+    /// and columns stop there; an explicit range keeps its dimensions, its blank rest allocated only on demand.
     /// </summary>
     public FormulaValue Read(FormulaArea area)
     {
@@ -130,7 +130,10 @@ internal sealed class FormulaEvaluator(
             }
         }
 
-        return FormulaValue.Of(values);
+        var (rows, columns) = (area.WholeColumns ? values.GetLength(0) : area.Rows, area.WholeRows ? values.GetLength(1) : area.Columns);
+        return rows == values.GetLength(0) && columns == values.GetLength(1)
+            ? FormulaValue.Of(values)
+            : FormulaValue.Of(new FormulaPartialRange(values, rows, columns, () => Allocate(rows, columns)));
     }
 
     // The cell count and used range of a sheet, measured once per recalculation (formulas fill existing cells).

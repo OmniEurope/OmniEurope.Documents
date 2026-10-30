@@ -117,7 +117,7 @@ internal static class FormulaReferenceReader
         var bottom = first.IsColumn ? CellReference.MaxRow : Math.Max(first.Row, second.Row);
         var left = first.IsRow ? 1 : Math.Min(first.Column, second.Column);
         var right = first.IsRow ? CellReference.MaxColumn : Math.Max(first.Column, second.Column);
-        return new FormulaArea(null, top, left, bottom, right);
+        return new FormulaArea(null, top, left, bottom, right) { WholeColumns = first.IsColumn, WholeRows = first.IsRow };
     }
 
     /// <summary>A corner of a reference: row 0 for a whole column, column 0 for a whole row.</summary>

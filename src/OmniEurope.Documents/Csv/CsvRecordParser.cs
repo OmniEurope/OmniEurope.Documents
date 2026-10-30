@@ -8,6 +8,7 @@ namespace OmniEurope.Documents.Csv;
 /// </summary>
 internal sealed class CsvRecordParser(char delimiter, bool quoting, char quote, bool skipEmptyLines, int maxRecordLength)
 {
+    public char Delimiter { get; set; } = delimiter;
     private enum State
     {
         FieldStart,
@@ -102,7 +103,7 @@ internal sealed class CsvRecordParser(char delimiter, bool quoting, char quote, 
 
     private bool StepUnquoted(ReadOnlySpan<char> chunk, ref int i)
     {
-        var run = chunk[i..].IndexOfAny(delimiter, '\r', '\n');
+        var run = chunk[i..].IndexOfAny(Delimiter, '\r', '\n');
         if (run != 0)
         {
             var count = run < 0 ? chunk.Length - i : run;
@@ -114,7 +115,7 @@ internal sealed class CsvRecordParser(char delimiter, bool quoting, char quote, 
         }
 
         var c = chunk[i++];
-        if (c != delimiter)
+        if (c != Delimiter)
         {
             return EndLine(c);
         }
@@ -165,7 +166,7 @@ internal sealed class CsvRecordParser(char delimiter, bool quoting, char quote, 
             Append(quote);
             _state = State.Quoted;
         }
-        else if (c == delimiter)
+        else if (c == Delimiter)
         {
             EndField();
             _state = State.FieldStart;

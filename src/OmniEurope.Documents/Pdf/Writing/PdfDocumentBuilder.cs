@@ -280,7 +280,7 @@ public sealed class PdfDocumentBuilder
         {
             var offset = date.Offset;
             var sign = offset < TimeSpan.Zero ? '-' : '+';
-            info.Set("CreationDate", PdfString.FromText($"D:{date:yyyyMMddHHmmss}{sign}{Math.Abs(offset.Hours):00}'{Math.Abs(offset.Minutes):00}'"));
+            info.Set("CreationDate", PdfString.FromText(FormattableString.Invariant($"D:{date:yyyyMMddHHmmss}{sign}{Math.Abs(offset.Hours):00}'{Math.Abs(offset.Minutes):00}'")));
         }
 
         return info;

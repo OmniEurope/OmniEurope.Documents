@@ -4,6 +4,10 @@ namespace OmniEurope.Documents.Excel.Formulas;
 /// <summary>A rectangle of cells, on a named sheet or (null) on the sheet of the formula.</summary>
 internal readonly record struct FormulaArea(string? Sheet, int Top, int Left, int Bottom, int Right)
 {
+    public bool WholeColumns { get; init; }
+
+    public bool WholeRows { get; init; }
+
     public int Rows => Bottom - Top + 1;
 
     public int Columns => Right - Left + 1;

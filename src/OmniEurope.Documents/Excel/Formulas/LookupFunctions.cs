@@ -26,7 +26,8 @@ internal static class LookupFunctions
     private static FormulaValue TableLookup(FormulaEvaluator evaluator, IReadOnlyList<FormulaNode> arguments, bool vertical)
     {
         var sought = evaluator.Evaluate(arguments[0]).Scalar();
-        var table = Grid(evaluator.Evaluate(arguments[1]));
+        var value = evaluator.Evaluate(arguments[1]);
+        var table = StoredGrid(value);
         var index = Number(evaluator, arguments[2]);
         var approximate = arguments.Count < 4 || evaluator.Evaluate(arguments[3]).ToBoolean() is { IsError: false, Boolean: true };
         if (sought.IsError || index.IsError)
@@ -36,7 +37,7 @@ internal static class LookupFunctions
 
         var offset = (int)Math.Truncate(index.Number) - 1;
         var lines = vertical ? table.GetLength(0) : table.GetLength(1);
-        var width = vertical ? table.GetLength(1) : table.GetLength(0);
+        var width = vertical ? value.Columns : value.Rows;
         if (offset < 0)
         {
             return FormulaValue.ValueError;
@@ -49,7 +50,7 @@ internal static class LookupFunctions
 
         var keys = Enumerable.Range(0, lines).Select(i => vertical ? table[i, 0] : table[0, i]).ToList();
         var found = approximate ? Approximate(keys, sought, ascending: true) : Exact(keys, sought);
-        return found < 0 ? FormulaValue.NotAvailable : Blank(vertical ? table[found, offset] : table[offset, found]);
+        return found < 0 ? FormulaValue.NotAvailable : Blank(vertical ? ElementAt(table, found, offset) : ElementAt(table, offset, found));
     }
 
     // A blank cell found by a lookup gives 0, as in Excel.
@@ -59,19 +60,19 @@ internal static class LookupFunctions
     private static FormulaValue Match(FormulaEvaluator evaluator, IReadOnlyList<FormulaNode> arguments)
     {
         var sought = evaluator.Evaluate(arguments[0]).Scalar();
-        var array = Grid(evaluator.Evaluate(arguments[1]));
+        var array = evaluator.Evaluate(arguments[1]);
         var type = Number(evaluator, arguments, 2, 1);
         if (sought.IsError || type.IsError)
         {
             return sought.IsError ? sought : type;
         }
 
-        if (array.GetLength(0) > 1 && array.GetLength(1) > 1)
+        if (array.Rows > 1 && array.Columns > 1)
         {
             return FormulaValue.NotAvailable;
         }
 
-        var values = array.Cast<FormulaValue>().ToList();
+        var values = StoredGrid(array).Cast<FormulaValue>().ToList();
         var found = type.Number switch
         {
             0 => Exact(values, sought),
@@ -84,7 +85,7 @@ internal static class LookupFunctions
     // INDEX(array, row, [column]): 1-based; a single row or column takes one index for its length.
     private static FormulaValue Index(FormulaEvaluator evaluator, IReadOnlyList<FormulaNode> arguments)
     {
-        var array = Grid(evaluator.Evaluate(arguments[0]));
+        var array = evaluator.Evaluate(arguments[0]);
         var row = Number(evaluator, arguments[1]);
         var column = Number(evaluator, arguments, 2, 0);
         if (row.IsError || column.IsError)
@@ -93,7 +94,7 @@ internal static class LookupFunctions
         }
 
         var (r, c) = ((int)Math.Truncate(row.Number), (int)Math.Truncate(column.Number));
-        if (arguments.Count == 2 && array.GetLength(0) == 1)
+        if (arguments.Count == 2 && array.Rows == 1)
         {
             (r, c) = (1, r);
         }
@@ -104,7 +105,7 @@ internal static class LookupFunctions
         }
 
         (r, c) = (Math.Max(r, 1), Math.Max(c, 1));
-        return r <= array.GetLength(0) && c <= array.GetLength(1) ? Blank(array[r - 1, c - 1]) : FormulaValue.Ref;
+        return r <= array.Rows && c <= array.Columns ? Blank(ElementAt(StoredGrid(array), r - 1, c - 1)) : FormulaValue.Ref;
     }
 
     // XLOOKUP(value, lookup, return, [if not found], [mode]): mode 0 exact, -1 exact or next smaller, 1 exact or next larger, 2 wildcards.

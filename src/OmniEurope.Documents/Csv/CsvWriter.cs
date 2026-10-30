@@ -227,11 +227,21 @@ public sealed class CsvWriter : IDisposable, IAsyncDisposable
         _ => encoding.Preamble,
     };
 
-    private static Encoding WithoutPreamble(Encoding encoding) => encoding switch
+    private static Encoding WithoutPreamble(Encoding encoding)
     {
-        UTF8Encoding => new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
-        UnicodeEncoding u => new UnicodeEncoding(u.CodePage == 1201, byteOrderMark: false),
-        UTF32Encoding u => new UTF32Encoding(u.CodePage == 12001, byteOrderMark: false),
-        _ => encoding,
-    };
+        var result = encoding switch
+        {
+            UTF8Encoding => new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
+            UnicodeEncoding u => new UnicodeEncoding(u.CodePage == 1201, byteOrderMark: false),
+            UTF32Encoding u => new UTF32Encoding(u.CodePage == 12001, byteOrderMark: false),
+            _ => encoding,
+        };
+        if (!ReferenceEquals(result, encoding))
+        {
+            result = (Encoding)result.Clone();
+            result.EncoderFallback = encoding.EncoderFallback;
+            result.DecoderFallback = encoding.DecoderFallback;
+        }
+        return result;
+    }
 }

@@ -56,7 +56,7 @@ internal sealed class TextExtractor
         {
             if (c.Depth < MaxFormDepth)
             {
-                x.RunForm(c.Resources, o[0] as PdfName, c.State.Ctm, c.Depth);
+                x.RunForm(c.Resources, o[0] as PdfName, c.State, c.Depth);
             }
         }),
     };
@@ -78,9 +78,10 @@ internal sealed class TextExtractor
         return extractor._letters;
     }
 
-    private void Run(byte[] content, PdfDictionary? resources, Matrix initial, int depth)
+    private void Run(byte[] content, PdfDictionary? resources, Matrix initial, int depth, TextState? inherited = null)
     {
-        var context = new RunContext(new TextState { Ctm = initial }, resources, depth);
+        var state = inherited is null ? new TextState { Ctm = initial } : inherited with { Ctm = initial, Tm = Matrix.Identity, Tlm = Matrix.Identity };
+        var context = new RunContext(state, resources, depth);
         foreach (var operation in ContentStreamReader.Read(content))
         {
             if (Operators.TryGetValue(operation.Operator, out var op) && operation.Operands.Count >= op.Operands)
@@ -108,7 +109,7 @@ internal sealed class TextExtractor
         && _store.Get(stream, "Subtype") is PdfName { Value: "Form" }
             ? stream
             : null;
-    private void RunForm(PdfDictionary? resources, PdfName? name, Matrix ctm, int depth)
+    private void RunForm(PdfDictionary? resources, PdfName? name, TextState inherited, int depth)
     {
         // A form that is already being run (a form drawing itself) is skipped.
         if (FormNamed(resources, name) is not { } form || !_activeForms.Add(form))
@@ -118,8 +119,8 @@ internal sealed class TextExtractor
 
         try
         {
-            var matrix = Matrix.FromArray(_store.Get<PdfArray>(form, "Matrix")).Multiply(ctm);
-            Run(_store.DecodeBytes(form), _store.Get<PdfDictionary>(form, "Resources") ?? resources, matrix, depth + 1);
+            var matrix = Matrix.FromArray(_store.Get<PdfArray>(form, "Matrix")).Multiply(inherited.Ctm);
+            Run(_store.DecodeBytes(form), _store.Get<PdfDictionary>(form, "Resources") ?? resources, matrix, depth + 1, inherited);
         }
         catch (Exception exception) when (exception is InvalidDataException or NotSupportedException)
         {

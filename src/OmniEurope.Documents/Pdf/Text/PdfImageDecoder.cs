@@ -20,6 +20,13 @@ internal static class PdfImageDecoder
         try
         {
             var decoded = Decode(store, image, inlineData, resources);
+            if (decoded is not null && inlineData is null && store.Get(image, "SMask") is not PdfStream && store.Get(image, "Mask") is PdfStream stencil)
+            {
+                // A soft mask takes precedence. A stencil that cannot be read must not turn into opaque pixels:
+                // the renderer reports a failed decode as a gap.
+                return IsTrue(store, stencil, "ImageMask") && Decode(store, stencil, null, resources) is { } shape ? WithStencil(decoded, shape) : null;
+            }
+
             if (decoded is null || inlineData is not null || store.Number(image, "SMaskInData") != 0 || store.Get(image, "SMask") is not PdfStream mask)
             {
                 return decoded;
@@ -44,6 +51,12 @@ internal static class PdfImageDecoder
         }
 
         var (data, imageFilter, parameters) = Filtered(store, image, inlineData);
+        if (imageFilter is "DCTDecode" or "DCT" or "JPXDecode" && store.Get(image, "SMask") is not PdfStream && store.Get(image, "Mask") is PdfArray)
+        {
+            // These codecs have already transformed their native samples; applying a mask to the resulting
+            // RGB bytes would guess at the original component values. Report the unsupported mask instead.
+            return null;
+        }
         return imageFilter switch
         {
             "DCTDecode" or "DCT" => JpegDecoder.Decode(data),
@@ -61,7 +74,15 @@ internal static class PdfImageDecoder
         var isMask = IsTrue(store, image, "ImageMask") || IsTrue(store, image, "IM");
         var bits = isMask || ccitt ? 1 : (int)Value(store, image, "BitsPerComponent", "BPC", 8);
         var space = isMask ? PdfColorSpace.Gray : PdfColorSpace.Resolve(store, store.Get(image, "ColorSpace") ?? store.Get(image, "CS"), resources);
-        return Unpack(data, width, height, bits, space, DecodeArray(store, image, isMask));
+        var mask = store.Get(image, "SMask") is PdfStream ? null : MaskBounds(store, image, space.Components);
+        return Unpack(data, width, height, bits, space, DecodeArray(store, image, isMask), mask);
+    }
+
+    private static int[]? MaskBounds(PdfObjectStore store, PdfDictionary image, int components)
+    {
+        if (store.Get<PdfArray>(image, "Mask") is not { } bounds) return null;
+        if (bounds.Count != components * 2) throw new InvalidDataException("Invalid image color-key mask component count.");
+        return bounds.Items.Select(v => store.Resolve(v) is PdfNumber n ? n.IntValue : throw new InvalidDataException("Image color-key bounds must be numbers.")).ToArray();
     }
 
     private static bool IsTrue(PdfObjectStore store, PdfDictionary image, string key) => store.Get(image, key) is PdfBoolean { Value: true };
@@ -155,10 +176,11 @@ internal static class PdfImageDecoder
         return inData != 0 && jpx.AlphaImage() is { } alpha ? Jpeg2000Colors.WithAlpha(colors, alpha, inData == 2 || jpx.Premultiplied) : colors;
     }
 
-    private static RasterImage Unpack(byte[] data, int width, int height, int bits, PdfColorSpace space, double[]? decode)
+    private static RasterImage Unpack(byte[] data, int width, int height, int bits, PdfColorSpace space, double[]? decode, int[]? mask = null)
     {
         var components = space.Components;
         var image = new RasterImage(width, height, space.Output);
+        var alpha = mask is null ? null : new RasterImage(width, height, ImageColorType.Gray);
         var rowBits = (long)width * components * bits;
         var rowBytes = (int)((rowBits + 7) / 8);
         var max = (1 << Math.Min(bits, 16)) - 1;
@@ -169,18 +191,21 @@ internal static class PdfImageDecoder
         {
             for (var x = 0; x < width; x++)
             {
+                var transparent = mask is not null;
                 for (var c = 0; c < components; c++)
                 {
                     var raw = Sample(data, (long)y * rowBytes, ((long)x * components) + c, bits);
+                    if (mask is not null && (raw < mask[c * 2] || raw > mask[(c * 2) + 1])) transparent = false;
                     var (low, high) = decode is { } d && d.Length > (2 * c) + 1 ? (d[2 * c], d[(2 * c) + 1]) : space.DefaultDecode(c) ?? (0, max);
                     samples[c] = low + (raw * (high - low) / max);
                 }
 
                 o = space.Write(samples, output, o);
+                if (alpha is not null) alpha.Pixels[(y * width) + x] = transparent ? (byte)0 : (byte)255;
             }
         }
 
-        return image;
+        return alpha is null ? image : WithAlpha(image, alpha, null);
     }
 
     private static int Sample(byte[] data, long rowStart, long index, int bits)
@@ -219,6 +244,29 @@ internal static class PdfImageDecoder
         space.Write(samples, pixel.Pixels, 0);
         var (r, g, b, _) = pixel.ConvertTo(ImageColorType.Rgb).GetRgba(0, 0);
         return (r, g, b);
+    }
+
+    // An explicit mask (ISO 32000-1 §8.9.6.3) paints where the stencil decodes black, and may be finer than the image:
+    // the result takes the larger size of the two so that its edges stay sharp.
+    private static RasterImage WithStencil(RasterImage image, RasterImage stencil)
+    {
+        var rgb = image.ColorType == ImageColorType.Rgb ? image : image.ConvertTo(ImageColorType.Rgb);
+        var (width, height) = (Math.Max(rgb.Width, stencil.Width), Math.Max(rgb.Height, stencil.Height));
+        var result = new RasterImage(width, height, ImageColorType.Rgba);
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                var source = ((y * rgb.Height / height * rgb.Width) + (x * rgb.Width / width)) * 3;
+                var o = ((y * width) + x) * 4;
+                result.Pixels[o] = rgb.Pixels[source];
+                result.Pixels[o + 1] = rgb.Pixels[source + 1];
+                result.Pixels[o + 2] = rgb.Pixels[source + 2];
+                result.Pixels[o + 3] = (byte)(255 - stencil.GetRgba(x * stencil.Width / width, y * stencil.Height / height).R);
+            }
+        }
+
+        return result;
     }
 
     // The soft mask (resampled to the image size) becomes alpha; with a Matte the colours are first unpremultiplied:

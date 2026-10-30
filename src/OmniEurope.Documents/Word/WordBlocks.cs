@@ -102,7 +102,7 @@ public sealed class WordTable : WordBlock
     public List<WordTableRow> Rows { get; } = [];
 
     /// <summary>Cells separated by tabs, rows by line feeds.</summary>
-    public override string Text => string.Join('\n', Rows.Select(r => string.Join('\t', r.Cells.Select(c => c.Text))));
+    public override string Text => string.Join('\n', Rows.Where(r => r.Revision?.Kind != WordRevisionKind.Deleted).Select(r => string.Join('\t', r.Cells.Select(c => c.Text))));
 
     /// <summary>Appends a row with one single-paragraph cell per text.</summary>
     public WordTableRow AddRow(params IEnumerable<string> cells)

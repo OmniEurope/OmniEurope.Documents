@@ -33,11 +33,17 @@ jobs:
           dotnet test --project tests/OmniEurope.Documents.Tests/OmniEurope.Documents.Tests.csproj
           --configuration Release --no-build --no-progress
           --report-trx --report-trx-filename tests.trx --results-directory artifacts/tests
+          --coverlet --coverlet-output-format cobertura
+          --coverlet-include '[OmniEurope.Documents]*'
+          --coverlet-exclude-by-attribute GeneratedCodeAttribute ExcludeFromCodeCoverageAttribute
       - name: Verify test results
         # A run that leaves no result file, executes no test, or reports a failed, errored, timed-out or
         # aborted test is a failure, never a silent pass.
         shell: pwsh
         run: ./.github/scripts/verify-trx.ps1 -Directory artifacts/tests -Name tests.trx
+      - name: Verify coverage and CRAP
+        shell: pwsh
+        run: ./scripts/crap-gate.ps1 -CoverageRoot artifacts/tests -ReportPath artifacts/crap-scores.csv
       - name: Pack
         run: >-
           dotnet pack src/OmniEurope.Documents/OmniEurope.Documents.csproj

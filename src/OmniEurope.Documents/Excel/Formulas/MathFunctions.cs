@@ -17,7 +17,7 @@ internal static class MathFunctions
         registry["MAX"] = new(1, Many, (e, a) => Aggregate(e, a, n => n.Count == 0 ? 0 : n.Max()));
         registry["COUNT"] = new(1, Many, (e, a) => FormulaValue.Of(Elements(e, a).Count(v => v.Value.Kind == ValueKind.Number || (v.Direct && !v.Value.ToNumber().IsError && v.Value.Kind != ValueKind.Blank))));
         registry["COUNTA"] = new(1, Many, (e, a) => FormulaValue.Of(Elements(e, a).Count(v => v.Value.Kind != ValueKind.Blank || v.Direct)));
-        registry["COUNTBLANK"] = new(1, 1, (e, a) => FormulaValue.Of(Grid(e.Evaluate(a[0])).Cast<FormulaValue>().Count(v => v.Kind == ValueKind.Blank || (v.Kind == ValueKind.Text && v.Text.Length == 0))));
+        registry["COUNTBLANK"] = new(1, 1, (e, a) => FormulaValue.Of(CountBlank(e.Evaluate(a[0]))));
         registry["COUNTIF"] = new(2, 2, (e, a) => Counted(Matches(e, [(a[0], a[1])])));
         registry["COUNTIFS"] = new(2, Many, (e, a) => a.Count % 2 == 0 ? Counted(Matches(e, Pairs(a, 0))) : FormulaValue.ValueError);
         registry["SUMIF"] = new(2, 3, (e, a) => ConditionalSum(e, a.Count == 3 ? a[2] : a[0], [(a[0], a[1])], average: false));
@@ -67,41 +67,65 @@ internal static class MathFunctions
         return pairs;
     }
 
-    // For each cell of the ranges (all of one size), whether it meets every criterion; null when sizes differ.
-    private static bool[]? Matches(FormulaEvaluator evaluator, List<(FormulaNode Range, FormulaNode Criterion)> pairs)
+    // Blank cells and empty text; the unallocated rest of a range is blank.
+    private static long CountBlank(FormulaValue value)
     {
-        bool[]? result = null;
-        foreach (var (rangeNode, criterionNode) in pairs)
-        {
-            var range = Grid(evaluator.Evaluate(rangeNode)).Cast<FormulaValue>().ToList();
-            var test = Criterion(evaluator.Evaluate(criterionNode));
-            result ??= Enumerable.Repeat(true, range.Count).ToArray();
-            if (range.Count != result.Length)
-            {
-                return null;
-            }
+        var stored = StoredGrid(value);
+        var held = stored.Cast<FormulaValue>().Count(v => v.Kind == ValueKind.Blank || (v.Kind == ValueKind.Text && v.Text.Length == 0));
+        return held + ((long)value.Rows * value.Columns) - stored.Length;
+    }
 
-            for (var i = 0; i < range.Count; i++)
+    // The cells that meet every criterion, over the part of the ranges (all of one size) held in memory; beyond it
+    // every cell is blank, so those are all counted in BlankCells or none are. Null when sizes differ.
+    private static (bool[,] Cells, long BlankCells)? Matches(FormulaEvaluator evaluator, List<(FormulaNode Range, FormulaNode Criterion)> pairs, FormulaValue? extra = null)
+    {
+        var ranges = pairs.Select(p => (Value: evaluator.Evaluate(p.Range), Test: Criterion(evaluator.Evaluate(p.Criterion)))).ToList();
+        var values = ranges.Select(r => r.Value).Concat(extra is { } value ? [value] : []).ToList();
+        var (rows, columns) = (values[0].Rows, values[0].Columns);
+        if (values.Any(v => v.Rows != rows || v.Columns != columns))
+        {
+            return null;
+        }
+
+        var heldRows = values.Max(v => StoredGrid(v).GetLength(0));
+        var heldColumns = values.Max(v => StoredGrid(v).GetLength(1));
+        var cells = new bool[heldRows, heldColumns];
+        for (var r = 0; r < heldRows; r++)
+        {
+            for (var c = 0; c < heldColumns; c++)
             {
-                result[i] &= test(range[i]);
+                cells[r, c] = ranges.All(range => range.Test(ElementAt(StoredGrid(range.Value), r, c)));
             }
         }
 
-        return result;
+        var blanks = ranges.All(range => range.Test(FormulaValue.Blank)) ? ((long)rows * columns) - (heldRows * heldColumns) : 0;
+        return (cells, blanks);
     }
 
-    private static FormulaValue Counted(bool[]? matches) => matches is null ? FormulaValue.ValueError : FormulaValue.Of(matches.Count(m => m));
+    private static FormulaValue Counted((bool[,] Cells, long BlankCells)? matches) =>
+        matches is { } m ? FormulaValue.Of(m.Cells.Cast<bool>().Count(cell => cell) + m.BlankCells) : FormulaValue.ValueError;
 
     private static FormulaValue ConditionalSum(FormulaEvaluator evaluator, FormulaNode sumNode, List<(FormulaNode, FormulaNode)> pairs, bool average)
     {
-        var matches = Matches(evaluator, pairs);
-        var values = Grid(evaluator.Evaluate(sumNode)).Cast<FormulaValue>().ToList();
-        if (matches is null || values.Count != matches.Length)
+        var sum = evaluator.Evaluate(sumNode);
+        if (Matches(evaluator, pairs, sum) is not { } matches)
         {
             return FormulaValue.ValueError;
         }
 
-        var selected = values.Where((_, i) => matches[i]).ToList();
+        var values = StoredGrid(sum);
+        var selected = new List<FormulaValue>();
+        for (var r = 0; r < matches.Cells.GetLength(0); r++)
+        {
+            for (var c = 0; c < matches.Cells.GetLength(1); c++)
+            {
+                if (matches.Cells[r, c])
+                {
+                    selected.Add(ElementAt(values, r, c));
+                }
+            }
+        }
+
         if (selected.Find(v => v.IsError) is { Kind: ValueKind.Error } error)
         {
             return error;
@@ -198,6 +222,7 @@ internal static class MathFunctions
         {
             // ROUNDUP and ROUNDDOWN move away from or towards zero whatever the next digit.
             var scaled = (double)Math.Round((decimal)(Math.Abs(x.Number) * scale), 9);
+            if (scaled == 0 && x.Number != 0) scaled = Math.Max(Math.Abs(x.Number) * scale, double.Epsilon);
             var rounded = (mode == MidpointRounding.AwayFromZero ? Math.Ceiling(scaled) : Math.Floor(scaled)) / scale;
             return FormulaValue.Of(Math.CopySign(rounded, x.Number));
         }
@@ -207,8 +232,18 @@ internal static class MathFunctions
             return FormulaValue.Of((double)Math.Round((decimal)x.Number, places, mode));
         }
 
+        // Extreme factors and values do not fit decimal. The scaled number is already bounded above by
+        // the significant-digit guard; round it without converting either large operand to decimal.
+        if (places < -28 || Math.Abs(x.Number) >= (double)decimal.MaxValue)
+        {
+            return FormulaValue.Of(Math.Round(x.Number * scale, 0, mode) / scale);
+        }
+
         var factor = (decimal)Math.Pow(10, -places);
-        return FormulaValue.Of((double)(Math.Round((decimal)x.Number / factor, 0, mode) * factor));
+        var integral = Math.Round((decimal)x.Number / factor, 0, mode);
+        return FormulaValue.Of(Math.Abs(integral) > decimal.MaxValue / factor
+            ? Math.Round(x.Number * scale, 0, mode) / scale
+            : (double)(integral * factor));
     }
 
     // CEILING and FLOOR to a multiple of significance (1 when omitted), which must share the number's sign.

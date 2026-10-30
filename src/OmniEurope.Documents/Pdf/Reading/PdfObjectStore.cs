@@ -121,6 +121,11 @@ internal sealed class PdfObjectStore
 
         try
         {
+            if (_resolving.Count > MaxResolveDepth)
+            {
+                throw new InvalidDataException("PDF object loads exceed the maximum nested resolution depth.");
+            }
+
             var value = LoadUncached(number);
             if (value is not null)
             {

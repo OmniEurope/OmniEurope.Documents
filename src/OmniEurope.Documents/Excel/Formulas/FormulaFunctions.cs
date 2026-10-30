@@ -45,7 +45,8 @@ internal static class FormulaFunctions
             var value = evaluator.Evaluate(argument);
             if (value.Kind == ValueKind.Array)
             {
-                foreach (var element in value.Array)
+                // List readers skip blanks, so the blank rest of a range is left unallocated.
+                foreach (var element in value.Stored)
                 {
                     yield return (element, false);
                 }
@@ -112,6 +113,13 @@ internal static class FormulaFunctions
 
     /// <summary>The elements of an argument as a two-dimensional array (a single value is a 1 x 1 array).</summary>
     public static FormulaValue[,] Grid(FormulaValue value) => value.Kind == ValueKind.Array ? value.Array : new[,] { { value } };
+
+    /// <summary>The elements of an argument held in memory; those past its bounds are blank (see <see cref="ElementAt"/>).</summary>
+    public static FormulaValue[,] StoredGrid(FormulaValue value) => value.Kind == ValueKind.Array ? value.Stored : new[,] { { value } };
+
+    /// <summary>An element of a stored grid, blank past its bounds.</summary>
+    public static FormulaValue ElementAt(FormulaValue[,] grid, int row, int column) =>
+        row < grid.GetLength(0) && column < grid.GetLength(1) ? grid[row, column] : FormulaValue.Blank;
 
     /// <summary>
     /// A test from a criterion as COUNTIF, SUMIF and their kin read it: <c>"&gt;5"</c>, <c>"&lt;&gt;x"</c>, <c>"=a*"</c>

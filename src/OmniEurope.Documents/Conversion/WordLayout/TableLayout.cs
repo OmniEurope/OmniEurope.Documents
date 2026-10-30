@@ -11,7 +11,13 @@ namespace OmniEurope.Documents.Conversion.WordLayout;
 /// </summary>
 internal sealed class TableLayout(LayoutContext context, BlockLayout blocks)
 {
-    public List<FlowItem> Layout(WordTable table, double width) => [.. Rows(table, width, context.Lists.Clone())];
+    public List<FlowItem> Layout(WordTable table, double width)
+    {
+        // Keep the loaded revision model intact while formatting the accepted, visible row sequence.
+        var visible = new WordTable(table.Columns) { Properties = table.Properties };
+        visible.Rows.AddRange(table.Rows.Where(r => r.Revision?.Kind != WordRevisionKind.Deleted));
+        return [.. Rows(visible, width, context.Lists.Clone())];
+    }
 
     // The rows at one width; the table keeps the list counters as they were at its start, to lay it out again at the
     // width of another column.

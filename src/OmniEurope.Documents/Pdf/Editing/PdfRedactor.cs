@@ -59,15 +59,17 @@ public static class PdfRedactor
         }
 
         var totals = new Totals();
-        var kids = new List<PdfObject>();
+        var pages = new List<Func<PdfReference>>();
         foreach (var page in document.Pages)
         {
             var areas = byPage.GetValueOrDefault(page.Number);
-            kids.Add(areas is null && !options.RemoveMetadata
-                ? copier.CopyPage(page, tree, numbers)
+            pages.Add(areas is null && !options.RemoveMetadata
+                ? () => copier.CopyPage(page, tree, numbers)
                 : RedactPage(page, areas ?? [], options, table, copier, tree, numbers, totals));
         }
 
+        // Every page has identified its replacement properties before any shared source object is copied.
+        var kids = pages.Select(copy => (PdfObject)copy()).ToList();
         table.Set(tree, new PdfDictionary().SetName("Type", "Pages").Set("Kids", new PdfArray(kids)).SetNumber("Count", kids.Count));
         table.Set(catalog, new PdfDictionary().SetName("Type", "Catalog").Set("Pages", tree));
         var info = options.RemoveMetadata ? new PdfDictionary().Set("Producer", PdfString.FromText("OmniEurope.Documents")) : PdfEditor.Information(document.Information);
@@ -77,13 +79,16 @@ public static class PdfRedactor
     }
 
     /// <exception cref="PdfRedactionException">See <see cref="Redact"/>.</exception>
-    private static PdfReference RedactPage(PdfPage page, List<PdfRectangle> areas, PdfRedactionOptions options, PdfObjectTable table, PdfObjectCopier copier, PdfReference tree, ISet<int> numbers, Totals totals)
+    private static Func<PdfReference> RedactPage(PdfPage page, List<PdfRectangle> areas, PdfRedactionOptions options, PdfObjectTable table, PdfObjectCopier copier, PdfReference tree, ISet<int> numbers, Totals totals)
     {
         var store = page.Store;
+        var pending = new List<(PdfReference Target, PdfObject Value)>();
         PdfObject Register(PdfStream stream)
         {
             var placeholder = new PdfDictionary();
-            copier.Substitute(placeholder, table.Add(copier.CopyObject(store, stream)));
+            var target = table.Reserve();
+            copier.Substitute(placeholder, target);
+            pending.Add((target, stream));
             return placeholder;
         }
 
@@ -107,8 +112,25 @@ public static class PdfRedactor
             }
         }
 
+        // Delay copying until every rewritten form and mark has identified its replacement texts. A named
+        // property can be shared by aliases, forms and unredacted occurrences; none may retain its old text.
+        foreach (var properties in context.ReplacementProperties)
+        {
+            var target = table.Reserve();
+            copier.Substitute(properties, target);
+            pending.Add((target, RedactionRewriter.WithoutReplacementText(properties)));
+        }
+
         totals.Add(context);
-        return copier.CopyPage(page, tree, numbers, entries: entries, resources: rewritten?.Resources ?? page.Resources);
+        return () =>
+        {
+            foreach (var (target, value) in pending)
+            {
+                table.Set(target, copier.CopyObject(store, value));
+            }
+
+            return copier.CopyPage(page, tree, numbers, entries: entries, resources: rewritten?.Resources ?? page.Resources);
+        };
     }
 
     // The page's own drawing inside q/Q (whatever it leaves in the graphics state), then the areas filled.
