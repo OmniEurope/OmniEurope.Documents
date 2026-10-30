@@ -40,7 +40,6 @@ public sealed class PublicApiCoherenceTests
         Assert.Contains(WordToMarkdown.Convert(document).Gaps, gap => gap.Contains("paragraph", StringComparison.Ordinal));
 
         var plain = new WordDocument();
-        plain.Styles.DefaultParagraphProperties = WordParagraphProperties.Empty;
         plain.AddParagraph("Plain").Properties = new WordParagraphProperties { MarkProperties = new WordRunProperties { Bold = true } };
         Assert.DoesNotContain(WordToMarkdown.Convert(plain).Gaps, gap => gap.Contains("paragraph", StringComparison.Ordinal));
     }
@@ -155,6 +154,33 @@ public sealed class PublicApiCoherenceTests
         Assert.Equal(12, page.Letters[2].FontSize);
         Assert.Equal(2, page.Letters[0].RenderingMode);
         Assert.Empty(PdfRenderer.Render(page).Gaps);
+    }
+
+    [Fact]
+    public void Markdown_does_not_report_the_defaults_of_the_document_as_lost_formatting()
+    {
+        var document = new WordDocument();
+        document.AddParagraph("Plain text");
+        foreach (var view in new[] { document, WordDocument.Load(document.ToArray()) })
+        {
+            Assert.DoesNotContain(WordToMarkdown.Convert(view).Gaps, gap => gap.Contains("font", StringComparison.Ordinal) || gap.Contains("paragraph", StringComparison.Ordinal));
+        }
+    }
+
+    [Fact]
+    public void Markdown_measures_lost_formatting_against_custom_document_defaults()
+    {
+        var document = new WordDocument();
+        document.Styles.DefaultRunProperties = new WordRunProperties { Font = "Arial", FontSize = 10, Color = "336699" };
+        document.Styles.DefaultParagraphProperties = new WordParagraphProperties { SpacingAfter = 3 };
+        document.AddParagraph("Plain text");
+        var plain = WordToMarkdown.Convert(WordDocument.Load(document.ToArray())).Gaps;
+        Assert.DoesNotContain(plain, gap => gap.Contains("font", StringComparison.Ordinal) || gap.Contains("colour", StringComparison.Ordinal) || gap.Contains("paragraph", StringComparison.Ordinal));
+
+        document.AddParagraph().AddText("Direct", new WordRunProperties { Font = "Courier New", Color = "FF0000" });
+        var direct = WordToMarkdown.Convert(WordDocument.Load(document.ToArray())).Gaps;
+        Assert.Contains(direct, gap => gap.Contains("font", StringComparison.Ordinal));
+        Assert.Contains(direct, gap => gap.Contains("colour", StringComparison.Ordinal));
     }
 
     [Fact]

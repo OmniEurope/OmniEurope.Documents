@@ -219,8 +219,9 @@ internal sealed class MarkdownDocumentWriter(MarkdownContext context)
 
     private void NoteParagraphFormatting(WordParagraphProperties properties)
     {
-        var lost = properties with { StyleId = null, OutlineLevel = null, NumberingId = null, NumberingLevel = null, MarkProperties = null };
-        if (lost != WordParagraphProperties.Empty) context.Gaps.Add("paragraph formatting is not preserved");
+        // The defaults of the document are the look of plain text, not formatting met in it.
+        static WordParagraphProperties Visible(WordParagraphProperties p) => p with { StyleId = null, OutlineLevel = null, NumberingId = null, NumberingLevel = null, MarkProperties = null };
+        if (Visible(properties) != Visible(context.Document.Styles.DefaultParagraphProperties)) context.Gaps.Add("paragraph formatting is not preserved");
     }
 
     // Notes referred to inside other notes are numbered as they are met, so the loop runs to the end of a

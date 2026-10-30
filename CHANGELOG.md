@@ -4,6 +4,27 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ## [Unreleased]
 
+### Changed
+
+- An explicit Excel range keeps its dimensions after recalculation: `INDEX`, `COUNTBLANK`, `ROWS` and array operations
+  see the blank cells past the used area, which stay unallocated until an operation needs every element. `SUMIF`,
+  `COUNTIFS` and their kin now return `#VALUE!` for ranges of one cell count but different shapes.
+- `WordTable.Text` and Word to PDF leave out rows deleted with change tracking, as HTML and Markdown already did.
+- `WordToMarkdown` reports fonts, colours and paragraph formatting that differ from the defaults of the document.
+
+### Fixed
+
+- PDF redaction removes `ActualText`, `Alt` and `E` from named marked-content properties, including those shared with
+  aliases, forms and other pages.
+- Deeply nested indirect stream lengths are refused with `InvalidDataException` instead of overflowing the stack.
+- PDF rendering and image decoding apply colour-key masks and explicit stencil masks. A colour-key mask on a JPEG or
+  JPEG 2000 image, and a stencil whose size would multiply the pixels of the image, are reported as a gap.
+- Text extraction inherits the font and text parameters of the caller inside a form XObject.
+- The PDF creation date no longer depends on the calendar of the current culture.
+- `CsvReader` detects the delimiter whatever the read sizes of the `TextReader`, and `CsvWriter` keeps the encoder and
+  decoder fallbacks of the given encoding.
+- `ROUND`, `ROUNDUP` and `ROUNDDOWN` no longer abort a recalculation on extreme digit counts or values.
+
 ## [1.0.0] - 2026-10-20
 
 ### Added

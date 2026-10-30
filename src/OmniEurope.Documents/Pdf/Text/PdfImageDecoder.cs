@@ -15,6 +15,8 @@ namespace OmniEurope.Documents.Pdf.Text;
 /// </summary>
 internal static class PdfImageDecoder
 {
+    private const int MaxStencilGrowth = 4;
+
     public static RasterImage? TryDecode(PdfObjectStore store, PdfDictionary image, byte[]? inlineData, PdfDictionary? resources)
     {
         try
@@ -247,22 +249,29 @@ internal static class PdfImageDecoder
     }
 
     // An explicit mask (ISO 32000-1 §8.9.6.3) paints where the stencil decodes black, and may be finer than the image:
-    // the result takes the larger size of the two so that its edges stay sharp.
-    private static RasterImage WithStencil(RasterImage image, RasterImage stencil)
+    // the result takes the larger size of the two on each axis so that its edges stay sharp. Sizes that disagree so
+    // much that this would multiply the pixels of a small file are refused: the renderer reports it as a gap.
+    private static RasterImage? WithStencil(RasterImage image, RasterImage stencil)
     {
         var rgb = image.ColorType == ImageColorType.Rgb ? image : image.ConvertTo(ImageColorType.Rgb);
         var (width, height) = (Math.Max(rgb.Width, stencil.Width), Math.Max(rgb.Height, stencil.Height));
+        if ((long)width * height > MaxStencilGrowth * Math.Max((long)rgb.Width * rgb.Height, (long)stencil.Width * stencil.Height))
+        {
+            return null;
+        }
+
         var result = new RasterImage(width, height, ImageColorType.Rgba);
         for (var y = 0; y < height; y++)
         {
+            var (imageRow, stencilRow) = ((int)((long)y * rgb.Height / height), (int)((long)y * stencil.Height / height));
             for (var x = 0; x < width; x++)
             {
-                var source = ((y * rgb.Height / height * rgb.Width) + (x * rgb.Width / width)) * 3;
+                var source = ((imageRow * rgb.Width) + (int)((long)x * rgb.Width / width)) * 3;
                 var o = ((y * width) + x) * 4;
                 result.Pixels[o] = rgb.Pixels[source];
                 result.Pixels[o + 1] = rgb.Pixels[source + 1];
                 result.Pixels[o + 2] = rgb.Pixels[source + 2];
-                result.Pixels[o + 3] = (byte)(255 - stencil.GetRgba(x * stencil.Width / width, y * stencil.Height / height).R);
+                result.Pixels[o + 3] = (byte)(255 - stencil.GetRgba((int)((long)x * stencil.Width / width), stencilRow).R);
             }
         }
 

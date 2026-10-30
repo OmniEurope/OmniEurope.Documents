@@ -89,12 +89,19 @@ internal static class MathFunctions
 
         var heldRows = values.Max(v => StoredGrid(v).GetLength(0));
         var heldColumns = values.Max(v => StoredGrid(v).GetLength(1));
+        var grids = ranges.Select(range => (Grid: StoredGrid(range.Value), range.Test)).ToList();
         var cells = new bool[heldRows, heldColumns];
         for (var r = 0; r < heldRows; r++)
         {
             for (var c = 0; c < heldColumns; c++)
             {
-                cells[r, c] = ranges.All(range => range.Test(ElementAt(StoredGrid(range.Value), r, c)));
+                var met = true;
+                foreach (var (grid, test) in grids)
+                {
+                    met = met && test(ElementAt(grid, r, c));
+                }
+
+                cells[r, c] = met;
             }
         }
 
@@ -102,8 +109,21 @@ internal static class MathFunctions
         return (cells, blanks);
     }
 
-    private static FormulaValue Counted((bool[,] Cells, long BlankCells)? matches) =>
-        matches is { } m ? FormulaValue.Of(m.Cells.Cast<bool>().Count(cell => cell) + m.BlankCells) : FormulaValue.ValueError;
+    private static FormulaValue Counted((bool[,] Cells, long BlankCells)? matches)
+    {
+        if (matches is not { } m)
+        {
+            return FormulaValue.ValueError;
+        }
+
+        var count = m.BlankCells;
+        foreach (var cell in m.Cells)
+        {
+            count += cell ? 1 : 0;
+        }
+
+        return FormulaValue.Of(count);
+    }
 
     private static FormulaValue ConditionalSum(FormulaEvaluator evaluator, FormulaNode sumNode, List<(FormulaNode, FormulaNode)> pairs, bool average)
     {

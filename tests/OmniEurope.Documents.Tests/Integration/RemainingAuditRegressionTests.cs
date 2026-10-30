@@ -164,6 +164,31 @@ public sealed class RemainingAuditRegressionTests
     }
 
     [Fact]
+    public void An_explicit_mask_that_would_multiply_the_pixels_is_refused_and_reported()
+    {
+        // A wide image and a tall stencil must not grow into a square of 16384 x 16384 pixels.
+        var source = RawPdf.Page("q 50 0 0 50 0 0 cm /Im Do Q", "/XObject << /Im 5 0 R >>", "",
+            RawPdf.Stream("/Type /XObject /Subtype /Image /Width 16384 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8 /Mask 6 0 R", new byte[16384]),
+            RawPdf.Stream("/Type /XObject /Subtype /Image /Width 1 /Height 16384 /ImageMask true /BitsPerComponent 1", new byte[16384]));
+        var page = PdfDocument.Open(source).GetPage(1);
+        Assert.Null(page.Images[0].Decode());
+        Assert.NotEmpty(PdfRenderer.Render(page, new PdfRenderOptions { Dpi = 72 }).Gaps);
+    }
+
+    [Fact]
+    public void An_explicit_mask_across_its_image_keeps_both_on_their_own_axis()
+    {
+        // Four columns of colour, four rows of stencil: every column keeps its colour and only the top row is painted.
+        var source = RawPdf.Page("q 50 0 0 50 0 0 cm /Im Do Q", "/XObject << /Im 5 0 R >>", "",
+            RawPdf.Stream("/Type /XObject /Subtype /Image /Width 4 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8 /Mask 6 0 R", [0, 80, 160, 240]),
+            RawPdf.Stream("/Type /XObject /Subtype /Image /Width 1 /Height 4 /ImageMask true /BitsPerComponent 1", [0x00, 0x80, 0x80, 0x80]));
+        var decoded = PdfDocument.Open(source).GetPage(1).Images[0].Decode()!;
+        Assert.Equal((4, 4), (decoded.Width, decoded.Height));
+        Assert.Equal((240, 255), (decoded.GetRgba(3, 0).R, decoded.GetRgba(3, 0).A));
+        Assert.Equal(0, decoded.GetRgba(3, 1).A);
+    }
+
+    [Fact]
     public void An_explicit_mask_that_is_not_a_stencil_is_reported()
     {
         var source = RawPdf.Page("q 50 0 0 50 0 0 cm /Im Do Q", "/XObject << /Im 5 0 R >>", "",
