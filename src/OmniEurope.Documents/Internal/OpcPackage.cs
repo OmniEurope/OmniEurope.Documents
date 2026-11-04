@@ -288,7 +288,7 @@ internal sealed class OpcPackage
             .Where(e => string.Equals((string?)e.Attribute("Id"), id, StringComparison.Ordinal)).Remove();
     }
 
-    /// <summary>A part name not yet used:<paramref name="stem"/> followed by the first free number and <paramref name="extension"/>.</summary>
+    /// <summary>A part name not yet used: <paramref name="stem"/> followed by the first free number and <paramref name="extension"/>.</summary>
     public string UniqueName(string stem, string extension)
     {
         for (var n = 1; ; n++)
