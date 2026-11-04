@@ -26,4 +26,4 @@ Seuil annoncé au consommateur : mêmes coupures et même nombre de pages, moins
 
 ## Validation et limites
 
-À remplir lot par lot avec la commande ou l'observation qui le prouve.
+Validation locale complète le 4 novembre 2026 (`ylaunch.ps1 -s -ta -c`) : 2 669 tests (2 619 rapides, 50 de stress), 0 échec, 97,06 % des lignes, porte CRAP passée (3 946 méthodes). Paquet 1.1.0 construit et contrôlé (`verify-package.ps1`). Limites : aucun run CI hébergé, aucun fichier ouvert dans Word, comparaison de pages lente en WebAssembly (6,8 s à 150 dpi), thème réécrit avec les couleurs Office par défaut.
