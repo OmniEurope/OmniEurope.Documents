@@ -135,41 +135,25 @@ public static class PdfPageComparison
         long differing = 0, inkA = 0, inkB = 0;
         for (var y = 0; y < height; y++)
         {
+            var rowA = y * a.Width * 3;
+            var rowB = y * b.Width * 3;
+            var rowDiff = y * width * 3;
             for (var x = 0; x < width; x++)
             {
-                var ia = ((y * a.Width) + x) * 3;
-                var ib = ((y * b.Width) + x) * 3;
-                if (IsInk(rgbA, ia, threshold))
-                {
-                    inkA++;
-                }
+                var ia = rowA + (x * 3);
+                var ib = rowB + (x * 3);
+                inkA += IsInk(rgbA, ia, threshold) ? 1 : 0;
+                inkB += IsInk(rgbB, ib, threshold) ? 1 : 0;
 
-                if (IsInk(rgbB, ib, threshold))
-                {
-                    inkB++;
-                }
-
-                var differs = !Matches(rgbA, ia, rgbB, b.Width, x, y, width, height, threshold, radius)
-                    || !Matches(rgbB, ib, rgbA, a.Width, x, y, width, height, threshold, radius);
-                if (differs)
-                {
-                    differing++;
-                }
-
+                // The pixel at the same position lies in both windows: when it is close, both directions match and
+                // the window scans are skipped (most pixels of two renderings of one page are equal or near).
+                var differs = !Close(rgbA, ia, rgbB, ib, threshold)
+                    && (!Matches(rgbA, ia, rgbB, b.Width, x, y, width, height, threshold, radius)
+                        || !Matches(rgbB, ib, rgbA, a.Width, x, y, width, height, threshold, radius));
+                differing += differs ? 1 : 0;
                 if (diff is not null)
                 {
-                    var o = ((y * width) + x) * 3;
-                    if (differs)
-                    {
-                        (diff[o], diff[o + 1], diff[o + 2]) = (255, 0, 0);
-                    }
-                    else
-                    {
-                        for (var c = 0; c < 3; c++)
-                        {
-                            diff[o + c] = (byte)(((rgbA[ia + c] * 3) + (255 * 7) + 5) / 10);
-                        }
-                    }
+                    PaintDiff(diff, rowDiff + (x * 3), rgbA, ia, differs);
                 }
             }
         }
@@ -178,6 +162,28 @@ public static class PdfPageComparison
         var mismatch = a.Width != b.Width || a.Height != b.Height;
         return new PdfPageComparisonResult(width, height, differing, (long)width * height, inkA, inkB, mismatch, png);
     }
+
+    // A differing pixel in red, any other the first page's pixel faded towards white.
+    private static void PaintDiff(byte[] diff, int o, byte[] rgbA, int ia, bool differs)
+    {
+        if (differs)
+        {
+            (diff[o], diff[o + 1], diff[o + 2]) = (255, 0, 0);
+        }
+        else
+        {
+            var fade = Fade;
+            (diff[o], diff[o + 1], diff[o + 2]) = (fade[rgbA[ia]], fade[rgbA[ia + 1]], fade[rgbA[ia + 2]]);
+        }
+    }
+
+    // A channel faded to 30 % of its strength over white.
+    private static readonly byte[] Fade = Enumerable.Range(0, 256).Select(v => (byte)(((v * 3) + (255 * 7) + 5) / 10)).ToArray();
+
+    private static bool Close(byte[] a, int ia, byte[] b, int ib, int threshold) =>
+        Math.Abs(a[ia] - b[ib]) <= threshold
+        && Math.Abs(a[ia + 1] - b[ib + 1]) <= threshold
+        && Math.Abs(a[ia + 2] - b[ib + 2]) <= threshold;
 
     // Does the pixel at offset "from" (position x, y) have a close pixel in "to" within the radius,
     // kept inside the common area?
@@ -208,7 +214,34 @@ public static class PdfPageComparison
         return rgb[i] < limit || rgb[i + 1] < limit || rgb[i + 2] < limit;
     }
 
-    private static byte[] ToRgb(RasterImage image)
+    // The pixels as RGB over white; an RGB image is used as it is (only read).
+    private static byte[] ToRgb(RasterImage image) => image.ColorType switch
+    {
+        ImageColorType.Rgb => image.Pixels,
+        ImageColorType.Rgba => RgbaToRgb(image.Pixels),
+        _ => ToRgbPerPixel(image),
+    };
+
+    private static byte[] RgbaToRgb(byte[] rgba)
+    {
+        var rgb = new byte[rgba.Length / 4 * 3];
+        for (int i = 0, o = 0; i < rgba.Length; i += 4, o += 3)
+        {
+            var alpha = rgba[i + 3];
+            if (alpha == 255)
+            {
+                (rgb[o], rgb[o + 1], rgb[o + 2]) = (rgba[i], rgba[i + 1], rgba[i + 2]);
+            }
+            else
+            {
+                (rgb[o], rgb[o + 1], rgb[o + 2]) = (Over(rgba[i], alpha), Over(rgba[i + 1], alpha), Over(rgba[i + 2], alpha));
+            }
+        }
+
+        return rgb;
+    }
+
+    private static byte[] ToRgbPerPixel(RasterImage image)
     {
         var rgb = new byte[image.Width * image.Height * 3];
         var o = 0;

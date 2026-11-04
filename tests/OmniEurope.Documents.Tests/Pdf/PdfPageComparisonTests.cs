@@ -106,6 +106,27 @@ public sealed class PdfPageComparisonTests
     }
 
     [Fact]
+    public void Translucent_and_grey_images_are_composited_over_white_before_comparing()
+    {
+        // Half-transparent black over white is mid grey (128): it matches a grey image of 128, not one of 0.
+        var rgba = new RasterImage(4, 2, ImageColorType.Rgba);
+        for (var i = 0; i < rgba.Pixels.Length; i += 4)
+        {
+            (rgba.Pixels[i], rgba.Pixels[i + 1], rgba.Pixels[i + 2], rgba.Pixels[i + 3]) = (0, 0, 0, 127);
+        }
+
+        (rgba.Pixels[0], rgba.Pixels[3]) = (0, 255);
+        var grey = new RasterImage(4, 2, ImageColorType.Gray);
+        Array.Fill(grey.Pixels, (byte)128);
+        grey.Pixels[0] = 0;
+        var black = new RasterImage(4, 2, ImageColorType.Gray);
+
+        var options = new PdfPageComparisonOptions { ChannelThreshold = 2, NeighbourhoodRadius = 0 };
+        Assert.Equal(0, PdfPageComparison.Compare(rgba, grey, options).DifferingPixels);
+        Assert.Equal(7, PdfPageComparison.Compare(rgba, black, options).DifferingPixels);
+    }
+
+    [Fact]
     public void Pages_are_rendered_and_compared()
     {
         var a = Document("0 g 20 20 60 60 re f");

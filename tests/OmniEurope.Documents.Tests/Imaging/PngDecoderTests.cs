@@ -22,6 +22,23 @@ public sealed class PngDecoderTests
     }
 
     [Fact]
+    public void Random_images_survive_an_encode_decode_round_trip_whatever_filter_each_row_gets()
+    {
+        var random = new Random(7);
+        foreach (var type in new[] { ImageColorType.Gray, ImageColorType.Rgb, ImageColorType.Rgba })
+        {
+            var image = new RasterImage(37, 23, type);
+            for (var i = 0; i < image.Pixels.Length; i++)
+            {
+                // Smooth ramps with noise, so that every filter wins on some row.
+                image.Pixels[i] = (byte)((i % 7 == 0 ? random.Next(256) : i / 3) + (i / image.Stride * 5));
+            }
+
+            Assert.Equal(image.Pixels, PngCodec.Decode(PngCodec.Encode(image)).Pixels);
+        }
+    }
+
+    [Fact]
     public void Sixteen_bit_samples_keep_their_high_byte()
     {
         var png = PngFixture.Png(1, 1, 16, 2, false, [0, 0x12, 0x34, 0xAB, 0xCD, 0xFF, 0x00]);

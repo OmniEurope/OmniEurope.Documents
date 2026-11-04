@@ -265,26 +265,68 @@ internal static class PngFilters
         return output;
     }
 
+    // One loop per filter (no per-byte dispatch); the first row has a zero row above it, as PNG defines.
     private static long Apply(int filter, ReadOnlySpan<byte> row, ReadOnlySpan<byte> previous, int bpp, byte[] output)
     {
-        long score = 0;
-        for (var i = 0; i < row.Length; i++)
+        if (previous.IsEmpty)
         {
-            var left = i >= bpp ? row[i - bpp] : (byte)0;
-            var up = previous.IsEmpty ? (byte)0 : previous[i];
-            var upLeft = !previous.IsEmpty && i >= bpp ? previous[i - bpp] : (byte)0;
-            var value = filter switch
-            {
-                0 => row[i],
-                1 => (byte)(row[i] - left),
-                2 => (byte)(row[i] - up),
-                3 => (byte)(row[i] - ((left + up) >> 1)),
-                _ => (byte)(row[i] - PngUnpacker.Paeth(left, up, upLeft)),
-            };
-            output[i] = value;
-            score += value < 128 ? value : 256 - value;
+            previous = new byte[row.Length];
+        }
+
+        long score = 0;
+        switch (filter)
+        {
+            case 0:
+                for (var i = 0; i < row.Length; i++)
+                {
+                    score += Score(output[i] = row[i]);
+                }
+
+                break;
+            case 1:
+                for (var i = 0; i < row.Length; i++)
+                {
+                    score += Score(output[i] = (byte)(row[i] - (i >= bpp ? row[i - bpp] : 0)));
+                }
+
+                break;
+            case 2:
+                for (var i = 0; i < row.Length; i++)
+                {
+                    score += Score(output[i] = (byte)(row[i] - previous[i]));
+                }
+
+                break;
+            case 3:
+                for (var i = 0; i < row.Length; i++)
+                {
+                    score += Score(output[i] = (byte)(row[i] - (((i >= bpp ? row[i - bpp] : 0) + previous[i]) >> 1)));
+                }
+
+                break;
+            default:
+                score = ApplyPaeth(row, previous, bpp, output);
+                break;
         }
 
         return score;
     }
+
+    private static long ApplyPaeth(ReadOnlySpan<byte> row, ReadOnlySpan<byte> previous, int bpp, byte[] output)
+    {
+        long score = 0;
+        for (var i = 0; i < bpp && i < row.Length; i++)
+        {
+            score += Score(output[i] = (byte)(row[i] - previous[i]));
+        }
+
+        for (var i = bpp; i < row.Length; i++)
+        {
+            score += Score(output[i] = (byte)(row[i] - PngUnpacker.Paeth(row[i - bpp], previous[i], previous[i - bpp])));
+        }
+
+        return score;
+    }
+
+    private static int Score(byte value) => value < 128 ? value : 256 - value;
 }
