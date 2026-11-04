@@ -13,10 +13,10 @@ Modèle de référence (6 contrôles : 2 listes déroulantes modifiables, 4 date
 
 | Lot | Travail | Critère d'acceptation | État |
 |---|---|---|---|
-| A | Lire et remplir les contrôles de contenu, .dotx vers .docx | Les 6 contrôles d'un modèle synthétique équivalent sont listés avec genre, format, éléments et état d'espace réservé ; remplis par étiquette (date au format du contrôle, `w:fullDate` à jour, espace réservé retiré) ; un .dotx sauvé devient un document ; étiquette inconnue signalée | À faire |
+| A | Lire et remplir les contrôles de contenu, .dotx vers .docx | Les 6 contrôles d'un modèle synthétique équivalent sont listés avec genre, format, éléments et état d'espace réservé ; remplis par étiquette (date au format du contrôle, `w:fullDate` à jour, espace réservé retiré) ; un .dotx sauvé devient un document ; étiquette inconnue signalée | Vérifié localement : 25 tests ; fixture remplie, sauvée en .docx (`document.main`), rouverte et rendue en PDF avec les valeurs ; date invalide et étiquette inconnue signalées |
 | B | Encre dans Word vers PDF | Traits InkML dessinés en vectoriel, repli sur l'image VML ; plus de gap pour l'encre du modèle | À faire |
 | C | Marqueurs HTML des contrôles | Option désactivée par défaut ; chaque contrôle entouré d'un `span` (ou `div` bloc) `data-oe-field` | À faire |
-| D | Comparaison de pages rendues | API publique : part de pixels différents après seuil et tolérance de voisinage, image de différence | À faire |
+| D | Comparaison de pages rendues | API publique : part de pixels différents après seuil et tolérance de voisinage, image de différence | Vérifié localement : 15 tests ; fixture Word 365 contre elle-même = 0 |
 | E | Édition : contrôles par paragraphe, insertion et remplacement d'un dessin (traits ou PNG) | Un document édité puis sauvé donne le même PDF qu'un document généré depuis lui | À faire |
 | F | Fidélité | Calibri Light résolu (police enregistrée) ou signalé ; mêmes coupures de ligne que Word 365 sur le modèle, avec Carlito seul ; substitution par Carlito signalée dans les Gaps (décision du 4 novembre : pas de fourniture de polices par l'hôte) | À faire |
 
