@@ -71,6 +71,11 @@ internal sealed class Line
 internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
 {
     private const double Epsilon = 0.01;
+
+    // Word 2013 and later (compatibility mode 15) fit a word on a justified line by shrinking the spaces of the line,
+    // by a quarter of their width at most. Measured on Word 365 exports: spaces shrunk by 23 % on a line that took one
+    // more word, while another line needing 26 % for its next word did not take it.
+    private const double MaxSpaceShrink = 0.25;
     private List<Token> _tokens = [];
 
     /// <summary>Breaks the tokens from <paramref name="start"/> into lines; the first line takes the first-line indent
@@ -159,7 +164,7 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
                     continue;
             }
 
-            if (Overflows(token, state))
+            if (Overflows(k, state))
             {
                 var (next, carryOn) = Overflow(k, token, state);
                 if (!carryOn)
@@ -210,8 +215,34 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
         return (-1, true);
     }
 
-    private static bool Overflows(Token token, LineState state) =>
-        !(token is TextToken { IsSpace: true }) && state.X + token.Width > state.Right + Epsilon;
+    private bool Overflows(int k, LineState state)
+    {
+        var token = _tokens[k];
+        if (token is TextToken { IsSpace: true } || state.X + token.Width <= state.Right + Epsilon)
+        {
+            return false;
+        }
+
+        // A justified line takes a word it overflows by no more than its spaces can give up (see MaxSpaceShrink).
+        return !(geometry.Alignment == WordAlignment.Justify
+            && state.X + token.Width - (state.SpaceWidth * MaxSpaceShrink) <= state.Right + Epsilon
+            && ContinuesAfter(k));
+    }
+
+    // True when more text follows token k on the line or the next: a line ending the paragraph, or at a break, is not
+    // justified, so it cannot shrink.
+    private bool ContinuesAfter(int k)
+    {
+        for (var i = k + 1; i < _tokens.Count; i++)
+        {
+            if (_tokens[i] is not TextToken { IsSpace: true })
+            {
+                return _tokens[i] is not BreakToken;
+            }
+        }
+
+        return false;
+    }
 
     // The last item of the span a line may break before; the items from there move on.
     private static int BreakPoint(LineState state)
@@ -369,7 +400,12 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
         var free = right - (end.X + end.Width);
         var hasTabs = items.Any(i => i.Token is TabToken);
         var alignment = geometry.Alignment;
-        if (free <= Epsilon || (hasTabs && alignment is WordAlignment.Center or WordAlignment.Right))
+        if (free < -Epsilon && alignment == WordAlignment.Justify && !lastLine)
+        {
+            return Justify(items, end, free);
+        }
+
+        if (free <= Epsilon ||(hasTabs && alignment is WordAlignment.Center or WordAlignment.Right))
         {
             return items;
         }
@@ -384,23 +420,29 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
         };
     }
 
-    // Shares the free space among the spaces after the last tab, up to the last visible item.
+    // Shares the free space among the spaces after the last tab, up to the last visible item. Negative free space (a
+    // line that took a word by shrinking its spaces) is taken from the spaces in proportion to their width.
     private static List<Placed> Justify(List<Placed> items, Placed end, double free)
     {
         var lastTab = items.FindLastIndex(i => i.Token is TabToken);
         var endIndex = items.IndexOf(end);
         var spaces = 0;
+        var spaceWidth = 0.0;
         for (var i = lastTab + 1; i < endIndex; i++)
         {
-            spaces += items[i].Token is TextToken { IsSpace: true } ? 1 : 0;
+            if (items[i].Token is TextToken { IsSpace: true })
+            {
+                spaces++;
+                spaceWidth += items[i].Width;
+            }
         }
 
-        if (spaces == 0)
+        if (spaces == 0 || spaceWidth <= 0)
         {
             return items;
         }
 
-        var extra = free / spaces;
+        var shrink = free < 0 ? Math.Max(free / spaceWidth, -MaxSpaceShrink) : 0;
         var shift = 0.0;
         var result = new List<Placed>(items.Count);
         for (var i = 0; i < items.Count; i++)
@@ -408,6 +450,7 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
             var item = items[i] with { X = items[i].X + shift };
             if (i > lastTab && i < endIndex && item.Token is TextToken { IsSpace: true })
             {
+                var extra = free < 0 ? item.Width * shrink : free / spaces;
                 item = item with { Width = item.Width + extra };
                 shift += extra;
             }
@@ -439,7 +482,22 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
 
         public bool HasContent => Items.Any(i => i.Token is not AnchorToken);
 
-        public bool SpanHasContent => Items.Skip(SpanStart).Any(i => i.Token is not AnchorToken);
+        /// <summary>The width of the spaces of the span being filled since its last tab (the ones a justified line shares).</summary>
+        public double SpaceWidth
+        {
+            get
+            {
+                var width = 0.0;
+                for (var i = Items.Count - 1; i >= SpanStart && Items[i].Token is not TabToken; i--)
+                {
+                    width += Items[i].Token is TextToken { IsSpace: true } ? Items[i].Width : 0;
+                }
+
+                return width;
+            }
+        }
+
+        public bool SpanHasContent =>Items.Skip(SpanStart).Any(i => i.Token is not AnchorToken);
 
         public double SpanRight(int span) => spans[span].Right;
 

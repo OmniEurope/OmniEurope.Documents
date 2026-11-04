@@ -148,9 +148,18 @@ internal sealed class LayoutContext
     // A family that no bundled or registered font matches is drawn with a look-alike, which is reported.
     private void CheckFont(string family)
     {
-        if (_checkedFonts.Add(family) && Builder.Fonts.IsSubstituted(family))
+        if (!_checkedFonts.Add(family))
+        {
+            return;
+        }
+
+        if (Builder.Fonts.IsSubstituted(family))
         {
             Gaps.Add($"font \"{family}\" replaced by {FontLibrary.BundledStem(family)}");
+        }
+        else if (Builder.Fonts.LightSubstitution(family) is { } note)
+        {
+            Gaps.Add(note);
         }
     }
 }

@@ -87,6 +87,19 @@ public sealed class FontLibrary
     }
 
     /// <summary>
+    /// What a reader of the output should know when <paramref name="family"/> is Calibri Light and no font is registered
+    /// under that name: Carlito Regular is drawn, which has Calibri's widths but no light weight, so the text looks
+    /// heavier. Null otherwise (plain Calibri is drawn with Carlito, whose shapes differ but whose widths do not).
+    /// </summary>
+    internal string? LightSubstitution(string? family)
+    {
+        var name = (family ?? string.Empty).Trim().Trim('"', '\'');
+        return !_registered.ContainsKey(name) && name.Equals("Calibri Light", StringComparison.OrdinalIgnoreCase)
+            ? "font \"Calibri Light\" replaced by Carlito Regular (same widths, but no light weight: drawn heavier)"
+            : null;
+    }
+
+    /// <summary>
     /// The font to draw <paramref name="codePoint"/> with: the resolved font when it has the glyph, else the
     /// bundled Liberation face of the same class (Caladea, for instance, has no Greek or Cyrillic), else the
     /// resolved font (its .notdef glyph).
