@@ -141,6 +141,64 @@ public sealed class WordEditor
     }
 
     /// <summary>
+    /// The content controls (<c>w:sdt</c>) of the text parts, in <see cref="TextParts"/> order then document order
+    /// (an outer control before the controls it holds): block, inline, row and cell level, with their kind,
+    /// current text, placeholder state, date settings, list entries and check state.
+    /// </summary>
+    public IReadOnlyList<WordContentControl> ContentControls() => Controls().Select(c => c.Info).ToList();
+
+    /// <summary>
+    /// Fills the content controls whose tag is a key of <paramref name="valuesByTag"/> (all controls sharing a
+    /// tag are filled): the content becomes the value in the run formatting of the control's first run, the
+    /// placeholder state is cleared, a date is parsed (<c>yyyy-MM-dd</c> or the control's own format in its
+    /// language) and written in that format with <c>w:fullDate</c> updated, a list takes a value or display text
+    /// and writes the display text, a check box takes a boolean. A value that does not fit leaves its control
+    /// unchanged and is reported in <see cref="WordContentControlFill.Gaps"/>; a tag matching no control is
+    /// reported in <see cref="WordContentControlFill.UnknownTags"/>.
+    /// </summary>
+    public WordContentControlFill FillContentControls(IReadOnlyDictionary<string, string> valuesByTag)
+    {
+        ArgumentNullException.ThrowIfNull(valuesByTag);
+        return Filler().Fill(valuesByTag);
+    }
+
+    /// <summary>Sets the date of the date controls tagged <paramref name="tag"/>, written in their own format and language.</summary>
+    public WordContentControlFill SetDate(string tag, DateOnly date)
+    {
+        ArgumentNullException.ThrowIfNull(tag);
+        return Filler().SetDate(tag, date);
+    }
+
+    /// <summary>Selects an entry, by value or display text, in the combo boxes and drop-down lists tagged <paramref name="tag"/>.</summary>
+    public WordContentControlFill SelectItem(string tag, string valueOrDisplayText)
+    {
+        ArgumentNullException.ThrowIfNull(tag);
+        ArgumentNullException.ThrowIfNull(valueOrDisplayText);
+        return Filler().SelectItem(tag, valueOrDisplayText);
+    }
+
+    /// <summary>Checks or unchecks the check boxes tagged <paramref name="tag"/>: <c>w14:checked</c> and the glyph
+    /// follow the control's own checked and unchecked states (U+2612 and U+2610 by default).</summary>
+    public WordContentControlFill SetChecked(string tag, bool value)
+    {
+        ArgumentNullException.ThrowIfNull(tag);
+        return Filler().SetChecked(tag, value);
+    }
+
+    private List<ScannedControl> Controls() =>
+        WordContentControlScanner.Scan(Stories().Select(s => (s.PartName, Root: _package.GetXml(s.PartName)?.Root)).Where(p => p.Root is not null).Select(p => (p.PartName, p.Root!)));
+
+    private WordContentControlFiller Filler() => new(Controls(), PlaceholderStyle);
+
+    // The character style of the text a content control shows as a placeholder.
+    private bool PlaceholderStyle(string styleId)
+    {
+        var styles = WordDocumentReader.Part(_package, _package.Relationships(_main), StylesType)?.Root;
+        var style = styles?.Elements(W + "style").FirstOrDefault(s => Attr(s, "styleId") == styleId);
+        return styleId == "PlaceholderText" || string.Equals(Val(style, "name"), "Placeholder Text", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
     /// The tracked changes of the text parts (in <see cref="TextParts"/> order), then of the styles and list
     /// definitions, each part in document order; changes inside alternate-content fallbacks are not listed.
     /// </summary>
@@ -220,6 +278,29 @@ public sealed class WordEditor
     {
         using var stream = new MemoryStream();
         Save(stream);
+        return stream.ToArray();
+    }
+
+    /// <summary>True when the main part is a template (<c>.dotx</c>): <see cref="Save(Stream)"/> keeps it a template.</summary>
+    public bool IsTemplate => _package.ContentTypeOf(_main) == TemplateContentType;
+
+    /// <summary>
+    /// Writes the package as a document: a template (<c>.dotx</c>) gets the document content type for its main
+    /// part and the editor then holds a document (<see cref="IsTemplate"/> is false); a document is written as
+    /// <see cref="Save(Stream)"/> does.
+    /// </summary>
+    public void SaveAsDocument(Stream stream)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+        _package.SetContentType(_main, MainContentType);
+        Save(stream);
+    }
+
+    /// <summary>The package as document bytes, see <see cref="SaveAsDocument(Stream)"/>.</summary>
+    public byte[] ToDocumentArray()
+    {
+        using var stream = new MemoryStream();
+        SaveAsDocument(stream);
         return stream.ToArray();
     }
 
