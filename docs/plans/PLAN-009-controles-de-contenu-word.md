@@ -18,7 +18,7 @@ Modèle de référence (6 contrôles : 2 listes déroulantes modifiables, 4 date
 | C | Marqueurs HTML des contrôles | Option désactivée par défaut ; chaque contrôle entouré d'un `span` (ou `div` bloc) `data-oe-field` | À faire |
 | D | Comparaison de pages rendues | API publique : part de pixels différents après seuil et tolérance de voisinage, image de différence | À faire |
 | E | Édition : contrôles par paragraphe, insertion et remplacement d'un dessin (traits ou PNG) | Un document édité puis sauvé donne le même PDF qu'un document généré depuis lui | À faire |
-| F | Fidélité | Calibri Light résolu (police enregistrée) ou signalé ; mêmes coupures de ligne que Word 365 sur le modèle, avec Carlito seul ; polices embarquées du .docx et dossier de polices fourni par l'hôte | À faire |
+| F | Fidélité | Calibri Light résolu (police enregistrée) ou signalé ; mêmes coupures de ligne que Word 365 sur le modèle, avec Carlito seul ; substitution par Carlito signalée dans les Gaps (décision du 4 novembre : pas de fourniture de polices par l'hôte) | À faire |
 
 Seuil annoncé au consommateur : mêmes coupures et même nombre de pages, moins de 1 % de pixels différents à 150 dpi.
 
