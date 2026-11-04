@@ -21,8 +21,15 @@ internal sealed class ClipMask
     public byte[] Alpha { get; }
 
     /// <summary>The intersection of <paramref name="current"/> (null for the whole page) with a path.</summary>
-    public static ClipMask Intersect(ClipMask? current, IEnumerable<IReadOnlyList<(double X, double Y)>> polygons, bool evenOdd, int width, int height)
+    public static ClipMask? Intersect(ClipMask? current, IEnumerable<IReadOnlyList<(double X, double Y)>> polygons, bool evenOdd, int width, int height)
     {
+        // A rectangle covering the whole surface keeps every pixel at full coverage: the clip is unchanged (Word
+        // exports open many drawings with one), so the full-page mask is neither allocated nor rasterised.
+        if (CoversSurface(polygons, width, height))
+        {
+            return current;
+        }
+
         var alpha = new byte[width * height];
         Rasterizer.Fill(polygons, evenOdd, width, height, (y, left, coverage) =>
         {
@@ -34,6 +41,46 @@ internal sealed class ClipMask
             }
         });
         return new ClipMask(width, height, alpha);
+    }
+
+    // How far inside the surface an edge of a covering rectangle may lie: a border pixel then keeps a coverage above
+    // 0.999, which rounds to 255 like an inner one (Word places its page rectangle a few hundred-thousandths in).
+    private const double EdgeTolerance = 1.0 / 1024;
+
+    // One axis-aligned rectangle (four corners, the first possibly repeated at the end) reaching every edge.
+    private static bool CoversSurface(IEnumerable<IReadOnlyList<(double X, double Y)>> polygons, int width, int height)
+    {
+        using var enumerator = polygons.GetEnumerator();
+        var single = enumerator.MoveNext() ? enumerator.Current : null;
+        if (single is null || enumerator.MoveNext() || AxisRectangle(single) is not { } box)
+        {
+            return false;
+        }
+
+        return box.MinX <= EdgeTolerance && box.MinY <= EdgeTolerance && box.MaxX >= width - EdgeTolerance && box.MaxY >= height - EdgeTolerance;
+    }
+
+    // The bounds of a polygon of four corners (the first possibly repeated) whose every side is horizontal or vertical.
+    private static (double MinX, double MinY, double MaxX, double MaxY)? AxisRectangle(IReadOnlyList<(double X, double Y)> points)
+    {
+        if (points.Count is not (4 or 5))
+        {
+            return null;
+        }
+
+        var box = (MinX: double.MaxValue, MinY: double.MaxValue, MaxX: double.MinValue, MaxY: double.MinValue);
+        for (var i = 0; i < points.Count; i++)
+        {
+            var (p, q) = (points[i], points[(i + 1) % points.Count]);
+            if (!double.IsFinite(p.X + p.Y) || (p.X != q.X && p.Y != q.Y))
+            {
+                return null;
+            }
+
+            box = (Math.Min(box.MinX, p.X), Math.Min(box.MinY, p.Y), Math.Max(box.MaxX, p.X), Math.Max(box.MaxY, p.Y));
+        }
+
+        return box;
     }
 }
 

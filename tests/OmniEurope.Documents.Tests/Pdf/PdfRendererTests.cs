@@ -48,6 +48,24 @@ public sealed class PdfRendererTests
     }
 
     [Fact]
+    public void A_clip_covering_the_whole_page_changes_nothing_while_a_clip_half_a_pixel_in_still_clips()
+    {
+        const string Fill = "1 0 0 rg 0 0 200 200 re f 0 0 1 rg 30.3 30.7 50 50 re f";
+        var unclipped = Render(RawPdf.Page(Fill));
+
+        // Word exports open drawings with a page rectangle a few hundred-thousandths of a point inside the page.
+        var almostPage = Render(RawPdf.Page($"q 0.00002 0 199.99997 200 re W* n {Fill} Q"));
+        var nested = Render(RawPdf.Page($"q 50 50 100 100 re W n 0 0 200 200 re W n {Fill} Q"));
+        var halfPixelIn = Render(RawPdf.Page($"q 0.5 0 199.5 200 re W n {Fill} Q"));
+
+        Assert.Equal(unclipped.Pixels, almostPage.Pixels);
+        Assert.Equal((255, 255, 255), Pixel(nested, 40, 100));
+        Assert.Equal((255, 0, 0), Pixel(nested, 100, 100));
+        Assert.InRange(Pixel(halfPixelIn, 0, 100).G, 100, 160);
+        Assert.Equal((255, 0, 0), Pixel(halfPixelIn, 1, 100));
+    }
+
+    [Fact]
     public void Draws_images_inline_images_and_stencil_masks()
     {
         var builder = new PdfDocumentBuilder();
