@@ -19,6 +19,8 @@ Modèle de référence (6 contrôles : 2 listes déroulantes modifiables, 4 date
 | D | Comparaison de pages rendues | API publique : part de pixels différents après seuil et tolérance de voisinage, image de différence | Vérifié localement : 15 tests ; fixture Word 365 contre elle-même = 0 |
 | E | Édition : contrôles par paragraphe, insertion et remplacement d'un dessin (traits ou PNG) | Un document édité puis sauvé donne le même PDF qu'un document généré depuis lui | À faire |
 | F | Fidélité | Calibri Light résolu (police enregistrée) ou signalé ; mêmes coupures de ligne que Word 365 sur le modèle, avec Carlito seul ; substitution par Carlito signalée dans les Gaps (décision du 4 novembre : pas de fourniture de polices par l'hôte) | Vérifié localement : 10 tests (3 échouaient avant) ; fixture avec Carlito seul : mêmes lignes que Word 365, titres Calibri Light signalés dans les Gaps ; seuil de rétrécissement des espaces 25 % estimé (borné entre 23 et 26 %) |
+| G | WebAssembly (browser-wasm, trimming) | Lecture, remplissage, édition, Word vers PDF, rendu et comparaison prouvés dans un navigateur ; zéro avertissement de trimming ; aucun accès fichier ni police système ; temps de conversion de la fixture mesuré | À faire |
+| H | Polices libres supplémentaires dans une deuxième DLL du même paquet (décision du 4 novembre) | Selawik, Gelasio, Noto Sans et Serif, Roboto, Open Sans, Lato, licences livrées ; activation explicite par l'hôte ; liste « police demandée vers police utilisée » par document | À faire |
 
 Seuil annoncé au consommateur : mêmes coupures et même nombre de pages, moins de 1 % de pixels différents à 150 dpi.
 
