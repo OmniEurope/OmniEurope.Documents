@@ -54,15 +54,19 @@ internal sealed class HtmlInlineWriter(HtmlContext context, HtmlOutput output, W
     /// <summary>A link back to the reference of a note whose text has no mark of its own.</summary>
     public void BackLink(WordNoteKind kind, int id) => NoteLink(kind, id, isMark: true);
 
-    public void Write(IEnumerable<WordInline> inlines)
+    public void Write(IEnumerable<WordInline> inlines, int controlDepth = 0)
     {
+        var wrappers = new HtmlControlWrappers(context, output, "span", controlDepth, CloseRun);
         foreach (var inline in inlines)
         {
             if (!context.Skips(inline.Revision))
             {
+                wrappers.Sync(inline.ContentControls);
                 Inline(inline);
             }
         }
+
+        wrappers.End();
     }
 
     /// <summary>Closes the run still open.</summary>
@@ -159,7 +163,7 @@ internal sealed class HtmlInlineWriter(HtmlContext context, HtmlOutput output, W
             context.Gaps.Add("page number fields show their last computed value");
         }
 
-        Write(field.Result);
+        Write(field.Result, field.ContentControls.Count);
     }
 
     private void Link(WordHyperlink link)
@@ -171,7 +175,7 @@ internal sealed class HtmlInlineWriter(HtmlContext context, HtmlOutput output, W
             output.Open("a", ("href", href));
         }
 
-        Write(link.Inlines);
+        Write(link.Inlines, link.ContentControls.Count);
         CloseRun();
         if (href is not null)
         {

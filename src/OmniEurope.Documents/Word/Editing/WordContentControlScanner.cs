@@ -52,9 +52,23 @@ internal static class WordContentControlScanner
         };
     }
 
+    /// <summary>The boundary of a control as the model carries it.</summary>
+    public static WordContentControlMark Mark(XElement sdt)
+    {
+        var properties = sdt.Element(W + "sdtPr");
+        return new WordContentControlMark
+        {
+            Tag = Val(properties, "tag"),
+            Alias = Val(properties, "alias"),
+            Id = Int(Val(properties, "id")),
+            Kind = KindOf(properties),
+            ShowingPlaceholder = properties?.Element(W + "showingPlcHdr") is not null,
+        };
+    }
+
     public static bool IsChecked(XElement checkbox) => checkbox.Element(W14 + "checked")?.Attribute(W14 + "val")?.Value is "1" or "true" or "on";
 
-    private static WordContentControlKind KindOf(XElement? properties)
+    internal static WordContentControlKind KindOf(XElement? properties)
     {
         foreach (var child in properties?.Elements() ?? [])
         {

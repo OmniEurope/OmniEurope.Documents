@@ -17,6 +17,10 @@ public abstract class WordInline
     /// <summary>Set when the content was inserted or deleted with change tracking on.</summary>
     public WordRevision? Revision { get; set; }
 
+    /// <summary>The content controls this content was read from, outermost first; empty when it sits in none. The
+    /// content stays plain for every other consumer: only <see cref="Conversion.WordToHtml"/> reads it.</summary>
+    public IReadOnlyList<WordContentControlMark> ContentControls { get; internal set; } = WordContentControlMark.None;
+
     internal abstract void AppendText(StringBuilder builder);
 
     internal static string TextOf(IEnumerable<WordInline> inlines)

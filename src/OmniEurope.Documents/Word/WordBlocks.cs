@@ -13,6 +13,10 @@ public abstract class WordBlock
     /// <summary>The visible text (deleted revisions excluded).</summary>
     public abstract string Text { get; }
 
+    /// <summary>The block content controls this block was read from, outermost first; empty when it sits in none.
+    /// The block stays plain for every other consumer: only <see cref="Conversion.WordToHtml"/> reads it.</summary>
+    public IReadOnlyList<WordContentControlMark> ContentControls { get; internal set; } = WordContentControlMark.None;
+
     internal static string TextOf(IEnumerable<WordBlock> blocks) => string.Join('\n', blocks.Select(b => b.Text));
 }
 

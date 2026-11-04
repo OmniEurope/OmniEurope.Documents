@@ -24,6 +24,16 @@ public sealed record WordHtmlOptions
     /// compared ignoring case): its element receives the class <see cref="WordToHtml.HighlightClass"/> and the id
     /// <see cref="WordToHtml.HighlightId"/>.</summary>
     public string? HighlightAddress { get; init; }
+
+    /// <summary>
+    /// When true, each content control (<c>w:sdt</c>) is wrapped: an inline control in a <c>span</c>, a block
+    /// control in a <c>div</c> around its paragraphs and tables. The wrapper carries <c>data-oe-field</c> (the tag,
+    /// or <c>data-oe-field-id</c> with the control id when there is no tag), <c>data-oe-field-kind</c> (the lowercase
+    /// <see cref="Word.Editing.WordContentControlKind"/> name), <c>data-oe-field-alias</c> when the control has a
+    /// title and <c>data-oe-placeholder="true"</c> while it shows its placeholder. Row and cell level controls are
+    /// not wrapped, nor is a control without content. False by default: the output is then unchanged.
+    /// </summary>
+    public bool MarkContentControls { get; init; }
 }
 
 /// <summary>A converted document: a standalone HTML page and what the conversion only approximates.</summary>

@@ -20,8 +20,10 @@ internal sealed class HtmlBlockWriter(HtmlContext context, HtmlOutput output)
     public void Write(IReadOnlyList<WordBlock> blocks, CellStyle? cell = null, bool numbering = true)
     {
         var resolved = blocks.Select(b => b is WordParagraph p ? WordResolution.Paragraph(context.Document, p, cell) : null).ToList();
+        var wrappers = new HtmlControlWrappers(context, output, "div", 0, output.Line);
         for (var i = 0; i < blocks.Count; i++)
         {
+            wrappers.Sync(blocks[i].ContentControls);
             if (blocks[i] is WordTable table)
             {
                 new HtmlTableWriter(context, output, this).Write(table);
@@ -31,6 +33,8 @@ internal sealed class HtmlBlockWriter(HtmlContext context, HtmlOutput output)
             var spacing = Spacing(resolved[i]!, i > 0 ? resolved[i - 1] : null, i + 1 < blocks.Count ? resolved[i + 1] : null);
             Paragraph((WordParagraph)blocks[i], resolved[i]!, spacing, cell, numbering);
         }
+
+        wrappers.End();
     }
 
     private void Paragraph(WordParagraph paragraph, WordParagraphProperties p, IEnumerable<string> spacing, CellStyle? cell, bool numbering)

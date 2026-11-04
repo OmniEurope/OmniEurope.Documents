@@ -61,7 +61,8 @@ internal sealed class WordReadContext(OpcPackage package)
 
 /// <summary>
 /// Reads blocks and inline content of one part (body, header, footer, notes, comments). Content controls,
-/// custom XML and smart tags are transparent; for alternate content the first choice is read. Complex fields
+/// custom XML and smart tags are transparent (the content is read as if unwrapped); a block or inline inside a
+/// content control also records it in <c>ContentControls</c>; for alternate content the first choice is read. Complex fields
 /// (<c>fldChar</c>) are rebuilt with their instruction and result; a field still open at the end of a
 /// paragraph is closed there and the rest of its result reads as ordinary text.
 /// </summary>
@@ -78,6 +79,8 @@ internal sealed class WordContentReader
     private static readonly HashSet<string> Transparent = new(StringComparer.Ordinal) { "sdt", "smartTag", "customXml", "dir", "bdo" };
 
     private readonly List<FieldFrame> _fields = [];
+    private readonly List<WordContentControlMark> _inlineControls = [];
+    private List<WordContentControlMark> _blockControls = [];
     private readonly Dictionary<string, OpcRelationship> _relationships;
     private readonly WordDrawingReader _drawings;
     private readonly int? _noteId;
@@ -99,13 +102,27 @@ internal sealed class WordContentReader
 
     public List<WordBlock> Blocks(XElement container)
     {
+        // A cell or a note starts outside any block control of the content around it.
+        var outer = _blockControls;
+        _blockControls = [];
         var blocks = new List<WordBlock>();
         foreach (var child in container.Elements())
         {
             AddBlock(child, blocks);
         }
 
+        _blockControls = outer;
         return blocks;
+    }
+
+    private static IReadOnlyList<WordContentControlMark> Snapshot(List<WordContentControlMark> controls) =>
+        controls.Count == 0 ? WordContentControlMark.None : [.. controls];
+
+    private T Stamp<T>(T block)
+        where T : WordBlock
+    {
+        block.ContentControls = Snapshot(_blockControls);
+        return block;
     }
 
     public void AddBlock(XElement element, List<WordBlock> blocks)
@@ -116,17 +133,28 @@ internal sealed class WordContentReader
         }
         else if (element.Name == W + "p")
         {
-            blocks.Add(Paragraph(element));
+            blocks.Add(Stamp(Paragraph(element)));
         }
         else if (element.Name == W + "tbl")
         {
-            blocks.Add(Table(element));
+            blocks.Add(Stamp(Table(element)));
         }
         else if (element.Name == W + "sdt" || element.Name == W + "customXml")
         {
+            var isControl = element.Name == W + "sdt";
+            if (isControl)
+            {
+                _blockControls.Add(Editing.WordContentControlScanner.Mark(element));
+            }
+
             foreach (var child in (element.Element(W + "sdtContent") ?? element).Elements())
             {
                 AddBlock(child, blocks);
+            }
+
+            if (isControl)
+            {
+                _blockControls.RemoveAt(_blockControls.Count - 1);
             }
         }
         else if (element.Name == W + "altChunk")
@@ -243,6 +271,12 @@ internal sealed class WordContentReader
         {
             Inlines(child, list, Revision(child, kind));
         }
+        else if (name == "sdt")
+        {
+            _inlineControls.Add(Editing.WordContentControlScanner.Mark(child));
+            Inlines(child.Element(W + "sdtContent") ?? child, list, revision);
+            _inlineControls.RemoveAt(_inlineControls.Count - 1);
+        }
         else if (Transparent.Contains(name))
         {
             Inlines(child.Element(W + "sdtContent") ?? child, list, revision);
@@ -257,7 +291,7 @@ internal sealed class WordContentReader
         }
         else if (name == "fldSimple")
         {
-            var field = new WordField(Attr(child, "instr") ?? string.Empty) { Revision = revision };
+            var field = new WordField(Attr(child, "instr") ?? string.Empty) { Revision = revision, ContentControls = Snapshot(_inlineControls) };
             Inlines(child, field.Result, revision);
             Sink(list)?.Add(field);
         }
@@ -277,6 +311,7 @@ internal sealed class WordContentReader
         var relationship = Relationship(element.Attribute(R + "id")?.Value);
         var link = WordHyperlink.Create(relationship?.External == true ? relationship.Target : null, Attr(element, "anchor"));
         link.Revision = revision;
+        link.ContentControls = Snapshot(_inlineControls);
         Sink(list)?.Add(link);
         Inlines(element, link.Inlines, revision);
     }
@@ -368,6 +403,7 @@ internal sealed class WordContentReader
     {
         inline.Properties = properties;
         inline.Revision = revision;
+        inline.ContentControls = Snapshot(_inlineControls);
         Sink(list)?.Add(inline);
     }
 
@@ -398,7 +434,7 @@ internal sealed class WordContentReader
         switch (Attr(element, "fldCharType"))
         {
             case "begin":
-                _fields.Add(new FieldFrame(list, properties, revision));
+                _fields.Add(new FieldFrame(list, properties, revision) { Controls = Snapshot(_inlineControls) });
                 break;
             case "separate" when _fields.Count > 0:
                 _fields[^1].InResult = true;
@@ -413,7 +449,7 @@ internal sealed class WordContentReader
     {
         var frame = _fields[^1];
         _fields.RemoveAt(_fields.Count - 1);
-        var field = new WordField(frame.Instruction.ToString()) { Properties = frame.Properties, Revision = frame.Revision };
+        var field = new WordField(frame.Instruction.ToString()) { Properties = frame.Properties, Revision = frame.Revision, ContentControls = frame.Controls };
         field.Result.AddRange(frame.Result);
         if (_fields.Count > 0 && ReferenceEquals(_fields[^1].Owner, frame.Owner) && !_fields[^1].InResult)
         {
@@ -456,5 +492,7 @@ internal sealed class WordContentReader
         public List<WordInline> Result { get; } = [];
 
         public bool InResult { get; set; }
+
+        public IReadOnlyList<WordContentControlMark> Controls { get; init; } = WordContentControlMark.None;
     }
 }
