@@ -7,13 +7,15 @@ namespace OmniEurope.Documents.Word.Reading;
 
 /// <summary>
 /// Reads DrawingML (<c>w:drawing</c>) and VML (<c>w:pict</c>, <c>w:object</c>) objects into pictures, text
-/// boxes and charts (the chart part a <c>c:chart</c> names, read by <see cref="Charts.ChartReader"/>). Diagrams, grouped
+/// boxes, freehand ink (<see cref="WordInkReader"/>) and charts (the chart part a <c>c:chart</c> names, read by
+/// <see cref="Charts.ChartReader"/>). Diagrams, grouped
 /// and geometric shapes and the chart types introduced by Office 2016 have no model: they are skipped and reported as
 /// gaps. Linked (not embedded) pictures and charts are skipped too: nothing is ever fetched.
 /// </summary>
 internal sealed class WordDrawingReader(WordContentReader owner)
 {
     private const double EmuPerPoint = 12700;
+    private WordInkReader? _ink;
 
     public WordShape? Drawing(XElement drawing)
     {
@@ -43,6 +45,7 @@ internal sealed class WordDrawingReader(WordContentReader owner)
     {
         PictureUri => Picture(data!.Descendants(A + "blip").FirstOrDefault()?.Attribute(R + "embed")?.Value, width, height),
         ChartUri => Chart(data!, width, height),
+        InkUri => (_ink ??= new WordInkReader(owner, this)).Read(data!, width, height),
         ShapeUri => Fitted(TextBox(data!.Descendants(W + "txbxContent").FirstOrDefault(), width, height, "shape without text"), data!.Descendants(A + "spAutoFit").Any()),
         var uri => Unsupported(uri),
     };

@@ -122,6 +122,8 @@ internal sealed class ShapeFactory(LayoutContext context, BlockLayout blocks)
             case WordTextBox box:
                 var (paintBox, height) = TextBox(box);
                 return (paintBox, height);
+            case WordInk ink:
+                return ((paint, x, y) => InkPainter.Paint(paint.Canvas, ink, x, y), ink.Height);
             case WordChart chart:
                 return ((paint, x, y) => new Charts.ChartPainter(context, chart.Chart, chart.Culture ?? System.Globalization.CultureInfo.InvariantCulture).Paint(paint.Canvas, x, y, chart.Width, chart.Height), chart.Height);
             default:

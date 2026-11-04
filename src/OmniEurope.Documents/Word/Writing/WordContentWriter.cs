@@ -187,7 +187,8 @@ internal sealed class WordContentWriter(WordWriteContext context, PartRelationsh
         WordCommentReference comment => new XElement(W + "commentReference", new XAttribute(W + "id", Format(comment.Id))),
         WordPicture picture => WordDrawingWriter.Picture(this, picture, relationships.Add(ImageType, Relative(Context.ImagePart(picture.Image)))),
         WordTextBox box => WordDrawingWriter.TextBox(this, box),
-        WordChart chart => WordDrawingWriter.Chart(this, chart, relationships.Add(ChartType, Relative(Context.ChartPart(chart)))),
+        WordInk ink => WordInkWriter.Ink(this, ink, relationships.Add(InkType, Relative(Context.InkPart(ink)))),
+        WordChart chart =>WordDrawingWriter.Chart(this, chart, relationships.Add(ChartType, Relative(Context.ChartPart(chart)))),
         _ => throw new NotSupportedException(inline.GetType().Name),
     };
 

@@ -28,6 +28,7 @@ internal static class WordXml
     public const string PictureUri = "http://schemas.openxmlformats.org/drawingml/2006/picture";
     public const string ShapeUri = "http://schemas.microsoft.com/office/word/2010/wordprocessingShape";
     public const string ChartUri = "http://schemas.openxmlformats.org/drawingml/2006/chart";
+    public const string InkUri = "http://schemas.microsoft.com/office/word/2010/wordprocessingInk";
     public static readonly XNamespace C = "http://schemas.openxmlformats.org/drawingml/2006/chart";
 
     private const string RelationshipBase = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/";
@@ -42,6 +43,7 @@ internal static class WordXml
     public const string FooterType = RelationshipBase + "footer";
     public const string ImageType = RelationshipBase + "image";
     public const string ChartType = RelationshipBase + "chart";
+    public const string InkType = RelationshipBase + "customXml";
     public const string HyperlinkType = RelationshipBase + "hyperlink";
     public const string ThemeType = RelationshipBase + "theme";
     public const string ExtendedPropertiesType = RelationshipBase + "extended-properties";
@@ -58,7 +60,8 @@ internal static class WordXml
     public const string CommentsContentType = WordContent + "comments+xml";
     public const string HeaderContentType = WordContent + "header+xml";
     public const string FooterContentType = WordContent + "footer+xml";
-    public const string ChartContentType = "application/vnd.openxmlformats-officedocument.drawingml.chart+xml";
+    public const string InkContentType = "application/inkml+xml";
+    public const string ChartContentType ="application/vnd.openxmlformats-officedocument.drawingml.chart+xml";
     public const string CoreContentType = "application/vnd.openxmlformats-package.core-properties+xml";
     public const string ExtendedContentType = "application/vnd.openxmlformats-officedocument.extended-properties+xml";
     public const string RelationshipsContentType = "application/vnd.openxmlformats-package.relationships+xml";

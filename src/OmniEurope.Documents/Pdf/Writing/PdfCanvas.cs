@@ -173,6 +173,34 @@ public sealed class PdfCanvas
     }
 
     /// <summary>
+    /// Strokes an open polyline with round caps and joins, like a pen; a single point (or points all alike) is a dot of
+    /// the pen's width. An <paramref name="opacity"/> below 1 makes the stroke translucent.
+    /// </summary>
+    public void StrokePen(IReadOnlyList<(double X, double Y)> points, PdfColor color, double lineWidth = 1, double opacity = 1)
+    {
+        ArgumentNullException.ThrowIfNull(points);
+        if (points.Count == 0 || lineWidth <= 0)
+        {
+            return;
+        }
+
+        _content.SaveState();
+        Opacity(opacity);
+        _content.StrokeColor(color).Op("w", lineWidth).Op("J", 1).Op("j", 1);
+        if (points.All(p => p == points[0]))
+        {
+            // A zero-length subpath with round caps is a dot in the PDF imaging model; drawn explicitly it needs no guess.
+            Path([points[0], (points[0].X + 0.01, points[0].Y)], close: false);
+        }
+        else
+        {
+            Path(points, close: false);
+        }
+
+        _content.Op("S").RestoreState();
+    }
+
+    /// <summary>
     /// Fills and/or strokes a path made of several polygons (holes are cut by the even-odd rule or by
     /// opposite winding). Subpaths are closed when <paramref name="closed"/> is set.
     /// </summary>

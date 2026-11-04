@@ -20,6 +20,9 @@ internal sealed class WordWriteContext
     /// <summary>Chart parts by name with their content, in creation order.</summary>
     public List<(string Name, XElement Root)> Charts { get; } = [];
 
+    /// <summary>Ink (InkML) parts by name with their content, in creation order.</summary>
+    public List<(string Name, XElement Root)> Inks { get; } = [];
+
     /// <summary>Text width of the section being written, for tables without explicit columns.</summary>
     public double ContentWidth { get; set; } = WordPageSetup.A4.ContentWidth;
 
@@ -36,6 +39,14 @@ internal sealed class WordWriteContext
         root.Elements().Where(e => e.Name.LocalName is "externalData" or "userShapes").Remove();
         root.Descendants().Attributes().Where(a => a.Name.Namespace == R).Remove();
         Charts.Add((name, root));
+        return name;
+    }
+
+    /// <summary>A new InkML part holding the strokes of an ink.</summary>
+    public string InkPart(WordInk ink)
+    {
+        var name = "word/ink/ink" + (Inks.Count + 1).ToString(CultureInfo.InvariantCulture) + ".xml";
+        Inks.Add((name, WordInkWriter.Part(ink)));
         return name;
     }
 
@@ -110,7 +121,7 @@ internal static class WordDrawingWriter
         return new XElement(Mc + "AlternateContent", new XElement(Mc + "Choice", new XAttribute("Requires", "wps"), drawing));
     }
 
-    private static XElement Frame(WordShape shape, int id, string name, XElement graphic, XElement frameProperties)
+    internal static XElement Frame(WordShape shape, int id, string name, XElement graphic, XElement frameProperties)
     {
         var (cx, cy) = (ToEmu(shape.Width), ToEmu(shape.Height));
         var extent = new XElement(Wp + "extent", new XAttribute("cx", cx), new XAttribute("cy", cy));
