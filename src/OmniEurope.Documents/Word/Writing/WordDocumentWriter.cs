@@ -29,6 +29,11 @@ internal static class WordDocumentWriter
         var body = Body(document, writer, relationships, context, parts);
         parts.Insert(0, (DocumentPart, new XElement(W + "document", WordPartsWriter.Namespaces(), body), MainContentType));
         AddPart(parts, relationships, "word/styles.xml", WordPartsWriter.Styles(document.Styles), StylesType, StylesContentType);
+        if (WordThemeWriter.Theme(document.Styles) is { } theme)
+        {
+            AddPart(parts, relationships, "word/theme/theme1.xml", theme, ThemeType, ThemeContentType);
+        }
+
         var footnotes = document.Footnotes.Count > 0;
         var endnotes = document.Endnotes.Count > 0;
         AddPart(parts, relationships, "word/settings.xml", WordPartsWriter.Settings(document.Settings, footnotes, endnotes), SettingsType, SettingsContentType);

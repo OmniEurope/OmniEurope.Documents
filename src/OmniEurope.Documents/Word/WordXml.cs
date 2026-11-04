@@ -61,6 +61,7 @@ internal static class WordXml
     public const string HeaderContentType = WordContent + "header+xml";
     public const string FooterContentType = WordContent + "footer+xml";
     public const string InkContentType = "application/inkml+xml";
+    public const string ThemeContentType = "application/vnd.openxmlformats-officedocument.theme+xml";
     public const string ChartContentType ="application/vnd.openxmlformats-officedocument.drawingml.chart+xml";
     public const string CoreContentType = "application/vnd.openxmlformats-package.core-properties+xml";
     public const string ExtendedContentType = "application/vnd.openxmlformats-officedocument.extended-properties+xml";
