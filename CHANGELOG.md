@@ -4,6 +4,33 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ## [Unreleased]
 
+### Added
+
+- Word content controls: `WordEditor.ContentControls()` lists the `w:sdt` of every text part (tag, alias, id, kind,
+  text, placeholder state, date format and language, list entries, check state). `FillContentControls` fills them by
+  tag (dates written in the control's own format with `w:fullDate` updated, list entries by value or display text,
+  check boxes), with `SetDate`, `SelectItem` and `SetChecked`; a value that does not fit leaves its control unchanged
+  and is reported, an unknown tag too. `IsTemplate`, `SaveAsDocument` and `ToDocumentArray` turn a .dotx into a .docx.
+- Freehand ink: `WordInk` and `WordInkStroke` read from the InkML part of a drawing, drawn as vector strokes in Word to
+  PDF and written back on save; the VML picture saved with the ink stands in when the InkML part is missing or
+  unreadable. An ink part holds at most 1,000,000 points. `PdfCanvas.StrokePen` strokes a pen path.
+- Drawings in the editor: `WordEditableParagraph.Drawings()`, `InsertDrawing`, `ReplaceDrawing` and `RemoveDrawing`
+  with `WordDrawingContent` (ink strokes or a PNG with transparency) and `WordDrawingPlacement`; parts left unused by
+  a replaced or removed drawing are removed. `WordEditableParagraph.ContentControls()` lists the controls of a
+  paragraph.
+- `WordHtmlOptions.MarkContentControls` wraps each content control in a `span` (or a `div` for a block control) with
+  `data-oe-field`, `data-oe-field-kind`, `data-oe-field-alias` and `data-oe-placeholder`; `WordBlock.ContentControls`
+  and `WordInline.ContentControls` tell which controls an item was read from.
+- `PdfPageComparison` compares two rendered pages (PDF pages, PNG or raster images) with a channel threshold and a
+  neighbourhood tolerance, and returns the share of differing pixels, the same share over the inked pixels and a
+  difference image.
+- `OmniEurope.Documents.Fonts.dll`, shipped in the package, holds free fonts under the SIL OFL 1.1 (Selawik, Gelasio,
+  Noto Sans, Noto Serif, Roboto, Open Sans, Lato) with their licences; `DocumentFonts.Register` adds them to a
+  `FontLibrary`, draws Segoe UI with Selawik, Georgia with Gelasio, Aptos with Roboto, and unknown families with Noto.
+  The core does not reference it, so a WebAssembly host may load it lazily.
+- `WordPdfResult.Fonts` lists each font family a converted document asks for, with the font that drew it (`FontUse`).
+  `FontLibrary` gains `Register(TrueTypeFont)`, `AddSubstitute`, `SetClassFallbacks` and `Describe`.
+
 ### Changed
 
 - An explicit Excel range keeps its dimensions after recalculation: `INDEX`, `COUNTBLANK`, `ROWS` and array operations
@@ -24,6 +51,11 @@ Notable changes to this project are documented here, following the Keep a Change
 - `CsvReader` detects the delimiter whatever the read sizes of the `TextReader`, and `CsvWriter` keeps the encoder and
   decoder fallbacks of the given encoding.
 - `ROUND`, `ROUNDUP` and `ROUNDDOWN` no longer abort a recalculation on extreme digit counts or values.
+- A justified line takes a word that overflows it by shrinking its spaces by a quarter of their width at most, as Word
+  does, so its line breaks match Word's.
+- Word to PDF reports Calibri Light drawn with Carlito Regular (same widths, no light weight).
+- A document saved from the model writes a theme part holding its theme fonts, so styles that name a theme font keep
+  their font after a save (the colour scheme written is Office's default).
 
 ### Known limits
 
