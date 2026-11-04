@@ -4,6 +4,8 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-04
+
 ### Added
 
 - Word content controls: `WordEditor.ContentControls()` lists the `w:sdt` of every text part (tag, alias, id, kind,
