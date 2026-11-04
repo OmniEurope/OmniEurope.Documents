@@ -25,6 +25,11 @@ Notable changes to this project are documented here, following the Keep a Change
   decoder fallbacks of the given encoding.
 - `ROUND`, `ROUNDUP` and `ROUNDDOWN` no longer abort a recalculation on extreme digit counts or values.
 
+### Known limits
+
+- Word to PDF: a floating shape anchored in a table row of exact height is not clipped to its cell and may draw past
+  the row.
+
 ## [1.0.0] - 2026-10-20
 
 ### Added

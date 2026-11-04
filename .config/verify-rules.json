@@ -1,0 +1,9 @@
+{
+  "exclusions": [
+    {
+      "rule": "STD-SDKPIN",
+      "paths": [".github/dependabot.yml"],
+      "reason": "No Dependabot on this repository by decision: the SDK floor in global.json is the single source of truth, CI reads it through global-json-file, and SDK, runtime and package updates are raised by hand with a security note in the CHANGELOG. Remove this entry if Dependabot is enabled."
+    }
+  ]
+}

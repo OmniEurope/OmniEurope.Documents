@@ -1,6 +1,7 @@
 # crap-gate 3
 #
-# CRAP gate of this repository. Everything project-specific lives in .config/crap-exceptions.json.
+# CRAP gate. DO NOT EDIT A COPY: this file is copied verbatim into scripts/ of every .NET repository.
+# Everything project-specific lives in the repository's .config/crap-exceptions.json.
 #
 # Score of a method: CC^2 * (1 - line coverage)^3 + CC, read from the coverlet Cobertura reports found
 # under -CoverageRoot (cyclomatic complexity and line hits). Several reports are merged: a line is covered
