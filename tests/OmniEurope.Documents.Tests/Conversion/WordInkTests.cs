@@ -137,6 +137,21 @@ public sealed class WordInkTests
     }
 
     [Fact]
+    public void An_ink_part_past_the_point_limit_is_refused_reported_and_replaced_by_its_picture()
+    {
+        // Varied coordinates, so the part does not trip the compression-ratio guard of the package reader.
+        var random = new Random(7);
+        var points = string.Join(",", Enumerable.Range(0, InkMlReader.MaxPoints + 1).Select(_ => $"{random.Next(100000)} {random.Next(100000)}"));
+        var docx = Package(Anchor(), Ink($"<inkml:trace>{points}</inkml:trace>"), withInkPart: true);
+
+        var result = WordToPdf.Convert(docx);
+        var (r, g, b, _) = Render(result.Pdf).GetRgba(150, 225);
+
+        Assert.Contains(result.Gaps, gap => gap.StartsWith("unreadable ink part", StringComparison.Ordinal) && gap.Contains("points", StringComparison.Ordinal));
+        Assert.True(r > 200 && g < 60 && b < 60, $"the fallback picture is not drawn ({r},{g},{b})");
+    }
+
+    [Fact]
     public void Ink_without_strokes_and_without_fallback_is_reported_and_drawn_as_nothing()
     {
         var docx = Package(Anchor(fallback: false), null, withInkPart: false);

@@ -54,7 +54,8 @@ internal sealed class WordInkReader(WordContentReader owner, WordDrawingReader d
         }
         catch (Exception exception) when (exception is DocumentFormatException or System.Xml.XmlException)
         {
-            // An ink part that cannot be read costs the strokes, not the document.
+            // An ink part that cannot be read costs the strokes, not the document; its saved picture may stand in.
+            owner.Context.Gaps.Add($"unreadable ink part: {exception.Message}");
             return [];
         }
     }

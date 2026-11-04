@@ -22,6 +22,9 @@ internal static class InkMlReader
     private const string DefaultColor = "000000";
     private const double DefaultWidth = 0.05;
     private const double DigitiserUnit = 0.001;
+
+    /// <summary>The most points an ink part may hold, all traces together: past it the part is refused.</summary>
+    internal const int MaxPoints = 1_000_000;
     private static readonly XNamespace Ink = "http://www.w3.org/2003/InkML";
 
     // A unit as centimetres; a value without a known unit is a hundredth of a millimetre (the digitiser unit).
@@ -36,6 +39,7 @@ internal static class InkMlReader
     };
 
     /// <summary>The traces of an InkML part, in order; pen-up traces (movements without ink) are left out.</summary>
+    /// <exception cref="DocumentFormatException">The part holds more than <see cref="MaxPoints"/> points.</exception>
     public static List<InkTrace> Read(XElement root)
     {
         var contexts = ById(root, "context");
@@ -43,6 +47,7 @@ internal static class InkMlReader
         var defaultContext = contexts.Values.FirstOrDefault();
         var defaultBrush = brushes.Values.FirstOrDefault();
         var traces = new List<InkTrace>();
+        var total = 0;
         foreach (var trace in root.Descendants(Ink + "trace"))
         {
             if ((string?)trace.Attribute("type") is "penUp" or "indeterminate")
@@ -54,7 +59,8 @@ internal static class InkMlReader
                 ?? trace.Ancestors(Ink + "traceGroup").Select(g => Lookup(contexts, (string?)g.Attribute("contextRef"))).FirstOrDefault(c => c is not null)
                 ?? defaultContext;
             var brush = Lookup(brushes, (string?)trace.Attribute("brushRef")) ?? defaultBrush;
-            var points = Decode(trace.Value, Channels(context));
+            var points = Decode(trace.Value, Channels(context), MaxPoints - total);
+            total += points.Count;
             if (points.Count > 0)
             {
                 traces.Add(Pen(brush, points));
@@ -126,7 +132,7 @@ internal static class InkMlReader
     // The compact text form: points separated by commas, the values of a point by blanks (or by the sign of the next
     // value). A value may carry a prefix: "!" explicit, "'" first difference, '"' second difference; a prefix stays
     // in force for its channel until another replaces it. A missing value ("?" or "*") repeats the previous one.
-    private static List<(double X, double Y)> Decode(string text, List<(string Name, double Scale)> channels)
+    private static List<(double X, double Y)> Decode(string text, List<(string Name, double Scale)> channels, int budget)
     {
         var x = Math.Max(0, channels.FindIndex(c => c.Name == "X"));
         var y = Math.Max(0, channels.FindIndex(c => c.Name == "Y"));
@@ -138,6 +144,11 @@ internal static class InkMlReader
             decoder.EndValue();
             if (decoder.Count > Math.Max(x, y))
             {
+                if (points.Count >= budget)
+                {
+                    throw new DocumentFormatException($"The ink part holds more than {MaxPoints} points.");
+                }
+
                 points.Add((decoder.Values[x] * channels[x].Scale, decoder.Values[y] * channels[y].Scale));
             }
 
