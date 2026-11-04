@@ -405,7 +405,7 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
             return Justify(items, end, free);
         }
 
-        if (free <= Epsilon ||(hasTabs && alignment is WordAlignment.Center or WordAlignment.Right))
+        if (free <= Epsilon || (hasTabs && alignment is WordAlignment.Center or WordAlignment.Right))
         {
             return items;
         }
@@ -497,7 +497,7 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
             }
         }
 
-        public bool SpanHasContent =>Items.Skip(SpanStart).Any(i => i.Token is not AnchorToken);
+        public bool SpanHasContent => Items.Skip(SpanStart).Any(i => i.Token is not AnchorToken);
 
         public double SpanRight(int span) => spans[span].Right;
 
