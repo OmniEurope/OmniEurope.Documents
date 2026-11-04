@@ -143,6 +143,59 @@ public sealed class WordEditableParagraph
         WordContentRewriter.Apply(_element, pieces, language);
     }
 
+    /// <summary>
+    /// The inline content controls of the paragraph (<c>w:sdt</c> among its runs, nested ones included), in
+    /// document order, as <see cref="WordEditor.ContentControls"/> reads them. A block-level control holding the
+    /// paragraph, and the controls of a text box it anchors, are not listed.
+    /// </summary>
+    public IReadOnlyList<WordContentControl> ContentControls() =>
+        _element.Descendants(W + "sdt")
+            .Where(s => s.Ancestors().FirstOrDefault(a => a.Name == W + "p") == _element && !s.Ancestors(Mc + "Fallback").Any())
+            .Select(s => WordContentControlScanner.Read(s, PartName)).ToList();
+
+    /// <summary>
+    /// The drawings of the paragraph, anchored or inline, in document order: pictures, ink, charts, text boxes and
+    /// the others, with their size, floating offset, wrapping and layer. A text box's own drawings and the VML
+    /// fallback of an alternate content are not listed. A snapshot: list again after an edit.
+    /// </summary>
+    public IReadOnlyList<WordDrawingInfo> Drawings() => Drawing().List();
+
+    /// <summary>
+    /// Adds a drawing to the paragraph, after its other content: a floating drawing without text wrapping
+    /// (<c>wp:anchor</c> with <c>wp:wrapNone</c>), placed from the column and the paragraph, above the other shapes
+    /// unless <see cref="WordDrawingPlacement.BehindText"/>. Ink is written as an InkML part and a picture as a
+    /// new media part, each with its relationship and content type; the drawing gets a document-wide unique id.
+    /// Returns the new drawing as <see cref="Drawings"/> lists it (it comes last, so the indexes of the others
+    /// do not change).
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">The placement's width or height is not a positive number.</exception>
+    public WordDrawingInfo InsertDrawing(WordDrawingContent content, WordDrawingPlacement placement)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        ArgumentNullException.ThrowIfNull(placement);
+        return Drawing().Insert(content, placement);
+    }
+
+    /// <summary>
+    /// Replaces the drawing at <paramref name="index"/> of <see cref="Drawings"/> by new content, in the same run. With
+    /// no <paramref name="placement"/> the replaced drawing's layout stays whole (size, position, references, wrapping,
+    /// layer, inline or floating); with one, the new drawing floats as <see cref="InsertDrawing"/> makes it, a null
+    /// width or height keeping the replaced drawing's. The replaced drawing's parts (ink, picture, VML fallback)
+    /// that nothing else refers to are removed from the package.
+    /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">There is no such drawing, or the width or height is not a positive number.</exception>
+    public WordDrawingInfo ReplaceDrawing(int index, WordDrawingContent content, WordDrawingPlacement? placement = null)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        return Drawing().Replace(index, content, placement);
+    }
+
+    /// <summary>Removes the drawing at <paramref name="index"/> of <see cref="Drawings"/>, with its parts that nothing else refers to.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">There is no such drawing.</exception>
+    public void RemoveDrawing(int index) => Drawing().Remove(index);
+
+    private WordDrawingEditor Drawing() => new(_context.Package, _context.MainPart, PartName, _element);
+
     // The style of the table holding the paragraph (not crossing a text box).
     private string? TableStyleId() =>
         _element.Ancestors().TakeWhile(a => a.Name != W + "txbxContent").FirstOrDefault(a => a.Name == W + "tbl") is { } table

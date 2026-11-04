@@ -185,9 +185,9 @@ internal sealed class WordContentWriter(WordWriteContext context, PartRelationsh
         WordNoteReference { IsMark: true } mark => new XElement(W + (mark.Kind == WordNoteKind.Footnote ? "footnoteRef" : "endnoteRef")),
         WordNoteReference note => new XElement(W + (note.Kind == WordNoteKind.Footnote ? "footnoteReference" : "endnoteReference"), new XAttribute(W + "id", Format(note.Id))),
         WordCommentReference comment => new XElement(W + "commentReference", new XAttribute(W + "id", Format(comment.Id))),
-        WordPicture picture => WordDrawingWriter.Picture(this, picture, relationships.Add(ImageType, Relative(Context.ImagePart(picture.Image)))),
+        WordPicture picture => WordDrawingWriter.Picture(Context.NextDrawingId(), picture, relationships.Add(ImageType, Relative(Context.ImagePart(picture.Image)))),
         WordTextBox box => WordDrawingWriter.TextBox(this, box),
-        WordInk ink => WordInkWriter.Ink(this, ink, relationships.Add(InkType, Relative(Context.InkPart(ink)))),
+        WordInk ink => WordInkWriter.Ink(Context.NextDrawingId(), ink, relationships.Add(InkType, Relative(Context.InkPart(ink)))),
         WordChart chart =>WordDrawingWriter.Chart(this, chart, relationships.Add(ChartType, Relative(Context.ChartPart(chart)))),
         _ => throw new NotSupportedException(inline.GetType().Name),
     };

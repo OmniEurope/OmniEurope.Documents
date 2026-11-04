@@ -14,6 +14,10 @@ internal sealed class WordEditContext(OpcPackage package, string mainPart)
 
     public WordReadContext Read { get; } = new(package);
 
+    public OpcPackage Package => package;
+
+    public string MainPart => mainPart;
+
     public WordStyleSheet Styles => _styles ??= WordPartsReader.Styles(Part(StylesType), Part(ThemeType));
 
     public WordNumbering Numbering => _numbering ??= WordPartsReader.Numbering(Part(NumberingType), Styles);

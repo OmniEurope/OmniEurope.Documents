@@ -85,7 +85,7 @@ internal sealed class WordDrawingReader(WordContentReader owner)
 
     // A VML shape positioned absolutely floats: its CSS margins place it from the column (or margin, page, character)
     // and the paragraph (or margin, page, line); without a w10:wrap it lies over the text, a negative z-index behind it.
-    private static WordFloatingPosition? VmlFloating(Dictionary<string, string> style, XElement container)
+    internal static WordFloatingPosition? VmlFloating(Dictionary<string, string> style, XElement container)
     {
         if (!string.Equals(style.GetValueOrDefault("position"), "absolute", StringComparison.OrdinalIgnoreCase))
         {
@@ -132,7 +132,7 @@ internal sealed class WordDrawingReader(WordContentReader owner)
     };
 
     // The declarations of a CSS style attribute ("width:120pt;height:3cm"), by property name.
-    private static Dictionary<string, string> Css(string? style)
+    internal static Dictionary<string, string> Css(string? style)
     {
         var declarations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         foreach (var declaration in (style ?? string.Empty).Split(';'))
@@ -214,7 +214,7 @@ internal sealed class WordDrawingReader(WordContentReader owner)
 
     // The anchor's position (an offset or an alignment in its reference, or the simple position from the page corner),
     // the room kept free around it and the sides text wraps on.
-    private static WordFloatingPosition Floating(XElement anchor)
+    internal static WordFloatingPosition Floating(XElement anchor)
     {
         var horizontal = anchor.Element(Wp + "positionH");
         var vertical = anchor.Element(Wp + "positionV");
@@ -284,7 +284,7 @@ internal sealed class WordDrawingReader(WordContentReader owner)
         return (WordWrap.None, WordWrapSide.BothSides);
     }
 
-    private static double CssLength(string value)
+    internal static double CssLength(string value)
     {
         if (value.EndsWith("px", StringComparison.Ordinal))
         {

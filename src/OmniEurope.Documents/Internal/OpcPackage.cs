@@ -281,7 +281,14 @@ internal sealed class OpcPackage
         return id;
     }
 
-    /// <summary>A part name not yet used: <paramref name="stem"/> followed by the first free number and <paramref name="extension"/>.</summary>
+    /// <summary>Removes one relationship of <paramref name="partName"/> by id; the part it targets is left in place.</summary>
+    public void RemoveRelationship(string partName, string id)
+    {
+        GetXml(OpcRelationships.RelationshipsPath(Normalize(partName)))?.Root?.Elements(Rel + "Relationship")
+            .Where(e => string.Equals((string?)e.Attribute("Id"), id, StringComparison.Ordinal)).Remove();
+    }
+
+    /// <summary>A part name not yet used:<paramref name="stem"/> followed by the first free number and <paramref name="extension"/>.</summary>
     public string UniqueName(string stem, string extension)
     {
         for (var n = 1; ; n++)

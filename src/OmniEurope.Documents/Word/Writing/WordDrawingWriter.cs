@@ -74,9 +74,9 @@ internal sealed class WordWriteContext
 /// <summary>Writes pictures and text boxes as DrawingML, inline or anchored.</summary>
 internal static class WordDrawingWriter
 {
-    public static XElement Picture(WordContentWriter writer, WordPicture picture, string relationshipId)
+    /// <summary>A picture frame with drawing id <paramref name="id"/> naming the image relationship.</summary>
+    public static XElement Picture(int id, WordPicture picture, string relationshipId, long? relativeHeight = null)
     {
-        var id = writer.Context.NextDrawingId();
         var (cx, cy) = (ToEmu(picture.Width), ToEmu(picture.Height));
         var graphic = new XElement(
             A + "graphic",
@@ -88,7 +88,7 @@ internal static class WordDrawingWriter
                     new XElement(Pic + "nvPicPr", new XElement(Pic + "cNvPr", new XAttribute("id", "0"), new XAttribute("name", "Picture " + Format(id))), new XElement(Pic + "cNvPicPr")),
                     new XElement(Pic + "blipFill", new XElement(A + "blip", new XAttribute(R + "embed", relationshipId)), new XElement(A + "stretch", new XElement(A + "fillRect"))),
                     new XElement(Pic + "spPr", Transform(cx, cy), Rectangle()))));
-        return Frame(picture, id, "Picture", graphic, new XElement(Wp + "cNvGraphicFramePr", new XElement(A + "graphicFrameLocks", new XAttribute("noChangeAspect", "1"))));
+        return Frame(picture, id, "Picture", graphic, new XElement(Wp + "cNvGraphicFramePr", new XElement(A + "graphicFrameLocks", new XAttribute("noChangeAspect", "1"))), relativeHeight);
     }
 
     /// <summary>A chart frame naming its chart part.</summary>
@@ -121,7 +121,8 @@ internal static class WordDrawingWriter
         return new XElement(Mc + "AlternateContent", new XElement(Mc + "Choice", new XAttribute("Requires", "wps"), drawing));
     }
 
-    internal static XElement Frame(WordShape shape, int id, string name, XElement graphic, XElement frameProperties)
+    // The z-order of an anchored shape (relativeHeight) defaults to a step per drawing id.
+    internal static XElement Frame(WordShape shape, int id, string name, XElement graphic, XElement frameProperties, long? relativeHeight = null)
     {
         var (cx, cy) = (ToEmu(shape.Width), ToEmu(shape.Height));
         var extent = new XElement(Wp + "extent", new XAttribute("cx", cx), new XAttribute("cy", cy));
@@ -143,7 +144,7 @@ internal static class WordDrawingWriter
                 Wp + "anchor",
                 Distances(floating),
                 new XAttribute("simplePos", "0"),
-                new XAttribute("relativeHeight", Format(id * 1024)),
+                new XAttribute("relativeHeight", Format(relativeHeight ?? id * 1024L)),
                 new XAttribute("behindDoc", floating.BehindText ? "1" : "0"),
                 new XAttribute("locked", "0"),
                 new XAttribute("layoutInCell", "1"),

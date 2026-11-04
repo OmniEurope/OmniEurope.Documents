@@ -21,9 +21,8 @@ internal static class WordInkWriter
     private static readonly XNamespace InkMl = "http://www.w3.org/2003/InkML";
 
     /// <summary>The drawing, in alternate content because the ink namespace is a Word 2010 extension.</summary>
-    public static XElement Ink(WordContentWriter writer, WordInk ink, string relationshipId)
+    public static XElement Ink(int id, WordInk ink, string relationshipId, long? relativeHeight = null)
     {
-        var id = writer.Context.NextDrawingId();
         var points = ink.Strokes.SelectMany(s => s.Points).ToList();
         var (cx, cy) = points.Count == 0 ? (ToEmu(ink.Width), ToEmu(ink.Height)) : (ToEmu(Math.Max(0, points.Max(p => p.X))), ToEmu(Math.Max(0, points.Max(p => p.Y))));
         var graphic = new XElement(
@@ -41,7 +40,7 @@ internal static class WordInkWriter
                         W14 + "xfrm",
                         new XElement(A + "off", new XAttribute("x", "0"), new XAttribute("y", "0")),
                         new XElement(A + "ext", new XAttribute("cx", cx), new XAttribute("cy", cy))))));
-        var drawing = WordDrawingWriter.Frame(ink, id, "Ink", graphic, new XElement(Wp + "cNvGraphicFramePr"));
+        var drawing = WordDrawingWriter.Frame(ink, id, "Ink", graphic, new XElement(Wp + "cNvGraphicFramePr"), relativeHeight);
         return new XElement(
             Mc + "AlternateContent",
             new XElement(Mc + "Choice", new XAttribute(XNamespace.Xmlns + "wpi", Wpi), new XAttribute("Requires", "wpi"), drawing));
