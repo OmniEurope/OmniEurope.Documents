@@ -169,10 +169,12 @@ internal sealed class WordContentControlFiller(IReadOnlyList<ScannedControl> con
             ? char.ConvertFromUtf32(code)
             : char.ConvertFromUtf32(Convert.ToInt32(fallback, 16));
 
-    private static bool? ParseBool(string value) => value.Trim().ToLowerInvariant() switch
+    private static readonly HashSet<string> TrueWords = new(StringComparer.OrdinalIgnoreCase) { "true", "1", "yes", "oui", "on", "checked" };
+    private static readonly HashSet<string> FalseWords = new(StringComparer.OrdinalIgnoreCase) { "false", "0", "no", "non", "off", "unchecked" };
+
+    private static bool? ParseBool(string value)
     {
-        "true" or "1" or "yes" or "oui" or "on" or "checked" => true,
-        "false" or "0" or "no" or "non" or "off" or "unchecked" => false,
-        _ => null,
-    };
+        var word = value.Trim();
+        return TrueWords.Contains(word) ? true : FalseWords.Contains(word) ? false : null;
+    }
 }

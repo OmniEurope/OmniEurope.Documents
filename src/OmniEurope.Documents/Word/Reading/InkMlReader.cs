@@ -184,28 +184,33 @@ internal static class InkMlReader
 
         public void Add(char c)
         {
+            if (char.IsAsciiDigit(c) || c == '.')
+            {
+                _token.Append(c);
+            }
+            else if (char.IsWhiteSpace(c) || Separators.Contains(c))
+            {
+                // A blank, a repeat, a prefix or a sign ends the value being read.
+                EndValue();
+                Separate(c);
+            }
+        }
+
+        private const string Separators = "?*!'\"-+";
+
+        private void Separate(char c)
+        {
             if (c is '?' or '*')
             {
-                EndValue();
                 Store(Count < _channels.Length ? _channels[Count].Last : 0);
             }
             else if (c is '!' or '\'' or '"')
             {
-                EndValue();
                 _prefix = c;
             }
             else if (c is '-' or '+')
             {
-                EndValue();
                 _token.Append(c);
-            }
-            else if (char.IsAsciiDigit(c) || c == '.')
-            {
-                _token.Append(c);
-            }
-            else if (char.IsWhiteSpace(c))
-            {
-                EndValue();
             }
         }
 
