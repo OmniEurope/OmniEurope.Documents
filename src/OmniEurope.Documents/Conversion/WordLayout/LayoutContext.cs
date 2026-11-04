@@ -48,6 +48,9 @@ internal sealed class LayoutContext
     /// <summary>Note labels in reading order, with the footnote restarts of the settings and sections.</summary>
     public NoteNumbering Notes { get; }
 
+    /// <summary>Each family met, with the font that draws it, in order of first use.</summary>
+    public List<FontUse> FontUses { get; } = [];
+
     public SortedSet<string> Gaps { get; } = new(StringComparer.Ordinal);
 
     public double Measure(string text, TextStyle style) =>
@@ -145,7 +148,8 @@ internal sealed class LayoutContext
         return result;
     }
 
-    // A family that no bundled or registered font matches is drawn with a look-alike, which is reported.
+    // A family that no bundled or registered font matches is drawn with a look-alike, which is reported; every
+    // family met is listed, in order of first use, with the font that draws it.
     private void CheckFont(string family)
     {
         if (!_checkedFonts.Add(family))
@@ -153,9 +157,10 @@ internal sealed class LayoutContext
             return;
         }
 
+        FontUses.Add(Builder.Fonts.Describe(family));
         if (Builder.Fonts.IsSubstituted(family))
         {
-            Gaps.Add($"font \"{family}\" replaced by {FontLibrary.BundledStem(family)}");
+            Gaps.Add($"font \"{family}\" replaced by {Builder.Fonts.SubstituteName(family)}");
         }
         else if (Builder.Fonts.LightSubstitution(family) is { } note)
         {

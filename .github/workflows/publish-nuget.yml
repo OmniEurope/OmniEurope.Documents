@@ -54,7 +54,7 @@ jobs:
         shell: pwsh
         run: |
           ./.github/scripts/test-package-provenance.ps1 -PackageDirectory artifacts/package -ExpectedCommit '${{ steps.ci.outputs.release_sha }}' -ExpectedRepository $env:GITHUB_REPOSITORY -ExpectedRunId '${{ steps.ci.outputs.run_id }}' -ExpectedRunAttempt '${{ steps.ci.outputs.run_attempt }}'
-          ./.github/scripts/verify-package.ps1 -Directory artifacts/package -Fonts src/OmniEurope.Documents/Fonts/Bundled -ExpectedVersion $env:RELEASE_TAG
+          ./.github/scripts/verify-package.ps1 -Directory artifacts/package -Fonts src/OmniEurope.Documents/Fonts/Bundled -ExtraFonts src/OmniEurope.Documents.Fonts/Fonts -ExpectedVersion $env:RELEASE_TAG
           $package = Get-ChildItem artifacts/package/*.nupkg | Where-Object Name -NotLike '*.snupkg' | Select-Object -First 1
           if (-not $package) { throw 'The validated package artifact is incomplete.' }
           "package_path=$($package.FullName)" >> $env:GITHUB_OUTPUT

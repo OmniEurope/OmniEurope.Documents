@@ -23,6 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\OmniEurope.Documents\OmniEurope.Documents.csproj" />
+    <ProjectReference Include="..\..\src\OmniEurope.Documents.Fonts\OmniEurope.Documents.Fonts.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/OmniEurope.Documents/OmniEurope.Documents.csproj" />
+    <Project Path="src/OmniEurope.Documents.Fonts/OmniEurope.Documents.Fonts.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/OmniEurope.Documents.Tests/OmniEurope.Documents.Tests.csproj" />

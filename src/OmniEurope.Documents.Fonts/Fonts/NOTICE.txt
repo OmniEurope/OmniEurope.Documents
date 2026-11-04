@@ -1,0 +1,77 @@
+OmniEurope.Documents.Fonts - third-party fonts
+
+Every font below is shipped unmodified (only the file names of Selawik are changed, from selawk*.ttf to
+Selawik-<Style>.ttf). Each one is embedded in OmniEurope.Documents.Fonts.dll with its licence file, and the
+licence files are also shipped in the NuGet package under fonts/extra/. A PDF produced by the library embeds a
+subset of the glyphs used, as the SIL Open Font License 1.1 (the licence of every font here) allows.
+
+Selawik 1.01 - SIL Open Font License 1.1 (LICENSE-Selawik.txt)
+  Copyright 2015, Microsoft Corporation, with Reserved Font Name Selawik.
+  Source: https://github.com/microsoft/Selawik/releases/download/1.01/Selawik_Release.zip
+  (tag 1.01, commit b65ff9ce7c4673e75ec5c622924a6b6f61f2f876; archive SHA-256
+  3f62c51e05e3b5a1e6241cf92a371f0be2ea1183aa87b30718bbd40832a8d423)
+  Licence: https://raw.githubusercontent.com/microsoft/Selawik/b65ff9ce7c4673e75ec5c622924a6b6f61f2f876/LICENSE.txt
+  Selawik-Regular.ttf    selawk.ttf    e9d98518d8ac2817782a9a382430463a2e0793ea68350b695bb727d9a830ee1c
+  Selawik-Bold.ttf       selawkb.ttf   f0db5e174a90e0956ad7d2844bdca1d5e6da92ec65b2c04e57ba9b180668c904
+  Selawik-Light.ttf      selawkl.ttf   8e19d073091a1e869b5b0d48b925e605c0a4c6ece7df7b22a364fb065314c4c5
+  Selawik-Semibold.ttf   selawksb.ttf  0a9e9d0549a10f24bef9b3a29e06fe6e0b5c21e7a784c503b048a307841a7783
+  Selawik-Semilight.ttf  selawksl.ttf  8620960344f12093482cded984a1aafa5a57d24cbf7e9299da125ccf0e9d4102
+  LICENSE-Selawik.txt    LICENSE.txt   77b7c2506d4efb22e09c8ccf10159f4956eab3ef7c007fef95de136bcf45300c
+
+Gelasio 1.007 - SIL Open Font License 1.1 (LICENSE-Gelasio.txt)
+  Copyright 2022 The Gelasio Project Authors.
+  Source: https://raw.githubusercontent.com/google/fonts/cb927e07c4bf27b1e5922e1de4a6aef627e60080/ofl/gelasio/<file>
+  Gelasio-Regular.ttf     5f99733733e8ee2d96409f28eba7888dc5ff7626eb40f9df7d9b37b15642b544
+  Gelasio-Bold.ttf        fc97890f6b059afb5c3ee72ae58707a89281899ecd6e4ad11bf91576ee4c1d95
+  Gelasio-Italic.ttf      0df93b4eb365dbe93b4b22edbded45460add10defc97961c57afb350e069a05b
+  Gelasio-BoldItalic.ttf  839de43ec55423ed6f592150a1bb7629bc0d6f874652fdd86a0f019a332a60b2
+  LICENSE-Gelasio.txt     OFL.txt  af98a2aec12e0ff6aeee941693221ddbfdb86ae4486949e1d54cbedf2422f994
+
+Noto Sans - SIL Open Font License 1.1 (LICENSE-NotoSans.txt)
+  Copyright 2015-2021 Google LLC.
+  Source: https://raw.githubusercontent.com/google/fonts/e69986d37832cc07980dee9d70fa5597b0b47ad8/ofl/notosans/<file>
+  NotoSans-Regular.ttf     a3c4b14201354e76f360300cccf688162280b90ea1639092f1e76706a040fab4
+  NotoSans-Bold.ttf        0d73b5b230cffac4cba183571bfdd52c3f4dfc49cfc1b5447db99d53d2b47111
+  NotoSans-Italic.ttf      6c0681558d11213df5f979cb677f63acec40a774497ee9bee048c53eb485574c
+  NotoSans-BoldItalic.ttf  4b08c127ed0399da6913d938f8e3f45a5d87f197b636f3d2978c6515f0cebd86
+  LICENSE-NotoSans.txt     OFL.txt  3a579abd469a5b75b779f244e4cebcb74451e32154503fce2c8e004d15bc7e98
+
+Noto Serif - SIL Open Font License 1.1 (LICENSE-NotoSerif.txt)
+  Copyright 2012 Google Inc.
+  Source: https://raw.githubusercontent.com/google/fonts/e69986d37832cc07980dee9d70fa5597b0b47ad8/ofl/notoserif/<file>
+  NotoSerif-Regular.ttf     375e83eade60ffc1c2f516a89175358ba5fcb785a9bdb68c6a3be1b6470704dd
+  NotoSerif-Bold.ttf        58de10340959ee1abd715fb6f8a670f44ca3adfc5d9c7e09e48d7af4a1ff4192
+  NotoSerif-Italic.ttf      4a5ae30931a7590be230ae1867650679f803188c5211493bd1a5e3fc0ac78181
+  NotoSerif-BoldItalic.ttf  c8d7e9e9a586cd5f671fc267906c8739be70fb5e92069fd891e1177e1d255fe1
+  LICENSE-NotoSerif.txt     OFL.txt  5e0da210fb04058a8c0087985d2d456b931c2579811a49655721d3cf0c36b6d6
+
+Lato 1.1 - SIL Open Font License 1.1 (LICENSE-Lato.txt)
+  Copyright (c) 2010-2011 by tyPoland Lukasz Dziedzic, with Reserved Font Name "Lato".
+  Source: https://raw.githubusercontent.com/google/fonts/27f377ab0b921dec33d7fadff05503b086d5a714/ofl/lato/<file>
+  Lato-Regular.ttf     7ae714b63c2c8b940bdd211a0cc678f01168a34eea8aa13c0df25364f29238a7
+  Lato-Bold.ttf        14f7de6b616950395062902eb8f70f01c0a901223db5d40f2a05728ac4a830f6
+  Lato-Italic.ttf      1a63dda1d2f019336e934e41d7ffa8f3e5f4cee0eb6a0c4734827dbe09ce5015
+  Lato-BoldItalic.ttf  2101c00b9c973a666bf128b3a776a45df7107bd29116079ee00541a8863d50ce
+  LICENSE-Lato.txt     OFL.txt  74ba064d03f1f1c4a952da936c3eb71866c34404916734de3cae73b34357e59e
+
+Roboto 3.016 - SIL Open Font License 1.1 (LICENSE-Roboto.txt)
+  Copyright 2011 The Roboto Project Authors.
+  Source: https://github.com/googlefonts/roboto-3-classic/releases/download/v3.016/Roboto_v3.016.zip, folder
+  web/static/ (tag v3.016, commit 5166f3d07889bf7d3732fb72e09623d7e52f862b; archive SHA-256
+  1653dbe12f248da8fb0b9920db7b9496cd677ed3981154f6f15285c8bd4e334f)
+  Licence: https://raw.githubusercontent.com/googlefonts/roboto-3-classic/5166f3d07889bf7d3732fb72e09623d7e52f862b/OFL.txt
+  Roboto-Regular.ttf     a6ec0ffaad7339c18c90c6a9728465e9003ae725a8769401af356a8afe523690
+  Roboto-Bold.ttf        07ee011e62fd0dd0639f730fe20f6a49e325ecc1110134fadfb0062acdee3772
+  Roboto-Italic.ttf      0efc07ef597e416675d3bb82585d78f93558d76f7aa692f12ff1e857a81c3db4
+  Roboto-BoldItalic.ttf  2c7542955f0edc8801e4c3aff3f3421af9c451f807081669902f93fddb900202
+  LICENSE-Roboto.txt     OFL.txt  061402327a96aadb0bfb694a960ed289ecd38d383e396243831ab81feb109c41
+
+Open Sans 3.003 - SIL Open Font License 1.1 (LICENSE-OpenSans.txt)
+  Copyright 2020 The Open Sans Project Authors.
+  Source: https://raw.githubusercontent.com/googlefonts/opensans/8e14d71005add3120ad40627c1a55b7ba869737c/fonts/ttf/<file>
+  Licence: https://raw.githubusercontent.com/googlefonts/opensans/8e14d71005add3120ad40627c1a55b7ba869737c/OFL.txt
+  OpenSans-Regular.ttf     c53aceea2dcf5b4098099c0c4d0a061d17e178a049317b42a422b1a9f7f8eb59
+  OpenSans-Bold.ttf        27da758f4dcac9a65abe914c13b463b42982b9909bc65713424099f4810bd1e6
+  OpenSans-Italic.ttf      93bc1bb6abf4e6b7c75d7131714061d5b57cc478abcabe4cb3519bb38fb917aa
+  OpenSans-BoldItalic.ttf  d672a770037104b6af45e1336b3d3c1729c8aea940f81e010f5a8a7319c29a21
+  LICENSE-OpenSans.txt     OFL.txt  01cd5ffb3a528c219a86e49a814c6c53bd8a69b9a3c305dd237074ba1c811af7

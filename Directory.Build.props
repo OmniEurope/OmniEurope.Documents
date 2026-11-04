@@ -7,5 +7,8 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <!-- The package version, shared so OmniEurope.Documents.dll and OmniEurope.Documents.Fonts.dll (shipped in
+         the same package) always carry the same assembly and file version. -->
+    <Version>1.0.0</Version>
   </PropertyGroup>
 </Project>

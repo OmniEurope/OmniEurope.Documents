@@ -6,7 +6,6 @@
     <IsTrimmable>true</IsTrimmable>
     <IsAotCompatible>true</IsAotCompatible>
     <PackageId>OmniEurope.Documents</PackageId>
-    <Version>1.0.0</Version>
     <Authors>OmniEurope contributors</Authors>
     <Company>OmniEurope</Company>
     <Description>Create, edit, convert and read Word, Excel, PDF, Markdown and CSV documents, without OCR, without UI and without any dependency.</Description>
@@ -37,6 +36,50 @@
     <EmbeddedResource Include="Fonts\Bundled\LICENSE-*.txt" LogicalName="OmniEurope.Documents.Fonts.%(Filename)%(Extension)" />
     <None Include="Fonts\Bundled\LICENSE-*.txt" Pack="true" PackagePath="fonts/" />
   </ItemGroup>
+
+  <!--
+    The extra fonts (OmniEurope.Documents.Fonts.dll, a separate assembly a host may load lazily) ship in this
+    package: the assembly and its XML doc in lib/, its PDB in the symbol package, its licences in fonts/extra/.
+    That project references this one, so it is built here by an MSBuild call (a ProjectReference would be
+    circular); the extra global property keeps its build of this project a distinct instance.
+  -->
+  <PropertyGroup>
+    <ExtraFontsProject>$(MSBuildThisFileDirectory)..\OmniEurope.Documents.Fonts\OmniEurope.Documents.Fonts.csproj</ExtraFontsProject>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);AddExtraFontsToPackage</TargetsForTfmSpecificBuildOutput>
+    <TargetsForTfmSpecificDebugSymbolsInPackage>$(TargetsForTfmSpecificDebugSymbolsInPackage);AddExtraFontsSymbolsToPackage</TargetsForTfmSpecificDebugSymbolsInPackage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\OmniEurope.Documents.Fonts\Fonts\LICENSE-*.txt;..\OmniEurope.Documents.Fonts\Fonts\NOTICE.txt" Pack="true" PackagePath="fonts/extra/" />
+  </ItemGroup>
+
+  <Target Name="ResolveExtraFontsAssembly">
+    <PropertyGroup>
+      <_ExtraFontsTarget>Build</_ExtraFontsTarget>
+      <_ExtraFontsTarget Condition="'$(NoBuild)' == 'true'">GetTargetPath</_ExtraFontsTarget>
+    </PropertyGroup>
+    <MSBuild Projects="$(ExtraFontsProject)" Targets="$(_ExtraFontsTarget)" Properties="Configuration=$(Configuration);PackingExtraFonts=true">
+      <Output TaskParameter="TargetOutputs" ItemName="_ExtraFontsAssembly" />
+    </MSBuild>
+    <Error Condition="!Exists('@(_ExtraFontsAssembly)')" Text="@(_ExtraFontsAssembly) is missing: build OmniEurope.Documents.Fonts before packing with --no-build." />
+  </Target>
+
+  <Target Name="AddExtraFontsToPackage" DependsOnTargets="ResolveExtraFontsAssembly">
+    <ItemGroup>
+      <_ExtraFontsOutput Include="@(_ExtraFontsAssembly->'%(FullPath)')" />
+      <_ExtraFontsOutput Include="@(_ExtraFontsAssembly->'%(RootDir)%(Directory)%(Filename).xml')" />
+      <BuildOutputInPackage Include="@(_ExtraFontsOutput)" FinalOutputPath="%(FullPath)" TargetPath="%(Filename)%(Extension)" />
+    </ItemGroup>
+    <Error Condition="!Exists('%(_ExtraFontsOutput.FullPath)')" Text="%(_ExtraFontsOutput.FullPath) is missing." />
+  </Target>
+
+  <Target Name="AddExtraFontsSymbolsToPackage" DependsOnTargets="ResolveExtraFontsAssembly">
+    <ItemGroup>
+      <_ExtraFontsSymbols Include="@(_ExtraFontsAssembly->'%(RootDir)%(Directory)%(Filename).pdb')" />
+      <TfmSpecificDebugSymbolsFile Include="@(_ExtraFontsSymbols)" TargetFramework="$(TargetFramework)" FinalOutputPath="%(FullPath)" TargetPath="%(Filename)%(Extension)" />
+    </ItemGroup>
+    <Error Condition="!Exists('@(_ExtraFontsSymbols)')" Text="@(_ExtraFontsSymbols) is missing." />
+  </Target>
 
   <!-- Symbol advance widths: Adobe's Core 14 metrics file, unmodified, always with its licence (MustRead.html). -->
   <ItemGroup>

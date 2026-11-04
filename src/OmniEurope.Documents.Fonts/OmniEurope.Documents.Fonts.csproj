@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Extra free fonts (Selawik, Gelasio, Noto Sans and Serif, Roboto, Open Sans, Lato) in an assembly of their own,
+    so a host can load it lazily. It ships inside the OmniEurope.Documents package (see that project's pack
+    targets), never as a package of its own.
+  -->
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IsTrimmable>true</IsTrimmable>
+    <IsAotCompatible>true</IsAotCompatible>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>OmniEurope.Documents.Fonts</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OmniEurope.Documents\OmniEurope.Documents.csproj" />
+  </ItemGroup>
+
+  <!-- Fonts (SIL OFL 1.1), their licences and the notice recording their sources and SHA-256. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Fonts\*.ttf;Fonts\LICENSE-*.txt;Fonts\NOTICE.txt" LogicalName="OmniEurope.Documents.Fonts.%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>

@@ -51,7 +51,7 @@ jobs:
       - name: Verify package
         # No dependency, every font embedded and licensed, symbols present, no build machine path leaked.
         shell: pwsh
-        run: ./.github/scripts/verify-package.ps1 -Directory artifacts/package -Fonts src/OmniEurope.Documents/Fonts/Bundled
+        run: ./.github/scripts/verify-package.ps1 -Directory artifacts/package -Fonts src/OmniEurope.Documents/Fonts/Bundled -ExtraFonts src/OmniEurope.Documents.Fonts/Fonts
       - name: Record validated package provenance
         shell: pwsh
         run: |

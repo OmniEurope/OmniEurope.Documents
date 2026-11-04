@@ -21,7 +21,12 @@ public sealed record WordPdfOptions
 }
 
 /// <summary>A converted document: the PDF, its page count and what the conversion could not render faithfully.</summary>
-public sealed record WordPdfResult(byte[] Pdf, int PageCount, IReadOnlyList<string> Gaps);
+public sealed record WordPdfResult(byte[] Pdf, int PageCount, IReadOnlyList<string> Gaps)
+{
+    /// <summary>Each font family the document asks for, in order of first use, with the font that drew it and
+    /// whether it is the requested one (Calibri drawn with Carlito, Segoe UI with Selawik...).</summary>
+    public IReadOnlyList<FontUse> Fonts { get; init; } = [];
+}
 
 /// <summary>
 /// Lays a Word document out into pages and writes it as PDF: styles and numbering resolved, lines broken
@@ -62,7 +67,7 @@ public static class WordToPdf
         }
 
         var gaps = document.Gaps.Concat(context.Gaps).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToList();
-        return new WordPdfResult(builder.ToArray(), pages.Count, gaps);
+        return new WordPdfResult(builder.ToArray(), pages.Count, gaps) { Fonts = context.FontUses.ToList() };
     }
 
     // Footnotes restarting at each page are numbered after the pages of the previous layout, until the
