@@ -152,7 +152,7 @@ public sealed class WordEditor
     /// tag are filled): the content becomes the value in the run formatting of the control's first run, the
     /// placeholder state is cleared, a date is parsed (<c>yyyy-MM-dd</c> or the control's own format in its
     /// language) and written in that format with <c>w:fullDate</c> updated, a list takes a value or display text
-    /// and writes the display text, a check box takes a boolean. A value that does not fit leaves its control
+    /// and writes the display text (a combo box also takes free text, written as it is; a drop-down list refuses a value outside its entries), a check box takes a boolean. A value that does not fit leaves its control
     /// unchanged and is reported in <see cref="WordContentControlFill.Gaps"/>; a tag matching no control is
     /// reported in <see cref="WordContentControlFill.UnknownTags"/>.
     /// </summary>
@@ -169,7 +169,7 @@ public sealed class WordEditor
         return Filler().SetDate(tag, date);
     }
 
-    /// <summary>Selects an entry, by value or display text, in the combo boxes and drop-down lists tagged <paramref name="tag"/>.</summary>
+    /// <summary>Selects an entry, by value or display text, in the combo boxes and drop-down lists tagged <paramref name="tag"/>; text matching no entry is written as free text in a combo box, as Word does, and refused in a drop-down list (reported as a gap).</summary>
     public WordContentControlFill SelectItem(string tag, string valueOrDisplayText)
     {
         ArgumentNullException.ThrowIfNull(tag);
