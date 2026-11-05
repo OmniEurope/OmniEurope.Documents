@@ -9,7 +9,7 @@ namespace OmniEurope.Documents.Conversion.HtmlLayout;
 /// <summary>
 /// Walks an HTML tree and writes Word blocks: headings, paragraphs, lists (nested, numbered or bulleted),
 /// block quotes, preformatted text, tables (with column and row spans), rules, line breaks, links and inline
-/// formatting (tags and the inline style attribute). Images are taken from <c>data:</c> URIs only: nothing is
+/// formatting (tags, the inline style attribute and the single-class rules of the page's style elements). Images are taken from <c>data:</c> URIs only: nothing is
 /// ever fetched. Scripts, styles and hidden elements are skipped.
 /// </summary>
 internal sealed class HtmlWordWriter
@@ -28,6 +28,7 @@ internal sealed class HtmlWordWriter
     private static readonly Regex Spaces = new(@"\s+", RegexOptions.CultureInvariant);
 
     private readonly WordDocument _document;
+    private readonly CssClassRules _rules;
     private readonly Stack<List<WordBlock>> _containers = new();
     private readonly List<int> _lists = [];
     private WordParagraph? _paragraph;
@@ -36,9 +37,10 @@ internal sealed class HtmlWordWriter
     private WordParagraphProperties _block = WordParagraphProperties.Empty;
     private bool _pre;
 
-    public HtmlWordWriter(WordDocument document)
+    public HtmlWordWriter(WordDocument document, CssClassRules? rules = null)
     {
         _document = document;
+        _rules = rules ?? CssClassRules.None;
         _containers.Push(document.Body);
     }
 
@@ -57,7 +59,7 @@ internal sealed class HtmlWordWriter
         var lists = _lists.ToList();
         Flush();
         _containers.Push(target);
-        var alignment = CssStyle.Alignment(CssStyle.Parse(node.GetAttribute("style")), node.GetAttribute("align"));
+        var alignment = CssStyle.Alignment(_rules.Of(node), node.GetAttribute("align"));
         (_paragraph, _sink, _block) = (null, null, new WordParagraphProperties { Alignment = alignment });
         _run = overlay is null ? _run : _run.Overlay(overlay);
         _lists.Clear();
@@ -100,7 +102,7 @@ internal sealed class HtmlWordWriter
     private void Element(HtmlElement element)
     {
         var name = element.TagName.ToLowerInvariant();
-        var css = CssStyle.Parse(element.GetAttribute("style"));
+        var css = _rules.Of(element);
         if (Skipped.Contains(name) || css.GetValueOrDefault("display") == "none" || element.HasAttribute("hidden"))
         {
             return;
@@ -338,9 +340,9 @@ internal sealed class HtmlWordWriter
     }
 
     // Size from the width and height attributes or styles (CSS pixels), else the image's own size at its resolution.
-    private static (double Width, double Height) ImageSize(HtmlElement element, byte[] data)
+    private (double Width, double Height) ImageSize(HtmlElement element, byte[] data)
     {
-        var css = CssStyle.Parse(element.GetAttribute("style"));
+        var css = _rules.Of(element);
         var width = Dimension(css, element, "width");
         var height = Dimension(css, element, "height");
         var (naturalWidth, naturalHeight) = NaturalSize(data);

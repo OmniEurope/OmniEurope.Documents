@@ -18,8 +18,11 @@ Notable changes to this project are documented here, following the Keep a Change
 - A Word document loaded from a .docx that carries a theme part keeps that theme on save (colour scheme, format scheme and the rest), only the latin theme fonts follow the model's `MajorFont` and `MinorFont`; a document without a theme part keeps the previous behaviour.
 - Word to HTML writes no `style` attribute any more: the formatting of each element is a generated class
   (`omni-sN`, identical formatting sharing one class) of the page's style sheet; the page renders as before. A
-  consumer that keeps only the body must now include the style sheet. HTML to Word reads only `style` attributes,
-  so converting such a page back to Word keeps its text and structure but no longer its CSS formatting.
+  consumer that keeps only the body must now include the style sheet.
+- `HtmlToWord.Convert` reads the rules of the page's own `style` elements whose selector is a single class (or a list
+  of single classes), in sheet order, under the `style` attribute: a page of Word to HTML converts back to Word with
+  the same formatting as the former page with `style` attributes. Other selectors and at-rules are ignored; a linked
+  style sheet is never fetched and is reported in the gaps. `HtmlToWord.Append` (a tree, not a page) is unchanged.
 
 - Rendering a Word 365 export is about ten times faster: a clip rectangle covering the whole page (Word opens many drawings with one) no longer builds a full-page mask; the rendered pixels are unchanged.
 - `PdfPageComparison` is about five times faster on the comparison itself (a pixel close to the one at the same position skips the neighbourhood scans, RGB images are read in place) and PNG encoding filters each row in a dedicated loop; results and PNG bytes are unchanged.

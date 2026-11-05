@@ -8,8 +8,10 @@ namespace OmniEurope.Documents.Conversion;
 
 /// <summary>
 /// HTML to Word: headings, paragraphs, lists, quotes, preformatted text, tables with spans, rules, links,
-/// inline formatting and the inline <c>style</c> attribute. Images are read from <c>data:</c> URIs only
-/// (nothing is fetched); anything left out is listed in <see cref="WordDocument.Gaps"/>.
+/// inline formatting, the inline <c>style</c> attribute and, for a whole page (<see cref="Convert"/>), the rules of
+/// its own <c>style</c> elements whose selector is a single class (<c>.name</c>, as Word to HTML writes them;
+/// the <c>style</c> attribute wins over them). Linked style sheets are not read and images are read from
+/// <c>data:</c> URIs only (nothing is fetched); anything left out is listed in <see cref="WordDocument.Gaps"/>.
 /// </summary>
 public static class HtmlToWord
 {
@@ -24,11 +26,20 @@ public static class HtmlToWord
             document.Information = document.Information with { Title = parsed.Title };
         }
 
-        Append(parsed.Body, document);
+        if (parsed.QuerySelectorAll("link").Any(l => l.GetAttribute("rel")?.Split(' ', StringSplitOptions.RemoveEmptyEntries).Contains("stylesheet", StringComparer.OrdinalIgnoreCase) == true))
+        {
+            document.Gaps.Add(LinkedStyleSheetsGap);
+        }
+
+        new HtmlWordWriter(document, CssClassRules.From(parsed)).Write(parsed.Body);
         return document;
     }
 
-    /// <summary>Appends the content of an HTML tree to the last section of <paramref name="document"/>.</summary>
+    /// <summary>The gap of a page that links a style sheet: it is never fetched, so its rules are not read.</summary>
+    internal const string LinkedStyleSheetsGap = "linked style sheets are not read (nothing is fetched)";
+
+    /// <summary>Appends the content of an HTML tree to the last section of <paramref name="document"/>; the
+    /// <c>style</c> attributes count, not the rules of the page's style elements (the tree may not be a page).</summary>
     public static void Append(HtmlNode root, WordDocument document)
     {
         ArgumentNullException.ThrowIfNull(root);

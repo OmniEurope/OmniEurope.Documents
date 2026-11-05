@@ -64,7 +64,9 @@ strict Content-Security-Policy without `'unsafe-inline'`:
   by `image1.png`, `image2.jpg`..., and `WordHtmlResult.Images` holds each name, media type and bytes. Without it,
   pictures stay `data:` URIs.
 
-A consumer that shows only the page body must now include the style sheet too.
+A consumer that shows only the page body must now include the style sheet too. HTML to Word reads the single-class
+rules of a page's own `style` elements, so such a page converts back to Word with its formatting; a linked style
+sheet is never fetched and is reported in the gaps.
 
 Companion tools: HTML parsing and sanitising, text diff (lines and words).
 
