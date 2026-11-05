@@ -34,17 +34,59 @@ public sealed record WordHtmlOptions
     /// not wrapped, nor is a control without content. False by default: the output is then unchanged.
     /// </summary>
     public bool MarkContentControls { get; init; }
+
+    /// <summary>
+    /// The address of the style sheet when the consumer serves it as a file (its text is
+    /// <see cref="WordHtmlResult.StyleSheet"/>): the page then links it with <c>&lt;link rel="stylesheet"&gt;</c>
+    /// and embeds no <c>style</c> element, which a Content-Security-Policy <c>style-src 'self'</c> allows. Null by
+    /// default: the sheet is embedded.
+    /// </summary>
+    public string? StyleSheetHref { get; init; }
+
+    /// <summary>
+    /// The nonce written on the <c>style</c> element (or on the <c>link</c> element of <see cref="StyleSheetHref"/>),
+    /// for a Content-Security-Policy <c>style-src 'nonce-…'</c>. Only a CSP <c>base64-value</c> is accepted: ASCII
+    /// letters, digits, <c>+ / - _</c>, then at most two <c>=</c>; anything else throws
+    /// <see cref="ArgumentException"/>. Null by default: no nonce.
+    /// </summary>
+    public string? StyleSheetNonce { get; init => field = HtmlPageStyle.CheckNonce(value); }
+
+    /// <summary>
+    /// When set, pictures are not embedded as <c>data:</c> URIs: each one becomes a separate resource of
+    /// <see cref="WordHtmlResult.Images"/>, named <c>image1.png</c>, <c>image2.jpg</c>... in order of first
+    /// appearance, and its <c>img</c> element takes this prefix followed by the name as <c>src</c>
+    /// (<c>"/documents/42/images/"</c> gives <c>/documents/42/images/image1.png</c>), which a
+    /// Content-Security-Policy <c>img-src 'self'</c> allows when the consumer serves them. Null by default: the
+    /// page embeds its pictures and stays standalone.
+    /// </summary>
+    public string? ImageUrlPrefix { get; init; }
 }
 
+/// <summary>A picture of the page served apart from it (<see cref="WordHtmlOptions.ImageUrlPrefix"/>): its file name,
+/// the one its <c>src</c> ends with, its media type (<c>image/png</c>...) and its bytes.</summary>
+public sealed record WordHtmlImage(string Name, string MediaType, byte[] Data);
+
 /// <summary>A converted document: a standalone HTML page and what the conversion only approximates.</summary>
-public sealed record WordHtmlResult(string Html, IReadOnlyList<string> Gaps);
+public sealed record WordHtmlResult(string Html, IReadOnlyList<string> Gaps)
+{
+    /// <summary>The style sheet of the page, the one it embeds or links (<see cref="WordHtmlOptions.StyleSheetHref"/>).</summary>
+    public string StyleSheet { get; init; } = string.Empty;
+
+    /// <summary>The pictures to serve at <see cref="WordHtmlOptions.ImageUrlPrefix"/>; empty when the page embeds
+    /// them.</summary>
+    public IReadOnlyList<WordHtmlImage> Images { get; init; } = [];
+}
 
 /// <summary>
-/// Converts a Word document into one standalone HTML page (UTF-8, styles embedded, nothing fetched): each
+/// Converts a Word document into one HTML page (UTF-8, nothing fetched unless asked): each
 /// section at its page width with its margins, the default header and footer of the first section as
 /// running blocks, headings, paragraphs and runs with their resolved formatting, lists with their computed
 /// labels, tables with spans and vertical merges, footnotes and endnotes listed at the end with links both
-/// ways, pictures as <c>data:</c> URIs, text boxes as blocks and hyperlinks with safe addresses only. Every
+/// ways, pictures as <c>data:</c> URIs (or separate resources, <see cref="WordHtmlOptions.ImageUrlPrefix"/>),
+/// text boxes as blocks and hyperlinks with safe addresses only. The page has no <c>style</c> attribute: the
+/// formatting of each element is a class of one style sheet (identical formatting shares a class), embedded or
+/// linked (<see cref="WordHtmlOptions.StyleSheetHref"/>), so it shows under a Content-Security-Policy without
+/// <c>'unsafe-inline'</c>. Every
 /// paragraph read from a package (alternate-content fallback markup aside) carries <c>data-address</c>, the
 /// address <see cref="Word.Editing.WordEditor"/> gives the same paragraph. All document text is encoded:
 /// nothing in the document can add markup or script. What the page only approximates is listed in
@@ -67,9 +109,9 @@ public static class WordToHtml
     {
         ArgumentNullException.ThrowIfNull(document);
         var context = new HtmlContext(document, options ?? new WordHtmlOptions());
-        var html = new HtmlPageWriter(context).Write();
+        var (html, css) = new HtmlPageWriter(context).Write();
         var gaps = document.Gaps.Concat(context.Gaps).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToList();
-        return new WordHtmlResult(html, gaps);
+        return new WordHtmlResult(html, gaps) { StyleSheet = css, Images = context.Images.Resources };
     }
 
     /// <summary>Loads a .docx package and converts it; every paragraph is addressed.</summary>

@@ -5,11 +5,15 @@ namespace OmniEurope.Documents.Conversion.WordHtml;
 
 /// <summary>
 /// The HTML being written. Text and attribute values always go through <see cref="Encode"/>; tag and
-/// attribute names are constants of the converter, never document content.
+/// attribute names are constants of the converter, never document content. A <c>style</c> attribute is never
+/// written: its declarations become a class of <see cref="Classes"/>, added to the element's classes.
 /// </summary>
 internal sealed class HtmlOutput
 {
     private readonly StringBuilder _html = new();
+
+    /// <summary>The classes that replace the <c>style</c> attributes given to <see cref="Open"/>.</summary>
+    public HtmlStyleClasses Classes { get; } = new();
 
     public void Raw(string markup) => _html.Append(markup);
 
@@ -17,21 +21,45 @@ internal sealed class HtmlOutput
 
     public void Text(string text) => Encode(text, _html);
 
-    /// <summary>An opening tag; attributes whose value is null are left out.</summary>
+    /// <summary>An opening tag; attributes whose value is null are left out, a <c>style</c> attribute becomes a
+    /// class (joined to the <c>class</c> attribute when there is one).</summary>
     public void Open(string tag, params ReadOnlySpan<(string Name, string? Value)> attributes)
     {
-        _html.Append('<').Append(tag);
+        string? generated = null;
         foreach (var (name, value) in attributes)
         {
-            if (value is not null)
+            if (name == "style" && value is not null)
             {
-                _html.Append(' ').Append(name).Append("=\"");
-                Encode(value, _html);
-                _html.Append('"');
+                generated = Classes.Of(value);
             }
         }
 
+        _html.Append('<').Append(tag);
+        foreach (var (name, value) in attributes)
+        {
+            if (name == "class")
+            {
+                Attribute(name, value is null ? generated : generated is null ? value : value + " " + generated);
+                generated = null;
+            }
+            else if (name != "style")
+            {
+                Attribute(name, value);
+            }
+        }
+
+        Attribute("class", generated);
         _html.Append('>');
+    }
+
+    private void Attribute(string name, string? value)
+    {
+        if (value is not null)
+        {
+            _html.Append(' ').Append(name).Append("=\"");
+            Encode(value, _html);
+            _html.Append('"');
+        }
     }
 
     public void Close(string tag) => _html.Append("</").Append(tag).Append('>');

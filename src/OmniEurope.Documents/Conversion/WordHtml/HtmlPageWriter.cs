@@ -4,7 +4,7 @@ using OmniEurope.Documents.Word;
 namespace OmniEurope.Documents.Conversion.WordHtml;
 
 /// <summary>
-/// Writes the page: the head with the embedded style sheet, the running header of the first section, each
+/// Writes the page: the head with the style sheet (embedded or linked), the running header of the first section, each
 /// section at its page width and margins, the footnotes then the endnotes in the order of their first
 /// reference, and the running footer.
 /// </summary>
@@ -37,12 +37,24 @@ internal sealed class HtmlPageWriter
 
     private WordDocument Document => _context.Document;
 
-    public string Write()
+    /// <summary>The page and its style sheet: the base rules, then the classes of the elements' own formatting.
+    /// The body is written first, so the head can hold every class it uses.</summary>
+    public (string Html, string StyleSheet) Write()
     {
         _context.Gaps.Add("line and page breaks are computed by the browser");
         _context.Gaps.Add("line heights are approximated (single spacing taken as 1.15 times the font size)");
         ReportLeftOut();
-        Head();
+        Body();
+        var classes = new System.Text.StringBuilder(StyleSheet);
+        _output.Classes.Write(classes);
+        var css = classes.ToString();
+        var head = new HtmlOutput();
+        Head(head, css);
+        return (head.ToString() + _output.ToString(), css);
+    }
+
+    private void Body()
+    {
         _output.Raw("<body>\n<div class=\"omni-document\">\n");
         var first = Document.Sections.Count > 0 ? Document.Sections[0] : null;
         Running("header", first, first?.Headers);
@@ -55,19 +67,18 @@ internal sealed class HtmlPageWriter
         Notes(WordNoteKind.Endnote, first);
         Running("footer", first, first?.Footers);
         _output.Raw("</div>\n</body>\n</html>\n");
-        return _output.ToString();
     }
 
-    private void Head()
+    private void Head(HtmlOutput head, string css)
     {
         var language = new string((Document.Styles.DefaultRunProperties.Language ?? string.Empty).Where(c => char.IsAsciiLetterOrDigit(c) || c == '-').ToArray());
-        _output.Raw("<!DOCTYPE html>\n");
-        _output.Open("html", ("lang", language.Length > 0 ? language : null));
-        _output.Raw("\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<meta name=\"generator\" content=\"OmniEurope.Documents\">\n<title>");
-        _output.Text(Document.Information.Title ?? string.Empty);
-        _output.Raw("</title>\n<style>");
-        _output.Raw(StyleSheet);
-        _output.Raw("</style>\n</head>\n");
+        head.Raw("<!DOCTYPE html>\n");
+        head.Open("html", ("lang", language.Length > 0 ? language : null));
+        head.Raw("\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<meta name=\"generator\" content=\"OmniEurope.Documents\">\n<title>");
+        head.Text(Document.Information.Title ?? string.Empty);
+        head.Raw("</title>\n");
+        HtmlPageStyle.Write(head, css, _context.Options.StyleSheetHref, _context.Options.StyleSheetNonce);
+        head.Raw("\n</head>\n");
     }
 
     private void ReportLeftOut()

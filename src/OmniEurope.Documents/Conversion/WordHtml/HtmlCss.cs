@@ -17,7 +17,7 @@ internal static class HtmlCss
     /// <summary>The line height of single spacing, as a multiple of the font size.</summary>
     public const double SingleLine = 1.15;
 
-    /// <summary>Declarations joined into a <c>style</c> attribute value; null when there are none.</summary>
+    /// <summary>Declarations joined into the formatting of one element (a class of the style sheet); null when there are none.</summary>
     public static string? Join(IEnumerable<string> declarations)
     {
         var text = string.Join(';', declarations);

@@ -201,6 +201,43 @@ public sealed class ExcelToHtmlTests
         Assert.DoesNotContain("font-family:'", css.StyleSheet(), StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Gives_its_style_sheet_apart_with_no_style_attribute_and_embeds_it_with_a_nonce()
+    {
+        foreach (var workbook in new[] { Reloaded(Sample()), Reloaded(SampleDocuments.Workbook()) })
+        {
+            var result = ExcelToHtml.ConvertWithStyleSheet(workbook, new ExcelHtmlOptions { StyleSheetNonce = "n0nce/+-_==" });
+            var document = HtmlParser.ParseDocument(result.Html);
+
+            Assert.DoesNotContain(" style=", result.Html, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain(document.DescendantElements(), e => e.GetAttribute("style") is not null);
+            var style = Assert.Single(document.Head.QuerySelectorAll("style"));
+            Assert.Equal("n0nce/+-_==", style.GetAttribute("nonce"));
+            Assert.Equal(result.StyleSheet, style.TextContent);
+            Assert.Equal(ExcelToHtml.Convert(workbook, new ExcelHtmlOptions { StyleSheetNonce = "n0nce/+-_==" }), result.Html);
+            foreach (var name in document.Body.QuerySelectorAll("td, col, table").SelectMany(e => e.ClassList).Where(c => c != ExcelToHtml.TableClass).Distinct())
+            {
+                Assert.Contains("." + name + "{", result.StyleSheet, StringComparison.Ordinal);
+            }
+        }
+    }
+
+    [Fact]
+    public void Links_the_style_sheet_served_by_the_consumer_instead_of_embedding_it()
+    {
+        var bytes = Sample().ToArray();
+        var embedded = ExcelToHtml.ConvertWithStyleSheet(bytes);
+        var linked = ExcelToHtml.ConvertWithStyleSheet(bytes, new ExcelHtmlOptions { StyleSheetHref = "sheet.css?v=1&w=2" });
+        var head = HtmlParser.ParseDocument(linked.Html).Head;
+
+        Assert.Empty(head.QuerySelectorAll("style"));
+        var link = Assert.Single(head.QuerySelectorAll("link"));
+        Assert.Equal(("stylesheet", "sheet.css?v=1&w=2", null), (link.GetAttribute("rel"), link.GetAttribute("href"), link.GetAttribute("nonce")));
+        Assert.Equal(embedded.StyleSheet, linked.StyleSheet);
+        Assert.Equal("width:249px", Rule(linked.StyleSheet, "." + HtmlParser.ParseDocument(linked.Html).QuerySelector("table")!.ClassList[1]));
+        Assert.Null(HtmlParser.ParseDocument(embedded.Html).Head.QuerySelector("style")!.GetAttribute("nonce"));
+    }
+
     private static XlsxWorkbook Sample()
     {
         var workbook = new XlsxWorkbook();

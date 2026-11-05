@@ -15,7 +15,7 @@ internal sealed class HtmlContext
         Options = options;
         Lists = new WordListCounter(document.Numbering);
         Notes = new NoteNumbering(document);
-        Images = new HtmlImages(Gaps);
+        Images = new HtmlImages(Gaps, options.ImageUrlPrefix);
     }
 
     public WordDocument Document { get; }

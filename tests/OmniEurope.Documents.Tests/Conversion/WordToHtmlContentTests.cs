@@ -46,8 +46,8 @@ public sealed class WordToHtmlContentTests
         Assert.Equal("<img src=x onerror=alert(10)>", page.Body.QuerySelector(".omni-label")!.TextContent);
         Assert.Equal(["#%22%3E%3Cscript%3Ealert(8)%3C/script%3E"], page.Body.QuerySelectorAll("a[href]").Select(a => a.GetAttribute("href")));
         Assert.Equal("frscript", page.DocumentElement.GetAttribute("lang"));
-        var font = page.Body.QuerySelectorAll("span[style]").Single(s => s.TextContent == "police");
-        Assert.Equal("font-family:'xstylescriptalert2script',sans-serif", font.GetAttribute("style"));
+        var font = page.Body.QuerySelectorAll("span[class]").Single(s => s.TextContent == "police");
+        Assert.Equal("font-family:'xstylescriptalert2script',sans-serif", HtmlStyleRules.Of(font));
         Assert.Equal("\" onerror=\"alert(9)", page.Body.QuerySelector("img")!.GetAttribute("alt"));
     }
 
@@ -87,7 +87,7 @@ public sealed class WordToHtmlContentTests
 
         Assert.Equal("data:" + type + ";base64," + Convert.ToBase64String(bytes), image.GetAttribute("src"));
         Assert.Equal("Image", image.GetAttribute("alt"));
-        Assert.Equal("width:30pt;height:20pt", image.GetAttribute("style"));
+        Assert.Equal("width:30pt;height:20pt", HtmlStyleRules.Of(image));
     }
 
     [Fact]
@@ -148,8 +148,8 @@ public sealed class WordToHtmlContentTests
         Assert.Equal(["p", "div", "p"], children.Select(c => c.TagName));
         Assert.Equal("Avant\tla boîtesuite", children[0].TextContent);
         Assert.NotNull(children[0].QuerySelector("br"));
-        Assert.Equal("omni-textbox", children[1].GetAttribute("class"));
-        Assert.Equal("width:120pt;min-height:40pt", children[1].GetAttribute("style"));
+        Assert.Equal("omni-textbox", HtmlStyleRules.Named(children[1]));
+        Assert.Equal("width:120pt;min-height:40pt", HtmlStyleRules.Of(children[1]));
         Assert.Equal("Dans la boîte", children[1].QuerySelector("p")!.TextContent);
         Assert.Equal("α•", children[2].TextContent);
         Assert.Contains("tab stops shown as tab characters of fixed width", result.Gaps);
@@ -168,10 +168,10 @@ public sealed class WordToHtmlContentTests
 
         var paragraphs = HtmlParser.ParseDocument(WordToHtml.Convert(document).Html).Body.QuerySelectorAll(".omni-section > p");
 
-        Assert.Contains("margin-top:4pt;font", paragraphs[1].GetAttribute("style"), StringComparison.Ordinal);
-        Assert.DoesNotContain("margin-bottom", paragraphs[1].GetAttribute("style"), StringComparison.Ordinal);
-        Assert.DoesNotContain("margin-top", paragraphs[2].GetAttribute("style"), StringComparison.Ordinal);
-        Assert.Contains("margin-bottom:6pt", paragraphs[2].GetAttribute("style"), StringComparison.Ordinal);
+        Assert.Contains("margin-top:4pt;font", HtmlStyleRules.Of(paragraphs[1]), StringComparison.Ordinal);
+        Assert.DoesNotContain("margin-bottom", HtmlStyleRules.Of(paragraphs[1]), StringComparison.Ordinal);
+        Assert.DoesNotContain("margin-top", HtmlStyleRules.Of(paragraphs[2]), StringComparison.Ordinal);
+        Assert.Contains("margin-bottom:6pt", HtmlStyleRules.Of(paragraphs[2]), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -223,14 +223,14 @@ public sealed class WordToHtmlContentTests
         var page = HtmlParser.ParseDocument(html);
         var first = page.Body.QuerySelector(".omni-section > p")!;
 
-        Assert.StartsWith("text-align:justify;line-height:1.242;border-top:0.5pt dotted #000000;border-left:0.5pt dashed #000000;border-right:0.25pt solid #000000;direction:rtl;", first.GetAttribute("style"), StringComparison.Ordinal);
-        Assert.Contains("<u style=\"text-decoration-style:dotted\">pointillé</u><u style=\"text-decoration-style:dashed\">tirets</u><u style=\"text-decoration-style:wavy\">vague</u><u style=\"text-decoration-thickness:2px\">épais</u><u>mots</u>", html, StringComparison.Ordinal);
-        Assert.Contains("<s style=\"text-decoration-style:double\">double</s>", html, StringComparison.Ordinal);
-        Assert.Contains("<span style=\"font-variant:small-caps;vertical-align:3pt\">petites</span>", html, StringComparison.Ordinal);
+        Assert.StartsWith("text-align:justify;line-height:1.242;border-top:0.5pt dotted #000000;border-left:0.5pt dashed #000000;border-right:0.25pt solid #000000;direction:rtl;", HtmlStyleRules.Of(first), StringComparison.Ordinal);
+        Assert.Contains("<u class=\"" + HtmlStyleRules.ClassOf(html, "text-decoration-style:dotted") + "\">pointillé</u><u class=\"" + HtmlStyleRules.ClassOf(html, "text-decoration-style:dashed") + "\">tirets</u><u class=\"" + HtmlStyleRules.ClassOf(html, "text-decoration-style:wavy") + "\">vague</u><u class=\"" + HtmlStyleRules.ClassOf(html, "text-decoration-thickness:2px") + "\">épais</u><u>mots</u>", html, StringComparison.Ordinal);
+        Assert.Contains("<s class=\"" + HtmlStyleRules.ClassOf(html, "text-decoration-style:double") + "\">double</s>", html, StringComparison.Ordinal);
+        Assert.Contains("<span class=\"" + HtmlStyleRules.ClassOf(html, "font-variant:small-caps;vertical-align:3pt") + "\">petites</span>", html, StringComparison.Ordinal);
         Assert.Contains(">symboles<", html, StringComparison.Ordinal);
-        Assert.Contains("<span style=\"background-color:#ABCDEF\">ombré</span>", html, StringComparison.Ordinal);
+        Assert.Contains("<span class=\"" + HtmlStyleRules.ClassOf(html, "background-color:#ABCDEF") + "\">ombré</span>", html, StringComparison.Ordinal);
         Assert.Equal("<br>", page.Body.QuerySelectorAll(".omni-section > p")[1].InnerHtml);
-        Assert.Contains("vertical-align:bottom;white-space:nowrap", page.Body.QuerySelector("td")!.GetAttribute("style"), StringComparison.Ordinal);
+        Assert.Contains("vertical-align:bottom;white-space:nowrap", HtmlStyleRules.Of(page.Body.QuerySelector("td")!), StringComparison.Ordinal);
     }
 
     [Fact]

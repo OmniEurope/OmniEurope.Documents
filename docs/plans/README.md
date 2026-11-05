@@ -14,6 +14,7 @@ un plan décrit un travail, pas l'état du produit.
 
 | Plan | Travail | ADR |
 |---|---|---|
+| [PLAN-010](PLAN-010-html-compatible-csp.md) | HTML de Word et d'Excel compatible avec une CSP stricte : classes générées, feuille séparée ou avec nonce, images séparées | Aucun |
 | [PLAN-009](PLAN-009-controles-de-contenu-word.md) | Contrôles de contenu Word, encre, édition minimale, marqueurs HTML, fidélité | Aucun |
 | [PLAN-007](PLAN-007-corrections-audit-coherence.md) | Treize corrections vérifiées localement, double contrôle ; CI distante non exécutée | Aucun |
 

@@ -19,24 +19,24 @@ internal sealed class ExcelHtmlWriter(ExcelHtmlOptions options)
     private readonly ExcelHtmlCss _css = new(options.Gridlines);
     private readonly HtmlOutput _body = new();
 
-    public string Write(XlsxWorkbook workbook)
+    public ExcelHtmlResult Write(XlsxWorkbook workbook)
     {
         foreach (var sheet in workbook.Worksheets)
         {
             WriteSheet(sheet);
         }
 
+        var css = _css.StyleSheet();
         var page = new HtmlOutput();
         page.Raw("<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\">");
         page.Open("title");
         page.Text(workbook.Title ?? workbook.Worksheets.FirstOrDefault()?.Name ?? "Workbook");
         page.Close("title");
-        page.Raw("<style>\n");
-        page.Raw(_css.StyleSheet());
-        page.Raw("</style></head><body>\n");
+        HtmlPageStyle.Write(page, css, options.StyleSheetHref, options.StyleSheetNonce);
+        page.Raw("</head><body>\n");
         page.Raw(_body.ToString());
         page.Raw("</body></html>\n");
-        return page.ToString();
+        return new ExcelHtmlResult(page.ToString(), css);
     }
 
     private void WriteSheet(XlsxWorksheet sheet)

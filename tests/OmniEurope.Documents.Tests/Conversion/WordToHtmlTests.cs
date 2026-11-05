@@ -30,9 +30,9 @@ public sealed class WordToHtmlTests
         var footer = page.Body.QuerySelector("footer.omni-footer")!;
         Assert.Equal("En-tête 1", header.TextContent.Trim());
         Assert.Equal("Pied de page", footer.TextContent.Trim());
-        Assert.Equal("width:595.3pt;padding:20pt 40pt 0pt 50pt", header.GetAttribute("style"));
-        Assert.Equal("width:595.3pt;padding:40pt 40pt 20pt 50pt", body.GetAttribute("style"));
-        Assert.Equal("width:595.3pt;padding:0pt 40pt 10pt 50pt", footer.GetAttribute("style"));
+        Assert.Equal("width:595.3pt;padding:20pt 40pt 0pt 50pt", HtmlStyleRules.Of(header));
+        Assert.Equal("width:595.3pt;padding:40pt 40pt 20pt 50pt", HtmlStyleRules.Of(body));
+        Assert.Equal("width:595.3pt;padding:0pt 40pt 10pt 50pt", HtmlStyleRules.Of(footer));
         Assert.Contains("page number fields show their last computed value", result.Gaps);
         Assert.Contains("line and page breaks are computed by the browser", result.Gaps);
         Assert.True(result.Html.IndexOf("omni-header", StringComparison.Ordinal) < result.Html.IndexOf("Corps", StringComparison.Ordinal));
@@ -70,9 +70,9 @@ public sealed class WordToHtmlTests
         Assert.Equal("Titre", paragraphs[0].TextContent);
         Assert.Equal(
             "text-align:center;margin-left:36pt;margin-right:18pt;text-indent:-18pt;line-height:18pt;background-color:#EEEEEE;border-top:1pt double #FF0000;margin-top:6pt;margin-bottom:12pt;font-family:'Calibri',sans-serif;font-size:11pt",
-            paragraphs[1].GetAttribute("style"));
-        Assert.Contains("text-align:justify;line-height:2.3;", paragraphs[2].GetAttribute("style"), StringComparison.Ordinal);
-        Assert.Contains("line-height:max(14pt,1.15em);break-before:page", paragraphs[3].GetAttribute("style"), StringComparison.Ordinal);
+            HtmlStyleRules.Of(paragraphs[1]));
+        Assert.Contains("text-align:justify;line-height:2.3;", HtmlStyleRules.Of(paragraphs[2]), StringComparison.Ordinal);
+        Assert.Contains("line-height:max(14pt,1.15em);break-before:page", HtmlStyleRules.Of(paragraphs[3]), StringComparison.Ordinal);
         Assert.Equal("p", paragraphs[4].TagName);
         Assert.NotNull(paragraphs[4].QuerySelector("span.omni-page-break"));
         Assert.Equal("AvantAprès", paragraphs[4].TextContent);
@@ -97,13 +97,13 @@ public sealed class WordToHtmlTests
 
         var html = WordToHtml.Convert(document).Html;
 
-        Assert.Contains(">normal <strong>gras</strong><u style=\"text-decoration-style:double\">souligné</u><s>barré</s><sup>exposant</sup><sub>indice</sub>", html, StringComparison.Ordinal);
-        Assert.Contains("<span style=\"font-size:14pt;color:#FF0000;background-color:#FFFF00\">grand</span>", html, StringComparison.Ordinal);
-        Assert.Contains("<span style=\"color:#00AA00\"><em>styleé</em></span>", html, StringComparison.Ordinal);
-        Assert.Contains("<span style=\"font-family:'Arial',sans-serif;letter-spacing:1pt;text-transform:uppercase\">capitales</span>", html, StringComparison.Ordinal);
+        Assert.Contains(">normal <strong>gras</strong><u class=\"" + HtmlStyleRules.ClassOf(html, "text-decoration-style:double") + "\">souligné</u><s>barré</s><sup>exposant</sup><sub>indice</sub>", html, StringComparison.Ordinal);
+        Assert.Contains("<span class=\"" + HtmlStyleRules.ClassOf(html, "font-size:14pt;color:#FF0000;background-color:#FFFF00") + "\">grand</span>", html, StringComparison.Ordinal);
+        Assert.Contains("<span class=\"" + HtmlStyleRules.ClassOf(html, "color:#00AA00") + "\"><em>styleé</em></span>", html, StringComparison.Ordinal);
+        Assert.Contains("<span class=\"" + HtmlStyleRules.ClassOf(html, "font-family:'Arial',sans-serif;letter-spacing:1pt;text-transform:uppercase") + "\">capitales</span>", html, StringComparison.Ordinal);
         Assert.DoesNotContain("caché", html, StringComparison.Ordinal);
         var heading = Parse(html).Body.QuerySelector("h1")!;
-        Assert.Contains("font-size:16pt;color:#1F3864", heading.GetAttribute("style"), StringComparison.Ordinal);
+        Assert.Contains("font-size:16pt;color:#1F3864", HtmlStyleRules.Of(heading), StringComparison.Ordinal);
         Assert.Equal("<strong>Titre stylé</strong>", heading.InnerHtml);
     }
 
@@ -125,19 +125,19 @@ public sealed class WordToHtmlTests
         var element = Parse(WordToHtml.Convert(document).Html).Body.QuerySelector("table.omni-table")!;
         var rows = element.QuerySelectorAll("tr");
 
-        Assert.Contains("width:450pt", element.GetAttribute("style"), StringComparison.Ordinal);
-        Assert.Contains("margin-left:auto;margin-right:auto", element.GetAttribute("style"), StringComparison.Ordinal);
+        Assert.Contains("width:450pt", HtmlStyleRules.Of(element), StringComparison.Ordinal);
+        Assert.Contains("margin-left:auto;margin-right:auto", HtmlStyleRules.Of(element), StringComparison.Ordinal);
         Assert.Equal(3, element.QuerySelectorAll("col").Count);
         var wide = rows[0].QuerySelectorAll("td")[0];
         Assert.Equal("2", wide.GetAttribute("colspan"));
-        Assert.Contains("width:250pt", wide.GetAttribute("style"), StringComparison.Ordinal);
-        Assert.Contains("background-color:#D9E2F3", wide.GetAttribute("style"), StringComparison.Ordinal);
-        Assert.Contains("border-top:0.5pt solid #000000", wide.GetAttribute("style"), StringComparison.Ordinal);
+        Assert.Contains("width:250pt", HtmlStyleRules.Of(wide), StringComparison.Ordinal);
+        Assert.Contains("background-color:#D9E2F3", HtmlStyleRules.Of(wide), StringComparison.Ordinal);
+        Assert.Contains("border-top:0.5pt solid #000000", HtmlStyleRules.Of(wide), StringComparison.Ordinal);
         var merged = rows[1].QuerySelectorAll("td")[0];
         Assert.Equal("2", merged.GetAttribute("rowspan"));
-        Assert.Contains("vertical-align:middle", merged.GetAttribute("style"), StringComparison.Ordinal);
+        Assert.Contains("vertical-align:middle", HtmlStyleRules.Of(merged), StringComparison.Ordinal);
         Assert.Equal(["B3", "C3"], rows[2].QuerySelectorAll("td").Select(c => c.TextContent.Trim()));
-        Assert.Equal("height:30pt", rows[3].GetAttribute("style"));
+        Assert.Equal("height:30pt", HtmlStyleRules.Of(rows[3]));
         Assert.Equal(["", "Décalée", ""], rows[3].QuerySelectorAll("td").Select(c => c.TextContent.Trim()));
         Assert.Equal("omni-grid-skip", rows[3].QuerySelectorAll("td")[0].GetAttribute("class"));
     }
@@ -160,9 +160,9 @@ public sealed class WordToHtmlTests
         var element = Parse(WordToHtml.Convert(document).Html).Body.QuerySelector("table")!;
         var cells = element.QuerySelectorAll("td");
 
-        Assert.Equal("width:80%;table-layout:fixed;margin-left:12pt;background-color:#FAFAFA", element.GetAttribute("style"));
-        Assert.Contains("background-color:#112233", cells[0].GetAttribute("style"), StringComparison.Ordinal);
-        Assert.Contains("padding:2pt 4pt 2pt 4pt", cells[0].GetAttribute("style"), StringComparison.Ordinal);
+        Assert.Equal("width:80%;table-layout:fixed;margin-left:12pt;background-color:#FAFAFA", HtmlStyleRules.Of(element));
+        Assert.Contains("background-color:#112233", HtmlStyleRules.Of(cells[0]), StringComparison.Ordinal);
+        Assert.Contains("padding:2pt 4pt 2pt 4pt", HtmlStyleRules.Of(cells[0]), StringComparison.Ordinal);
         Assert.Equal("<strong>Entête</strong>", cells[0].QuerySelector("p")!.InnerHtml);
         Assert.Equal("Valeur", cells[2].QuerySelector("p")!.InnerHtml);
         Assert.Null(element.QuerySelector("colgroup"));
@@ -185,8 +185,8 @@ public sealed class WordToHtmlTests
         var paragraphs = Parse(WordToHtml.Convert(document).Html).Body.QuerySelectorAll(".omni-section > p");
 
         Assert.Equal(["1.", "a.", "b.", "2.", "•", "•"], paragraphs.Select(p => p.QuerySelector(".omni-label")!.TextContent));
-        Assert.Equal("display:inline-block;min-width:18pt", paragraphs[0].QuerySelector(".omni-label")!.GetAttribute("style"));
-        Assert.Contains("margin-left:36pt;text-indent:-18pt", paragraphs[1].GetAttribute("style"), StringComparison.Ordinal);
+        Assert.Equal("display:inline-block;min-width:18pt", HtmlStyleRules.Of(paragraphs[0].QuerySelector(".omni-label")!));
+        Assert.Contains("margin-left:36pt;text-indent:-18pt", HtmlStyleRules.Of(paragraphs[1]), StringComparison.Ordinal);
         Assert.Equal("• Symbole", paragraphs[5].TextContent);
         Assert.DoesNotContain("Symbol'", paragraphs[5].InnerHtml, StringComparison.Ordinal);
     }
@@ -210,7 +210,7 @@ public sealed class WordToHtmlTests
         Assert.Equal(["i", "1", "1", "2"], references.Select(a => a.TextContent));
         Assert.Equal(["omni-enref-1", "omni-fnref-1", string.Empty, "omni-fnref-2"], references.Select(a => a.Id));
         var sections = page.Body.QuerySelectorAll("section.omni-notes");
-        Assert.Equal(["omni-notes omni-footnotes", "omni-notes omni-endnotes"], sections.Select(s => s.GetAttribute("class")));
+        Assert.Equal(["omni-notes omni-footnotes", "omni-notes omni-endnotes"], sections.Select(HtmlStyleRules.Named));
         var notes = sections[0].QuerySelectorAll(".omni-note");
         Assert.Equal(["omni-fn-1", "omni-fn-2"], notes.Select(n => n.Id));
         Assert.Equal("#omni-fnref-1", notes[0].QuerySelector("a.omni-backlink")!.GetAttribute("href"));
@@ -236,8 +236,8 @@ public sealed class WordToHtmlTests
         var page = Parse(result.Html);
 
         Assert.Equal(["1", "2", "I", "2"], page.Body.QuerySelectorAll(".omni-section sup a").Select(a => a.TextContent));
-        Assert.Contains("break-before:page", page.Body.QuerySelectorAll(".omni-section")[2].GetAttribute("style"), StringComparison.Ordinal);
-        Assert.DoesNotContain("break-before", page.Body.QuerySelectorAll(".omni-section")[1].GetAttribute("style"), StringComparison.Ordinal);
+        Assert.Contains("break-before:page", HtmlStyleRules.Of(page.Body.QuerySelectorAll(".omni-section")[2]), StringComparison.Ordinal);
+        Assert.DoesNotContain("break-before", HtmlStyleRules.Of(page.Body.QuerySelectorAll(".omni-section")[1]), StringComparison.Ordinal);
         Assert.Contains("footnote numbering restarting at each page continues, the page has no pages", result.Gaps);
     }
 

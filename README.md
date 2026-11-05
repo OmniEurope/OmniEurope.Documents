@@ -46,10 +46,25 @@ slice angle are held to the ranges of the schema. A chart, drawing or theme part
 theme: the Office colours are used) and reported (for a workbook, in the gaps of Excel to PDF), and does not fail the
 load of the document or workbook.
 
-Word to HTML gives one standalone page (styles embedded, pictures as `data:` URIs, nothing fetched) in which
+Word to HTML gives one standalone page (style sheet embedded, pictures as `data:` URIs, nothing fetched) in which
 every paragraph carries `data-address`, the address `WordEditor` gives the same paragraph, so a viewer can
 point at the paragraph an edit will touch. Document text is always encoded and only `http`, `https` and
 `mailto` links keep their address.
+
+Word to HTML and Excel to HTML write no `style` attribute: the formatting of each element is a generated class
+(`omni-s0`, `omni-s1`..., identical formatting sharing one class) of a single style sheet, so the page shows under a
+strict Content-Security-Policy without `'unsafe-inline'`:
+
+- `StyleSheetHref` links the sheet (`<link rel="stylesheet">`) instead of embedding it; serve its text
+  (`WordHtmlResult.StyleSheet`, or `ExcelToHtml.ConvertWithStyleSheet(...).StyleSheet`) as a file for
+  `style-src 'self'`.
+- `StyleSheetNonce` puts a nonce on the `style` (or `link`) element for `style-src 'nonce-…'`; only a CSP
+  base64 value is accepted, anything else throws `ArgumentException`.
+- `WordHtmlOptions.ImageUrlPrefix` serves pictures apart for `img-src 'self'`: `src` becomes the prefix followed
+  by `image1.png`, `image2.jpg`..., and `WordHtmlResult.Images` holds each name, media type and bytes. Without it,
+  pictures stay `data:` URIs.
+
+A consumer that shows only the page body must now include the style sheet too.
 
 Companion tools: HTML parsing and sanitising, text diff (lines and words).
 
