@@ -151,6 +151,24 @@ public sealed class WordInkTests
         Assert.True(r > 200 && g < 60 && b < 60, $"the fallback picture is not drawn ({r},{g},{b})");
     }
 
+    [Theory]
+    [InlineData("10000000000000")]
+    [InlineData("-2000000000000")]
+    public void An_ink_value_out_of_range_is_refused_reported_and_replaced_by_its_picture(string value)
+    {
+        // A 400-digit number parses as infinity; a value past any coordinate would scale the other points to nothing.
+        foreach (var forged in new[] { new string('9', 400), value })
+        {
+            var docx = Package(Anchor(), Ink($"<inkml:trace>10 10, {forged} 20, 30 30</inkml:trace>"), withInkPart: true);
+
+            var result = WordToPdf.Convert(docx);
+            var (r, g, b, _) = Render(result.Pdf).GetRgba(150, 225);
+
+            Assert.Contains(result.Gaps, gap => gap.StartsWith("unreadable ink part", StringComparison.Ordinal) && gap.Contains("out of range", StringComparison.Ordinal));
+            Assert.True(r > 200 && g < 60 && b < 60, $"the fallback picture is not drawn ({r},{g},{b})");
+        }
+    }
+
     [Fact]
     public void Ink_without_strokes_and_without_fallback_is_reported_and_drawn_as_nothing()
     {

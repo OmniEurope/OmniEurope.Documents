@@ -34,7 +34,7 @@ jobs:
           --configuration Release --no-build --no-progress
           --report-trx --report-trx-filename tests.trx --results-directory artifacts/tests
           --coverlet --coverlet-output-format cobertura
-          --coverlet-include '[OmniEurope.Documents]*'
+          --coverlet-include '[OmniEurope.Documents]*' '[OmniEurope.Documents.Fonts]*'
           --coverlet-exclude-by-attribute GeneratedCodeAttribute ExcludeFromCodeCoverageAttribute
       - name: Verify test results
         # A run that leaves no result file, executes no test, or reports a failed, errored, timed-out or

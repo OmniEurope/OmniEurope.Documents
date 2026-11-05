@@ -100,6 +100,49 @@ public sealed partial class HtmlToWordClassRulesTests
         Assert.Equal("#112233", CssClassRules.From(HtmlParser.ParseDocument("<style>.ok{color:#112233}</style>")).Of(element)["color"]);
     }
 
+    [Fact]
+    public void A_style_element_for_another_medium_or_language_is_not_read()
+    {
+        var page = HtmlParser.ParseDocument(
+            "<style media=\"print\">.x{display:none}</style><style type=\"text/less\">.x{color:#FF0000}</style>" +
+            "<style media=\"screen\">.x{font-weight:bold}</style><style type=\"text/css\" media=\"all\">.x{font-size:12pt}</style><p class=\"x\">kept</p>");
+
+        var css = CssClassRules.From(page).Of(page.QuerySelector("p")!);
+
+        Assert.False(css.ContainsKey("display"));
+        Assert.False(css.ContainsKey("color"));
+        Assert.Equal("bold", css["font-weight"]);
+        Assert.Equal("12pt", css["font-size"]);
+        Assert.Contains("kept", HtmlToWord.Convert(page.DocumentElement.OuterHtml).Body.OfType<WordParagraph>().SelectMany(p => p.Inlines).OfType<WordText>().Select(t => t.Value));
+    }
+
+    [Fact]
+    public void A_hostile_sheet_costs_linear_time()
+    {
+        // 40,000 rules for one class, each with many declarations, and 40,000 elements carrying it (and a unique
+        // second class each): merging rule text per element would parse billions of declarations.
+        const int Count = 40_000;
+        var html = new StringBuilder("<style>");
+        for (var i = 0; i < Count; i++)
+        {
+            html.Append(".a{color:#").Append((i % 0xFFFFFF).ToString("X6", System.Globalization.CultureInfo.InvariantCulture)).Append(";x-").Append(i).Append(":1;y:2}");
+        }
+
+        html.Append(".a{font-weight:bold}</style>");
+        for (var i = 0; i < Count; i++)
+        {
+            html.Append("<p class=\"a u").Append(i).Append("\">t</p>");
+        }
+
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var document = HtmlToWord.Convert(html.ToString());
+        watch.Stop();
+
+        Assert.Equal(Count, document.Body.OfType<WordParagraph>().Count());
+        Assert.True(document.Body.OfType<WordParagraph>().First().Inlines.OfType<WordText>().First().Properties.Bold == true);
+        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(20), $"took {watch.Elapsed}");
+    }
+
     private static string Inlined(string html, string css)
     {
         var rules = HtmlStyleRules.Rules(css);

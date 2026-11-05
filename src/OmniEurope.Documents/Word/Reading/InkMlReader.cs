@@ -25,6 +25,11 @@ internal static class InkMlReader
 
     /// <summary>The most points an ink part may hold, all traces together: past it the part is refused.</summary>
     internal const int MaxPoints = 1_000_000;
+
+    /// <summary>The largest channel value accepted, far past any real coordinate (a page is about 10^5 units of
+    /// 0.01 mm): a larger or non-finite value refuses the part, so scaling never meets an infinity.</summary>
+    internal const double MaxMagnitude = 1e12;
+
     private static readonly XNamespace Ink = "http://www.w3.org/2003/InkML";
 
     // A unit as centimetres; a value without a known unit is a hundredth of a millimetre (the digitiser unit).
@@ -39,7 +44,7 @@ internal static class InkMlReader
     };
 
     /// <summary>The traces of an InkML part, in order; pen-up traces (movements without ink) are left out.</summary>
-    /// <exception cref="DocumentFormatException">The part holds more than <see cref="MaxPoints"/> points.</exception>
+    /// <exception cref="DocumentFormatException">The part holds more than <see cref="MaxPoints"/> points, or a value past <see cref="MaxMagnitude"/>.</exception>
     public static List<InkTrace> Read(XElement root)
     {
         var contexts = ById(root, "context");
@@ -268,7 +273,8 @@ internal static class InkMlReader
                     break;
             }
 
-            return _value;
+            // A forged value past any real coordinate (or not finite) would turn the scaled points into infinities.
+            return Math.Abs(_value) <= MaxMagnitude ? _value : throw new DocumentFormatException("The ink part holds a value out of range.");
         }
     }
 }

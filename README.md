@@ -65,7 +65,7 @@ strict Content-Security-Policy without `'unsafe-inline'`:
   pictures stay `data:` URIs.
 
 A consumer that shows only the page body must now include the style sheet too. HTML to Word reads the single-class
-rules of a page's own `style` elements, so such a page converts back to Word with its formatting; a linked style
+rules of a page's own `style` elements (those for `all` or `screen` media and `text/css`), so such a page converts back to Word with its formatting; a linked style
 sheet is never fetched and is reported in the gaps.
 
 Companion tools: HTML parsing and sanitising, text diff (lines and words).
@@ -123,6 +123,15 @@ Third-party data shipped in the package:
   `NotoSansSymbols2-v2.008` of https://github.com/notofonts/symbols, unhinted TrueType), under the SIL Open
   Font License 1.1 (free commercial use, embedding allowed, sold only with software; licences in
   `src/OmniEurope.Documents/Fonts/Bundled/LICENSE-*.txt`, packed under `fonts/`);
+- in the separate `OmniEurope.Documents.Fonts.dll` of the same package, loaded only when an application calls it,
+  the Selawik, Gelasio, Noto Sans, Noto Serif, Roboto, Open Sans and Lato fonts, under the SIL Open Font License
+  1.1 (licences and their sources and hashes in `src/OmniEurope.Documents.Fonts/Fonts/LICENSE-*.txt` and
+  `NOTICE.txt`, embedded in that assembly and packed under `fonts/extra/`). `DocumentFonts.Register(library)` adds
+  them to a `FontLibrary` (`DocumentFonts.CreateLibrary()` returns a library holding them): Segoe UI draws
+  with Selawik, Georgia with Gelasio, Aptos with Roboto (widths differ) and Aptos Serif with Noto Serif, each
+  substitution reported as a gap, and Noto Sans and Noto Serif become the fallbacks of unknown sans and serif
+  fonts; `DocumentFonts.Licence(family)` and
+  `DocumentFonts.Notice()` return the licence texts;
 - the Symbol font metrics of Adobe's Core 14 AFM files (`Symbol.afm` from
   https://download.macromedia.com/pub/developer/opentype/tech-notes/Core14_AFMs.zip), unmodified, with
   their licence `MustRead.html` (use, copy and distribution for any purpose, copyright notices kept,

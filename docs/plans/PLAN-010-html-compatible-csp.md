@@ -33,7 +33,7 @@ Dans tous les modes, la sortie ne contient plus aucun attribut `style` : chaque 
 
 ## Validation
 
-5 novembre 2026, `ylaunch.ps1 -t -c -s` : 2 638 tests, 0 échec, 97,05 % des lignes, porte CRAP passée (3 965 méthodes). Mutations ciblées du code de production (attribut `style` réécrit, nonce non vérifié, lien ignoré, préfixe ignoré) : 14 des 16 nouveaux cas échouent ; les 2 autres vérifient des valeurs que le code d'avant ne produit pas (nonce sur `<style>` Excel, règle générée dans la feuille). Après le lot F : 2 644 tests, 0 échec, 97,05 % des lignes, porte CRAP passée (3 974 méthodes).
+5 novembre 2026, `ylaunch.ps1 -t -c -s` : 2 638 tests, 0 échec, 97,05 % des lignes, porte CRAP passée (3 965 méthodes). Mutations ciblées du code de production (attribut `style` réécrit, nonce non vérifié, lien ignoré, préfixe ignoré) : 14 des 16 nouveaux cas échouent ; les 2 autres échouent aussi sous leur propre mutation, reproduite par l'orchestrateur le 5 novembre (nonce Excel retiré : le test du nonce Excel échoue ; règles générées non écrites : 14 tests HTML échouent). Après le lot F : 2 644 tests, 0 échec, 97,05 % des lignes, porte CRAP passée (3 974 méthodes).
 
 ## Limites connues
 

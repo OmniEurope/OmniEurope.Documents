@@ -27,6 +27,15 @@ Notable changes to this project are documented here, following the Keep a Change
 - Rendering a Word 365 export is about ten times faster: a clip rectangle covering the whole page (Word opens many drawings with one) no longer builds a full-page mask; the rendered pixels are unchanged.
 - `PdfPageComparison` is about five times faster on the comparison itself (a pixel close to the one at the same position skips the neighbourhood scans, RGB images are read in place) and PNG encoding filters each row in a dedicated loop; results and PNG bytes are unchanged.
 
+### Fixed
+
+- `HtmlToWord.Convert` reads a page's class rules in time proportional to the sheet and the elements, whatever
+  the sheet repeats (each rule is parsed once and only the properties the conversion reads are kept), and skips a
+  `style` element meant for another medium (`media` other than `all` or `screen`) or another language (`type`
+  other than `text/css`), so a print-only `display:none` no longer drops content.
+- An ink part holding a value past any real coordinate (or a number too long to be finite) is refused and
+  reported as unreadable, its picture drawn instead, rather than scaled into invalid coordinates.
+
 ## [1.1.0] - 2026-11-04
 
 ### Added

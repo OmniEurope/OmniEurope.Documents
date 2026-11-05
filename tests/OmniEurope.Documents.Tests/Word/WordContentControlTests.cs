@@ -408,6 +408,30 @@ public sealed class WordContentControlTests
         Assert.Contains("Bleu ciel", PdfDocument.Open(WordToPdf.Convert(WordDocument.Load(editor.ToDocumentArray())).Pdf).GetPage(1).Text, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData(" Bleu ")]
+    [InlineData("a&b<c\"d")]
+    [InlineData("ligne 1\nligne 2")]
+    public void A_combo_box_keeps_free_text_with_spaces_markup_characters_and_line_breaks(string value)
+    {
+        var editor = ListEditor("comboBox");
+
+        var result = editor.SelectItem("couleur", value);
+
+        Assert.Empty(result.Gaps);
+        Assert.Equal(value, Find(WordEditor.Open(editor.ToDocumentArray()), "couleur").Text);
+    }
+
+    [Fact]
+    public void A_combo_box_without_entries_takes_free_text()
+    {
+        var body = """<w:p><w:sdt><w:sdtPr><w:tag w:val="ville"/><w:comboBox/></w:sdtPr><w:sdtContent><w:r><w:t>Paris</w:t></w:r></w:sdtContent></w:sdt></w:p>""";
+        var editor = WordEditor.Open(DocxFactory.Build(body));
+
+        Assert.Empty(editor.SelectItem("ville", "Lyon").Gaps);
+        Assert.Equal("Lyon", Find(WordEditor.Open(editor.ToDocumentArray()), "ville").Text);
+    }
+
     [Fact]
     public void A_combo_box_still_selects_the_entry_that_matches()
     {
