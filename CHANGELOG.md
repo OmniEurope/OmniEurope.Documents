@@ -22,7 +22,8 @@ Notable changes to this project are documented here, following the Keep a Change
   consumer that keeps only the body must now include the style sheet.
 - `HtmlToWord.Convert` reads the rules of the page's own `style` elements whose selector is a single class (or a list
   of single classes), in sheet order, under the `style` attribute: a page of Word to HTML converts back to Word with
-  the same formatting as the former page with `style` attributes. Other selectors and at-rules are ignored; a linked
+  the same formatting as the former page with `style` attributes (the screen highlight of `HighlightAddress`, a
+  display mark, is not carried into the document). Other selectors and at-rules are ignored; a linked
   style sheet is never fetched and is reported in the gaps. `HtmlToWord.Append` (a tree, not a page) is unchanged.
 - Rendering a Word 365 export is about ten times faster: a clip rectangle covering the whole page (Word opens many drawings with one) no longer builds a full-page mask; the rendered pixels are unchanged.
 - `PdfPageComparison` is about five times faster on the comparison itself (a pixel close to the one at the same position skips the neighbourhood scans, RGB images are read in place) and PNG encoding filters each row in a dedicated loop; results and PNG bytes are unchanged.

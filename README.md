@@ -156,7 +156,8 @@ dotnet test --project tests/OmniEurope.Documents.StressTests   # long tests, bef
 The long tests read thousands of damaged files and large documents, and compare conversions run in
 parallel.
 
-Git flow: `main` for released versions, `develop` for integration, `feature/*` for work in progress.
+Git flow: `main` for released versions, `develop` for integration. Contributors branch `feature/*` from
+`develop` and open a pull request to `develop`; the maintainer commits to `develop` directly.
 
 ## Licence
 

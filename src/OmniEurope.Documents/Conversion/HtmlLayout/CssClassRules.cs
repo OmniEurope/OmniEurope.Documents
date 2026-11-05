@@ -7,7 +7,7 @@ namespace OmniEurope.Documents.Conversion.HtmlLayout;
 /// The class rules of a page's own <c>style</c> elements, so a page that carries its formatting in classes (as
 /// Word to HTML writes it) converts like one with <c>style</c> attributes. Only rules whose selector is a single
 /// class (<c>.name</c>), or a list of single classes, are read; any other selector, at-rules with their content,
-/// comments, and style elements meant for another medium (<c>media</c> other than <c>all</c> or <c>screen</c>) or
+/// the highlight class of Word to HTML (<see cref="WordToHtml.HighlightClass"/>), comments, and style elements meant for another medium (<c>media</c> other than <c>all</c> or <c>screen</c>) or
 /// another language (<c>type</c> other than <c>text/css</c>) are ignored, and linked style sheets are never fetched.
 /// Each rule is parsed once and only the properties the conversion reads are kept, merged per class with the
 /// position of the rule that set them: the sheet costs linear time to read and an element costs at most its
@@ -140,7 +140,8 @@ internal sealed class CssClassRules
         var selectors = prelude.Split(',', StringSplitOptions.TrimEntries);
         if (selectors.All(IsSingleClass))
         {
-            rules.AddRange(selectors.Select(s => (s[1..], body)));
+            // The highlight of WordToHtml marks a paragraph on screen; it is not formatting of the document.
+            rules.AddRange(selectors.Select(s => s[1..]).Where(c => c != WordToHtml.HighlightClass).Select(c => (c, body)));
         }
     }
 

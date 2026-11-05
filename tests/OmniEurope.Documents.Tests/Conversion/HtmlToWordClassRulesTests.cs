@@ -64,7 +64,7 @@ public sealed partial class HtmlToWordClassRulesTests
     }
 
     [Fact]
-    public void Base_rules_are_read_too_so_the_highlighted_paragraph_keeps_its_background()
+    public void The_screen_highlight_of_a_paragraph_is_not_carried_into_the_document()
     {
         var document = new WordDocument();
         document.AddParagraph("surligné");
@@ -75,7 +75,7 @@ public sealed partial class HtmlToWordClassRulesTests
         var back = HtmlToWord.Convert(WordToHtml.Convert(docx, new WordHtmlOptions { HighlightAddress = address }).Html);
         var runs = back.Body.OfType<WordParagraph>().Select(p => ((WordText)p.Inlines[0]).Properties.Shading).ToList();
 
-        Assert.Equal(["FFF2A8", null], runs);
+        Assert.Equal([null, null], runs);
     }
 
     [Fact]
