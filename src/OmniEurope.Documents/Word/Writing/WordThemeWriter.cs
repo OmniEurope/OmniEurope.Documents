@@ -27,13 +27,12 @@ internal static class WordThemeWriter
             return Loaded(original, styles);
         }
 
-        if (styles.MajorFont is null && styles.MinorFont is null)
-        {
-            return null;
-        }
+        return styles.MajorFont is null && styles.MinorFont is null ? null : Default(styles.MajorFont ?? styles.MinorFont!, styles.MinorFont ?? styles.MajorFont!);
+    }
 
-        var major = styles.MajorFont ?? styles.MinorFont!;
-        var minor = styles.MinorFont ?? styles.MajorFont!;
+    // The theme built from the model's two fonts, with Office's default colour and format schemes.
+    private static XElement Default(string major, string minor)
+    {
         var colours = new XElement(
             A + "clrScheme",
             new XAttribute("name", "Office"),
