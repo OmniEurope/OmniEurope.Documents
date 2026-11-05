@@ -11,7 +11,7 @@ internal static class WordPartsReader
     public static WordStyleSheet Styles(XDocument? styles, XDocument? theme)
     {
         var fonts = theme?.Root?.Descendants(A + "fontScheme").FirstOrDefault();
-        var sheet = new WordStyleSheet { MajorFont = ThemeFont(fonts, "majorFont"), MinorFont = ThemeFont(fonts, "minorFont") };
+        var sheet = new WordStyleSheet { MajorFont = ThemeFont(fonts, "majorFont"), MinorFont = ThemeFont(fonts, "minorFont"), Theme = theme?.Root };
         var root = styles?.Root;
         if (root?.Element(W + "docDefaults") is null)
         {

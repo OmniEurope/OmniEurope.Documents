@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: EUPL-1.2
+using System.Xml.Linq;
+
 namespace OmniEurope.Documents.Word;
 
 /// <summary>What a style formats.</summary>
@@ -74,6 +76,9 @@ public sealed class WordStyleSheet
 
     /// <summary>Theme font for body text (<c>minor</c> slots), when the document has a theme.</summary>
     public string? MinorFont { get; set; }
+
+    /// <summary>The theme part as loaded (colour and format schemes included), kept so a save writes it back instead of a default.</summary>
+    internal XElement? Theme { get; set; }
 
     /// <summary>Styles by id.</summary>
     public Dictionary<string, WordStyle> Styles { get; } = new(StringComparer.Ordinal);

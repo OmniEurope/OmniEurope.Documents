@@ -5,10 +5,11 @@ using static OmniEurope.Documents.Word.WordXml;
 namespace OmniEurope.Documents.Word.Writing;
 
 /// <summary>
-/// Writes the theme part a style sheet needs: styles that name a theme font (<c>asciiTheme="minorHAnsi"</c>) mean nothing
-/// without one. Only the fonts of the model are its own (<see cref="WordStyleSheet.MajorFont"/>,
-/// <see cref="WordStyleSheet.MinorFont"/>); the colour and format schemes are Office's defaults, the model keeping
-/// neither.
+/// Writes the theme part of a style sheet. A theme loaded from a document (<see cref="WordStyleSheet.Theme"/>) is written back
+/// unchanged, except that the latin typefaces of its major and minor fonts follow <see cref="WordStyleSheet.MajorFont"/> and
+/// <see cref="WordStyleSheet.MinorFont"/> when those differ. Without a loaded theme, styles that name a theme font
+/// (<c>asciiTheme="minorHAnsi"</c>) need one to resolve: a default theme is built from the model's two fonts, with Office's
+/// default colour and format schemes, and none is written when no theme font is named.
 /// </summary>
 internal static class WordThemeWriter
 {
@@ -21,6 +22,11 @@ internal static class WordThemeWriter
     /// <summary>The theme, or null when the style sheet names no theme font.</summary>
     public static XElement? Theme(WordStyleSheet styles)
     {
+        if (styles.Theme is { } original)
+        {
+            return Loaded(original, styles);
+        }
+
         if (styles.MajorFont is null && styles.MinorFont is null)
         {
             return null;
@@ -43,6 +49,24 @@ internal static class WordThemeWriter
                 colours,
                 new XElement(A + "fontScheme", new XAttribute("name", "Office"), FontSet("majorFont", major), FontSet("minorFont", minor)),
                 Formats()));
+    }
+
+    // The loaded theme, copied, with the latin typefaces of its font scheme set to the model's fonts.
+    private static XElement Loaded(XElement original, WordStyleSheet styles)
+    {
+        var theme = new XElement(original);
+        var scheme = theme.Descendants(A + "fontScheme").FirstOrDefault();
+        SetLatin(scheme?.Element(A + "majorFont"), styles.MajorFont);
+        SetLatin(scheme?.Element(A + "minorFont"), styles.MinorFont);
+        return theme;
+    }
+
+    private static void SetLatin(XElement? set, string? typeface)
+    {
+        if (typeface is not null && set?.Element(A + "latin") is { } latin && (string?)latin.Attribute("typeface") != typeface)
+        {
+            latin.SetAttributeValue("typeface", typeface);
+        }
     }
 
     private static XElement FontSet(string name, string latin) =>
