@@ -15,6 +15,7 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Changed
 
+- Filling a combo box content control (`FillContentControls`, `SelectItem`) with text that matches no entry writes it as free text, as Word does (placeholder state cleared, run formatting kept, no entry selected); a drop-down list still refuses a value outside its entries and reports a gap.
 - A Word document loaded from a .docx that carries a theme part keeps that theme on save (colour scheme, format scheme and the rest), only the latin theme fonts follow the model's `MajorFont` and `MinorFont`; a document without a theme part keeps the previous behaviour.
 - Word to HTML writes no `style` attribute any more: the formatting of each element is a generated class
   (`omni-sN`, identical formatting sharing one class) of the page's style sheet; the page renders as before. A

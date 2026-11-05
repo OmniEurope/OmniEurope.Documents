@@ -128,16 +128,16 @@ public sealed class WordContentControlTests
     }
 
     [Fact]
-    public void Refuses_a_value_that_is_not_in_the_list_and_leaves_the_control_unchanged()
+    public void Refuses_a_value_that_is_not_in_a_drop_down_list_and_leaves_the_control_unchanged()
     {
-        var editor = Template();
+        var editor = ListEditor("dropDownList");
 
-        var result = editor.FillContentControls(new Dictionary<string, string> { ["mois"] = "13" });
+        var result = editor.FillContentControls(new Dictionary<string, string> { ["couleur"] = "13" });
 
         Assert.Empty(result.Filled);
         var gap = Assert.Single(result.Gaps);
-        Assert.Equal("mois", gap.Tag);
-        Assert.Equal("de janvier", Find(editor, "mois").Text);
+        Assert.Equal("couleur", gap.Tag);
+        Assert.Equal("Rouge", Find(editor, "couleur").Text);
         Assert.Empty(editor.ChangedParts);
     }
 
@@ -372,6 +372,72 @@ public sealed class WordContentControlTests
         var reopened = WordEditor.Open(editor.ToDocumentArray());
         Assert.All(reopened.ContentControls().Where(c => c.Kind == WordContentControlKind.Date), c => Assert.Equal("01/03/2026", c.Text));
         Assert.NotEmpty(WordToPdf.Convert(WordDocument.Load(editor.ToDocumentArray())).Pdf);
+    }
+
+    private static WordEditor ListEditor(string kind, bool placeholder = false)
+    {
+        const string run = """<w:rPr><w:b/><w:sz w:val="22"/></w:rPr>""";
+        var items = """<w:listItem w:displayText="Rouge" w:value="R"/><w:listItem w:displayText="Vert" w:value="V"/>""";
+        var content = placeholder
+            ? """<w:r><w:rPr><w:rStyle w:val="PlaceholderText"/><w:b/></w:rPr><w:t>Choisissez</w:t></w:r>"""
+            : $"""<w:r>{run}<w:t>Rouge</w:t></w:r>""";
+        var body = $"""<w:p><w:sdt><w:sdtPr><w:tag w:val="couleur"/><w:id w:val="7"/>{(placeholder ? "<w:showingPlcHdr/>" : string.Empty)}<w:{kind}>{items}</w:{kind}></w:sdtPr><w:sdtContent>{content}</w:sdtContent></w:sdt></w:p>""";
+        return WordEditor.Open(DocxFactory.Build(body));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void A_combo_box_takes_free_text_like_word_does(bool placeholder)
+    {
+        var editor = ListEditor("comboBox", placeholder);
+
+        var result = editor.SelectItem("couleur", "Bleu ciel");
+
+        Assert.Equal(["couleur"], result.Filled);
+        Assert.Empty(result.Gaps);
+        var reopened = Find(WordEditor.Open(editor.ToDocumentArray()), "couleur");
+        Assert.Equal("Bleu ciel", reopened.Text);
+        Assert.False(reopened.ShowingPlaceholder);
+        Assert.Equal(WordContentControlKind.ComboBox, reopened.Kind);
+        Assert.Equal(2, reopened.ListItems.Count);
+        var xml = MainXml(editor);
+        Assert.DoesNotContain("showingPlcHdr", xml, StringComparison.Ordinal);
+        Assert.DoesNotContain("PlaceholderText", xml, StringComparison.Ordinal);
+        Assert.Matches("<w:b ?/>", xml);
+        Assert.Contains("Bleu ciel", PdfDocument.Open(WordToPdf.Convert(WordDocument.Load(editor.ToDocumentArray())).Pdf).GetPage(1).Text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void A_combo_box_still_selects_the_entry_that_matches()
+    {
+        var editor = ListEditor("comboBox");
+
+        Assert.Empty(editor.SelectItem("couleur", "V").Gaps);
+        Assert.Equal("Vert", Find(editor, "couleur").Text);
+        Assert.Empty(editor.SelectItem("couleur", "rouge").Gaps);
+        Assert.Equal("Rouge", Find(editor, "couleur").Text);
+        Assert.Empty(editor.FillContentControls(new Dictionary<string, string> { ["couleur"] = "Vert" }).Gaps);
+        Assert.Equal("Vert", Find(editor, "couleur").Text);
+    }
+
+    [Fact]
+    public void A_drop_down_list_refuses_a_value_outside_its_entries()
+    {
+        var editor = ListEditor("dropDownList");
+        var before = Find(editor, "couleur");
+
+        var selected = editor.SelectItem("couleur", "Bleu ciel");
+        var filled = editor.FillContentControls(new Dictionary<string, string> { ["couleur"] = "Bleu ciel" });
+
+        Assert.Empty(selected.Filled);
+        Assert.Single(selected.Gaps);
+        Assert.Empty(filled.Filled);
+        Assert.Single(filled.Gaps);
+        Assert.Equal(before.Text, Find(editor, "couleur").Text);
+        Assert.Empty(editor.ChangedParts);
+        Assert.Empty(editor.SelectItem("couleur", "V").Gaps);
+        Assert.Equal("Vert", Find(editor, "couleur").Text);
     }
 
     private sealed class ControlComparer : IEqualityComparer<WordContentControl>

@@ -7,7 +7,7 @@ namespace OmniEurope.Documents.Word.Editing;
 
 /// <summary>
 /// Fills content controls by tag. Every value is checked before the control is touched: a value that does not
-/// fit (unparsable date, entry not in the list, unsupported kind) is reported as a gap and the control stays as
+/// fit (unparsable date, entry not in a drop-down list, unsupported kind) is reported as a gap and the control stays as
 /// it was.
 /// </summary>
 internal sealed class WordContentControlFiller(IReadOnlyList<ScannedControl> controls, Func<string, bool> isPlaceholderStyle)
@@ -79,7 +79,8 @@ internal sealed class WordContentControlFiller(IReadOnlyList<ScannedControl> con
         var item = items.FirstOrDefault(i => i.Value == value)
             ?? items.FirstOrDefault(i => i.DisplayText == value)
             ?? items.FirstOrDefault(i => string.Equals(i.DisplayText, value, StringComparison.OrdinalIgnoreCase));
-        if (item is null && items.Count > 0)
+        // A combo box accepts free text, as Word does; a drop-down list stays closed on its entries.
+        if (item is null && items.Count > 0 && control.Info.Kind != WordContentControlKind.ComboBox)
         {
             return $"'{value}' is neither a value nor a display text of the list";
         }
