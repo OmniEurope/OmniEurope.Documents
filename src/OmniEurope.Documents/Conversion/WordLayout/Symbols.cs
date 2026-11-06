@@ -96,7 +96,7 @@ internal static class Symbols
             var mapped = symbol ? MapSymbol(code) : dingbats ? MapDingbat(code) : (char?)null;
             if (mapped is null && c is >= '' and <= '')
             {
-                gaps.Add("symbol font characters approximated");
+                gaps.Add(DocumentGap.Of(WordPdfGapCodes.PdfSymbolCharactersApproximated));
                 mapped = (char)code;
             }
 

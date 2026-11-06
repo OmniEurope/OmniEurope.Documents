@@ -145,7 +145,7 @@ internal sealed class ShapeFactory(LayoutContext context, BlockLayout blocks)
             return;
         }
 
-        context.Gaps.Add($"picture format {picture.Image.ContentType} drawn as an empty frame");
+        context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.PdfPictureFormatEmptyFrame, picture.Image.ContentType));
         paint.Canvas.StrokeRectangle(x, y, picture.Width, picture.Height, Pdf.PdfColor.LightGray, 0.5);
     }
 

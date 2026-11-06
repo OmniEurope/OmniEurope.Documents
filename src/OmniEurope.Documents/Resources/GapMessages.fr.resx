@@ -27,6 +27,75 @@
   <data name="PdfArabicWithoutJoining" xml:space="preserve">
     <value>lettres arabes dessinées sans leurs formes liées</value>
   </data>
+  <data name="PdfPictureFormatEmptyFrame" xml:space="preserve">
+    <value>le format d'image {0} est dessiné comme un cadre vide</value>
+  </data>
+  <data name="PdfUnreadablePictureFrame" xml:space="preserve">
+    <value>image illisible remplacée par un cadre</value>
+  </data>
+  <data name="PdfFontReplaced" xml:space="preserve">
+    <value>police « {0} » remplacée par {1}</value>
+  </data>
+  <data name="PdfCalibriLightReplaced" xml:space="preserve">
+    <value>police « Calibri Light » remplacée par Carlito Regular (mêmes largeurs, mais sans graisse légère : dessinée plus grasse)</value>
+  </data>
+  <data name="PdfContentTallerThanPage" xml:space="preserve">
+    <value>le contenu plus haut qu'une page dépasse le bas de celle-ci</value>
+  </data>
+  <data name="PdfSymbolCharactersApproximated" xml:space="preserve">
+    <value>caractères de police de symboles approximés</value>
+  </data>
+  <data name="PdfChartTypeNotDrawn" xml:space="preserve">
+    <value>type de graphique non dessiné : {0}</value>
+  </data>
+  <data name="PdfChartPointLimit" xml:space="preserve">
+    <value>graphique au-delà de la limite de points : une partie de ses données n'est pas dessinée</value>
+  </data>
+  <data name="PdfEmfRotatedTextHorizontal" xml:space="preserve">
+    <value>texte pivoté dans les images dessiné à l'horizontale</value>
+  </data>
+  <data name="PdfEmfBitmapSkipped" xml:space="preserve">
+    <value>bitmap illisible dans une image ignoré</value>
+  </data>
+  <data name="RenderImageFormatUnsupported" xml:space="preserve">
+    <value>images dans un format non pris en charge non dessinées</value>
+  </data>
+  <data name="RenderOperationSkipped" xml:space="preserve">
+    <value>opération de dessin illisible ignorée</value>
+  </data>
+  <data name="RenderShadingNotDrawn" xml:space="preserve">
+    <value>dégradés de ce type non dessinés</value>
+  </data>
+  <data name="RenderPatternFlatColour" xml:space="preserve">
+    <value>motifs illisibles dessinés en aplat</value>
+  </data>
+  <data name="RenderFontNotEmbedded" xml:space="preserve">
+    <value>polices non incorporées dessinées avec des polices équivalentes fournies</value>
+  </data>
+  <data name="RenderEmbeddedFontUnreadable" xml:space="preserve">
+    <value>polices incorporées illisibles dessinées avec des polices équivalentes fournies</value>
+  </data>
+  <data name="RenderSoftMaskUnreadable" xml:space="preserve">
+    <value>masques progressifs illisibles non appliqués</value>
+  </data>
+  <data name="RenderSoftMaskTransferIgnored" xml:space="preserve">
+    <value>fonctions de transfert de masque progressif illisibles ignorées</value>
+  </data>
+  <data name="RedactVectorsPaintedOver" xml:space="preserve">
+    <value>les graphismes vectoriels et les dégradés sous une zone sont recouverts, non supprimés</value>
+  </data>
+  <data name="RedactTilingPatternsRemoved" xml:space="preserve">
+    <value>motifs en mosaïque affichant du texte ou des images sous une zone supprimés en entier</value>
+  </data>
+  <data name="RedactGlyphsMayMove" xml:space="preserve">
+    <value>les glyphes qui suivent un glyphe expurgé dessiné à la taille 0 peuvent se déplacer</value>
+  </data>
+  <data name="RedactFormsNestedTooDeep" xml:space="preserve">
+    <value>formulaires imbriqués trop profondément ou se dessinant eux-mêmes sous une zone supprimés en entier</value>
+  </data>
+  <data name="RedactUndecodableForms" xml:space="preserve">
+    <value>formulaires indécodables sous une zone supprimés en entier</value>
+  </data>
   <!-- end of Word and Excel to PDF, PDF rendering and redaction -->
 
   <!-- HTML, Markdown and HTML to Word: Html*, Markdown*, HtmlToWord* -->

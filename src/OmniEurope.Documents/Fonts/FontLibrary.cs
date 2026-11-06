@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 using System.Collections.Concurrent;
 using System.Reflection;
+using OmniEurope.Documents.Conversion;
 
 namespace OmniEurope.Documents.Fonts;
 
@@ -166,11 +167,14 @@ public sealed class FontLibrary
     /// under that name: Carlito Regular is drawn, which has Calibri's widths but no light weight, so the text looks
     /// heavier. Null otherwise (plain Calibri is drawn with Carlito, whose shapes differ but whose widths do not).
     /// </summary>
-    internal string? LightSubstitution(string? family)
+    internal string? LightSubstitution(string? family) => LightSubstitutionGap(family)?.Message;
+
+    /// <summary>The note <see cref="LightSubstitution"/> gives, as a coded gap.</summary>
+    internal DocumentGap? LightSubstitutionGap(string? family)
     {
         var name = (family ?? string.Empty).Trim().Trim('"', '\'');
         return !_registered.ContainsKey(name) && name.Equals("Calibri Light", StringComparison.OrdinalIgnoreCase)
-            ? "font \"Calibri Light\" replaced by Carlito Regular (same widths, but no light weight: drawn heavier)"
+            ? DocumentGap.Of(WordPdfGapCodes.PdfCalibriLightReplaced)
             : null;
     }
 

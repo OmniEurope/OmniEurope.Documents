@@ -403,7 +403,7 @@ internal sealed class EmfPlayer(PaintContext paint, EmfTransform output, (double
         };
         if (font.Escapement != 0)
         {
-            paint.Layout.Gaps.Add("rotated text in pictures drawn horizontally");
+            paint.Layout.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.PdfEmfRotatedTextHorizontal));
         }
 
         Canvas.DrawText(text, x, baseline, pdfFont, size, _state.TextColor);
@@ -428,7 +428,7 @@ internal sealed class EmfPlayer(PaintContext paint, EmfTransform output, (double
         }
         catch (Exception exception) when (exception is InvalidDataException or NotSupportedException or ArgumentException)
         {
-            paint.Layout.Gaps.Add("unreadable bitmap in a picture skipped");
+            paint.Layout.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.PdfEmfBitmapSkipped));
             return;
         }
 

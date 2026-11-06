@@ -50,7 +50,7 @@ internal sealed class TransparencyPainter(PageRenderer page)
         var kind = (store.Get(dictionary, "S") as PdfName)?.Value;
         if (store.Get(dictionary, "G") is not PdfStream form || kind is not ("Luminosity" or "Alpha"))
         {
-            page.Context.Gap("soft masks that cannot be read are not applied");
+            page.Context.Gap(DocumentGap.Of(RenderGapCodes.RenderSoftMaskUnreadable));
             return null;
         }
 
@@ -112,7 +112,7 @@ internal sealed class TransparencyPainter(PageRenderer page)
             return v => Math.Clamp(function.Evaluate(v) is { Length: > 0 } output ? output[0] : v, 0, 1);
         }
 
-        page.Context.Gap("soft mask transfer functions that cannot be read are ignored");
+        page.Context.Gap(DocumentGap.Of(RenderGapCodes.RenderSoftMaskTransferIgnored));
         return v => v;
     }
 }

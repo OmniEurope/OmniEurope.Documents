@@ -22,6 +22,10 @@ public sealed record PdfRenderOptions
 /// <summary>A rendered page: its pixels and what could not be drawn faithfully.</summary>
 public sealed record PdfPageRendering(RasterImage Image, IReadOnlyList<string> Gaps)
 {
+    /// <summary>The <see cref="Gaps"/> in their order, each with its code, to describe them in another language
+    /// (<see cref="DocumentGap.Describe"/>).</summary>
+    public IReadOnlyList<DocumentGap> GapDetails { get; init; } = Gaps.Select(DocumentGap.FromText).ToList();
+
     /// <summary>The image as PNG.</summary>
     public byte[] ToPng() => PngCodec.Encode(Image);
 }
@@ -60,7 +64,7 @@ public static class PdfRenderer
 
         var image = surface.ToImage();
         image.DpiX = image.DpiY = options.Dpi;
-        return new PdfPageRendering(image, [.. context.Gaps]);
+        return new PdfPageRendering(image, context.Gaps.Messages) { GapDetails = context.Gaps.ToList() };
     }
 
     /// <summary>Renders one page of a document (numbered from 1) as PNG.</summary>

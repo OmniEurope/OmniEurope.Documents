@@ -27,6 +27,75 @@
   <data name="PdfArabicWithoutJoining" xml:space="preserve">
     <value>Arabic letters drawn without joining forms</value>
   </data>
+  <data name="PdfPictureFormatEmptyFrame" xml:space="preserve">
+    <value>picture format {0} drawn as an empty frame</value>
+  </data>
+  <data name="PdfUnreadablePictureFrame" xml:space="preserve">
+    <value>unreadable picture replaced by a frame</value>
+  </data>
+  <data name="PdfFontReplaced" xml:space="preserve">
+    <value>font "{0}" replaced by {1}</value>
+  </data>
+  <data name="PdfCalibriLightReplaced" xml:space="preserve">
+    <value>font "Calibri Light" replaced by Carlito Regular (same widths, but no light weight: drawn heavier)</value>
+  </data>
+  <data name="PdfContentTallerThanPage" xml:space="preserve">
+    <value>content taller than a page runs past its bottom</value>
+  </data>
+  <data name="PdfSymbolCharactersApproximated" xml:space="preserve">
+    <value>symbol font characters approximated</value>
+  </data>
+  <data name="PdfChartTypeNotDrawn" xml:space="preserve">
+    <value>chart type not drawn: {0}</value>
+  </data>
+  <data name="PdfChartPointLimit" xml:space="preserve">
+    <value>chart past the point limit: part of its data is not drawn</value>
+  </data>
+  <data name="PdfEmfRotatedTextHorizontal" xml:space="preserve">
+    <value>rotated text in pictures drawn horizontally</value>
+  </data>
+  <data name="PdfEmfBitmapSkipped" xml:space="preserve">
+    <value>unreadable bitmap in a picture skipped</value>
+  </data>
+  <data name="RenderImageFormatUnsupported" xml:space="preserve">
+    <value>images in an unsupported format are not drawn</value>
+  </data>
+  <data name="RenderOperationSkipped" xml:space="preserve">
+    <value>unreadable drawing operation skipped</value>
+  </data>
+  <data name="RenderShadingNotDrawn" xml:space="preserve">
+    <value>shadings of this kind are not drawn</value>
+  </data>
+  <data name="RenderPatternFlatColour" xml:space="preserve">
+    <value>patterns that cannot be read are drawn as a flat colour</value>
+  </data>
+  <data name="RenderFontNotEmbedded" xml:space="preserve">
+    <value>fonts that are not embedded are drawn with bundled look-alikes</value>
+  </data>
+  <data name="RenderEmbeddedFontUnreadable" xml:space="preserve">
+    <value>unreadable embedded fonts are drawn with bundled look-alikes</value>
+  </data>
+  <data name="RenderSoftMaskUnreadable" xml:space="preserve">
+    <value>soft masks that cannot be read are not applied</value>
+  </data>
+  <data name="RenderSoftMaskTransferIgnored" xml:space="preserve">
+    <value>soft mask transfer functions that cannot be read are ignored</value>
+  </data>
+  <data name="RedactVectorsPaintedOver" xml:space="preserve">
+    <value>vector graphics and shadings under an area are painted over, not removed</value>
+  </data>
+  <data name="RedactTilingPatternsRemoved" xml:space="preserve">
+    <value>tiling patterns showing text or images under an area removed whole</value>
+  </data>
+  <data name="RedactGlyphsMayMove" xml:space="preserve">
+    <value>glyphs after a redacted glyph drawn at size 0 may move</value>
+  </data>
+  <data name="RedactFormsNestedTooDeep" xml:space="preserve">
+    <value>forms nested too deep or drawing themselves under an area removed whole</value>
+  </data>
+  <data name="RedactUndecodableForms" xml:space="preserve">
+    <value>undecodable forms under an area removed whole</value>
+  </data>
   <!-- end of Word and Excel to PDF, PDF rendering and redaction -->
 
   <!-- HTML, Markdown and HTML to Word: Html*, Markdown*, HtmlToWord* -->

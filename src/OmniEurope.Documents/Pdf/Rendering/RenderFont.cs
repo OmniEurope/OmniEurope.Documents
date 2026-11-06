@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: EUPL-1.2
 using OmniEurope.Documents.Fonts;
+using OmniEurope.Documents.Internal;
 using OmniEurope.Documents.Pdf.Objects;
 using OmniEurope.Documents.Pdf.Reading;
 using OmniEurope.Documents.Pdf.Text;
@@ -13,9 +14,9 @@ internal sealed class RenderContext(FontLibrary fonts)
 
     public FontLibrary Fonts { get; } = fonts;
 
-    public SortedSet<string> Gaps { get; } = new(StringComparer.Ordinal);
+    public GapSet Gaps { get; } = new();
 
-    public void Gap(string gap) => Gaps.Add(gap);
+    public void Gap(DocumentGap gap) => Gaps.Add(gap);
 
     public RenderFont Font(PdfObjectStore store, PdfDictionary dictionary)
     {
@@ -76,7 +77,7 @@ internal abstract class RenderFont(PdfFontDecoder decoder)
 
         if (!IsStandard(decoder.BaseFont))
         {
-            context.Gap("fonts that are not embedded are drawn with bundled look-alikes");
+            context.Gap(DocumentGap.Of(RenderGapCodes.RenderFontNotEmbedded));
         }
 
         return new BundledRenderFont(decoder, context.Fonts);
@@ -104,7 +105,7 @@ internal abstract class RenderFont(PdfFontDecoder decoder)
         }
         catch (Exception exception) when (exception is InvalidDataException or NotSupportedException or FormatException or IndexOutOfRangeException or ArgumentException)
         {
-            context.Gap("unreadable embedded fonts are drawn with bundled look-alikes");
+            context.Gap(DocumentGap.Of(RenderGapCodes.RenderEmbeddedFontUnreadable));
         }
 
         return null;

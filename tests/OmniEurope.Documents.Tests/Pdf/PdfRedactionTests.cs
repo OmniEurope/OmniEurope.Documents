@@ -48,6 +48,17 @@ public sealed class PdfRedactionTests
     private static PdfRedactionResult Redact(byte[] source, PdfRedactionOptions? options = null) =>
         PdfRedactor.Redact(PdfDocument.Open(source), new[] { LineArea, ArrayArea, ImageCorner, ImagesArea, FormArea }.Select(a => new PdfRedaction(1, a)), options);
 
+    [Fact]
+    public void A_redaction_gap_carries_its_code_and_a_French_description()
+    {
+        var result = Redact(Source());
+
+        var gap = Assert.Single(result.GapDetails, g => g.Code == "RedactVectorsPaintedOver");
+        Assert.Equal("vector graphics and shadings under an area are painted over, not removed", gap.Message);
+        Assert.Equal(result.Gaps, result.GapDetails.Select(g => g.Message));
+        Assert.Equal("les graphismes vectoriels et les dégradés sous une zone sont recouverts, non supprimés", gap.Describe(System.Globalization.CultureInfo.GetCultureInfo("fr-FR")));
+    }
+
     // Every string and every decoded stream of the file, as Latin-1 text.
     private static string Everything(byte[] pdf)
     {

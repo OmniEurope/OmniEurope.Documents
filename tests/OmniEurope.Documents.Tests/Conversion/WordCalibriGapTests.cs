@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: EUPL-1.2
+using System.Globalization;
 using OmniEurope.Documents.Conversion;
 using OmniEurope.Documents.Fonts;
 using OmniEurope.Documents.Word;
@@ -24,6 +25,20 @@ public sealed class WordCalibriGapTests
         var result = WordToPdf.Convert(docx);
 
         Assert.Contains(result.Gaps, g => g.Contains("\"Calibri Light\" replaced by Carlito", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void A_replaced_font_gap_carries_its_code_arguments_and_a_French_description()
+    {
+        var details = WordToPdf.Convert(Document("Police Imaginaire", "Calibri Light")).GapDetails;
+
+        var replaced = Assert.Single(details, g => g.Code == "PdfFontReplaced");
+        Assert.Equal(["Police Imaginaire", "LiberationSerif"], replaced.Arguments);
+        Assert.Equal("font \"Police Imaginaire\" replaced by LiberationSerif", replaced.Message);
+        Assert.Equal("police « Police Imaginaire » remplacée par LiberationSerif", replaced.Describe(CultureInfo.GetCultureInfo("fr-FR")));
+        var light = Assert.Single(details, g => g.Code == "PdfCalibriLightReplaced");
+        Assert.Equal("font \"Calibri Light\" replaced by Carlito Regular (same widths, but no light weight: drawn heavier)", light.Message);
+        Assert.Equal("police « Calibri Light » remplacée par Carlito Regular (mêmes largeurs, mais sans graisse légère : dessinée plus grasse)", light.Describe(CultureInfo.GetCultureInfo("fr-FR")));
     }
 
     [Fact]

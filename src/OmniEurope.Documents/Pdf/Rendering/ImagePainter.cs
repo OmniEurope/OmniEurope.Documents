@@ -19,7 +19,7 @@ internal sealed class ImagePainter(PageRenderer page)
         var raster = PdfImageDecoder.TryDecode(store, image, inlineData, resources);
         if (raster is null)
         {
-            page.Context.Gap("images in an unsupported format are not drawn");
+            page.Context.Gap(DocumentGap.Of(RenderGapCodes.RenderImageFormatUnsupported));
             return;
         }
 

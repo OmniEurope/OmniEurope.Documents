@@ -199,7 +199,7 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
             return i;
         }
 
-        context.Gaps.Add("content taller than a page runs past its bottom");
+        context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.PdfContentTallerThanPage));
         Put(item, i, before + drop);
         return i + 1;
     }

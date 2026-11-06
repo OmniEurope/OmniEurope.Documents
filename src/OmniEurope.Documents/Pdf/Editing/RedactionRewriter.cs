@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.IO.Compression;
 using OmniEurope.Documents.Imaging;
+using OmniEurope.Documents.Internal;
 using OmniEurope.Documents.Pdf.Objects;
 using OmniEurope.Documents.Pdf.Reading;
 using OmniEurope.Documents.Pdf.Text;
@@ -34,7 +35,7 @@ internal sealed class RedactionContext(PdfObjectStore store, IReadOnlyList<PdfRe
 
     public int BlankedImages { get; set; }
 
-    public SortedSet<string> Gaps { get; } = new(StringComparer.Ordinal);
+    public GapSet Gaps { get; } = new();
 
     public bool Touches(PdfRectangle box) => Areas.Any(a => box.Left < a.Right && box.Right > a.Left && box.Bottom < a.Top && box.Top > a.Bottom);
 
@@ -177,7 +178,7 @@ internal sealed class RedactionRewriter
         foreach (var name in names.Where(n => !_removedPatterns.Contains(n) && _patterns.ShowsContent(_resources, n)))
         {
             _removedPatterns.Add(name);
-            _context.Gaps.Add("tiling patterns showing text or images under an area removed whole");
+            _context.Gaps.Add(DocumentGap.Of(RedactGapCodes.RedactTilingPatternsRemoved));
             _changed = true;
         }
     }
@@ -354,7 +355,7 @@ internal sealed class RedactionRewriter
             }
             else
             {
-                _context.Gaps.Add("glyphs after a redacted glyph drawn at size 0 may move");
+                _context.Gaps.Add(DocumentGap.Of(RedactGapCodes.RedactGlyphsMayMove));
             }
 
             skipped = 0;
@@ -430,7 +431,7 @@ internal sealed class RedactionRewriter
 
         if (_depth >= MaxFormDepth || !_context.ActiveForms.Add(form))
         {
-            _context.Gaps.Add("forms nested too deep or drawing themselves under an area removed whole");
+            _context.Gaps.Add(DocumentGap.Of(RedactGapCodes.RedactFormsNestedTooDeep));
             _changed = true;
             return true;
         }
@@ -460,7 +461,7 @@ internal sealed class RedactionRewriter
         }
         catch (Exception exception) when (exception is InvalidDataException or NotSupportedException)
         {
-            _context.Gaps.Add("undecodable forms under an area removed whole");
+            _context.Gaps.Add(DocumentGap.Of(RedactGapCodes.RedactUndecodableForms));
             _changed = true;
             return true;
         }

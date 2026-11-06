@@ -24,12 +24,12 @@ internal sealed class ChartPainter(LayoutContext layout, Chart chart, CultureInf
     {
         foreach (var type in chart.UnsupportedTypes)
         {
-            layout.Gaps.Add("chart type not drawn: " + type);
+            layout.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.PdfChartTypeNotDrawn, type));
         }
 
         if (chart.Truncated)
         {
-            layout.Gaps.Add("chart past the point limit: part of its data is not drawn");
+            layout.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.PdfChartPointLimit));
         }
 
         var text = new ChartText(layout, canvas, culture);

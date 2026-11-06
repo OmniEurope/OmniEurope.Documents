@@ -120,6 +120,24 @@ public sealed class PdfRenderingDetailTests
         Assert.Contains("shadings of this kind are not drawn", rendering.Gaps);
     }
 
+    [Fact]
+    public void A_rendering_gap_carries_its_code_and_a_French_description()
+    {
+        var rendering = PdfRenderer.Render(
+            PdfDocument.Open(RawPdf.Page(
+                "q 50 0 0 50 0 0 cm /Im1 Do Q",
+                "/XObject << /Im1 5 0 R >>",
+                string.Empty,
+                RawPdf.Stream("/Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /JPXDecode", [1, 2, 3]))).GetPage(1),
+            new PdfRenderOptions { Dpi = 72 });
+
+        var gap = Assert.Single(rendering.GapDetails);
+        Assert.Equal("RenderImageFormatUnsupported", gap.Code);
+        Assert.Equal("images in an unsupported format are not drawn", gap.Message);
+        Assert.Equal(rendering.Gaps, rendering.GapDetails.Select(g => g.Message));
+        Assert.Equal("images dans un format non pris en charge non dessinées", gap.Describe(System.Globalization.CultureInfo.GetCultureInfo("fr-FR")));
+    }
+
     [Theory]
     [InlineData("[80 100 10 120 100 50]", "[true false]", 80, 255, 0, 0)]
     [InlineData("[80 100 10 120 100 50]", "[false false]", 80, 255, 255, 255)]

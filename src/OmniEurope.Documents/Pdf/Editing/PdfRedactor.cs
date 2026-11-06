@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: EUPL-1.2
+using OmniEurope.Documents.Internal;
 using OmniEurope.Documents.Pdf.Objects;
 using OmniEurope.Documents.Pdf.Text;
 
@@ -20,7 +21,12 @@ public sealed record PdfRedactionOptions
 
 /// <summary>What a redaction removed: glyphs (with their text, for an audit), images dropped or redrawn, annotations,
 /// and what it could only cover.</summary>
-public sealed record PdfRedactionResult(byte[] Pdf, int RemovedGlyphs, string RemovedText, int RemovedImages, int BlankedImages, int RemovedAnnotations, IReadOnlyList<string> Gaps);
+public sealed record PdfRedactionResult(byte[] Pdf, int RemovedGlyphs, string RemovedText, int RemovedImages, int BlankedImages, int RemovedAnnotations, IReadOnlyList<string> Gaps)
+{
+    /// <summary>The <see cref="Gaps"/> in their order, each with its code, to describe them in another language
+    /// (<see cref="DocumentGap.Describe"/>).</summary>
+    public IReadOnlyList<DocumentGap> GapDetails { get; init; } = Gaps.Select(DocumentGap.FromText).ToList();
+}
 
 /// <summary>
 /// True redaction: a new PDF in which what lies under the areas is gone from the content, not only hidden. A glyph
@@ -75,7 +81,7 @@ public static class PdfRedactor
         var info = options.RemoveMetadata ? new PdfDictionary().Set("Producer", PdfString.FromText("OmniEurope.Documents")) : PdfEditor.Information(document.Information);
         using var output = new MemoryStream();
         table.Write(output, catalog, table.Add(info));
-        return new PdfRedactionResult(output.ToArray(), totals.Glyphs, totals.Text.ToString(), totals.RemovedImages, totals.BlankedImages, totals.Annotations, totals.Gaps.ToList());
+        return new PdfRedactionResult(output.ToArray(), totals.Glyphs, totals.Text.ToString(), totals.RemovedImages, totals.BlankedImages, totals.Annotations, totals.Gaps.Messages) { GapDetails = totals.Gaps.ToList() };
     }
 
     /// <exception cref="PdfRedactionException">See <see cref="Redact"/>.</exception>
@@ -108,7 +114,7 @@ public static class PdfRedactor
             entries.Set("Annots", Annotations(store, page, areas, totals));
             if (ContentStreamReader.Read(body).Any(o => PathOperators.Contains(o.Operator)))
             {
-                context.Gaps.Add("vector graphics and shadings under an area are painted over, not removed");
+                context.Gaps.Add(DocumentGap.Of(RedactGapCodes.RedactVectorsPaintedOver));
             }
         }
 
@@ -181,7 +187,7 @@ public static class PdfRedactor
 
         public int Annotations { get; set; }
 
-        public SortedSet<string> Gaps { get; } = new(StringComparer.Ordinal);
+        public GapSet Gaps { get; } = new();
 
         public void Add(RedactionContext context)
         {

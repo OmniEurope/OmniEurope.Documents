@@ -142,7 +142,7 @@ internal sealed class LayoutContext
         }
         catch (Exception exception) when (exception is InvalidDataException or NotSupportedException or IOException)
         {
-            Gaps.Add("unreadable picture replaced by a frame");
+            Gaps.Add(DocumentGap.Of(WordPdfGapCodes.PdfUnreadablePictureFrame));
         }
 
         _images[image] = result;
@@ -161,9 +161,9 @@ internal sealed class LayoutContext
         FontUses.Add(Builder.Fonts.Describe(family));
         if (Builder.Fonts.IsSubstituted(family))
         {
-            Gaps.Add($"font \"{family}\" replaced by {Builder.Fonts.SubstituteName(family)}");
+            Gaps.Add(DocumentGap.Of(WordPdfGapCodes.PdfFontReplaced, family, Builder.Fonts.SubstituteName(family)));
         }
-        else if (Builder.Fonts.LightSubstitution(family) is { } note)
+        else if (Builder.Fonts.LightSubstitutionGap(family) is { } note)
         {
             Gaps.Add(note);
         }

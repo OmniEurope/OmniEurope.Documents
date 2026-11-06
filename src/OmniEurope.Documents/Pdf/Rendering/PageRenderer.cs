@@ -128,7 +128,7 @@ internal sealed class PageRenderer
             }
             catch (Exception exception) when (exception is InvalidDataException or NotSupportedException or InvalidCastException or ArgumentException or IndexOutOfRangeException)
             {
-                Context.Gap("unreadable drawing operation skipped");
+                Context.Gap(DocumentGap.Of(RenderGapCodes.RenderOperationSkipped));
             }
         }
     }
@@ -305,7 +305,7 @@ internal sealed class PageRenderer
                 return new ShadingPaint(shading, Matrix.FromArray(_store.Get<PdfArray>(pattern, "Matrix")).Multiply(_patternBase), background: true);
             }
 
-            Context.Gap("shadings of this kind are not drawn");
+            Context.Gap(DocumentGap.Of(RenderGapCodes.RenderShadingNotDrawn));
             return null;
         }
 
@@ -318,7 +318,7 @@ internal sealed class PageRenderer
             }
         }
 
-        Context.Gap("patterns that cannot be read are drawn as a flat colour");
+        Context.Gap(DocumentGap.Of(RenderGapCodes.RenderPatternFlatColour));
         return null;
     }
 
@@ -370,7 +370,7 @@ internal sealed class PageRenderer
         var shading = name is null ? null : Shading.Read(_store, _store.Get(_store.Get<PdfDictionary>(resources, "Shading"), name.Value), resources);
         if (shading is null)
         {
-            Context.Gap("shadings of this kind are not drawn");
+            Context.Gap(DocumentGap.Of(RenderGapCodes.RenderShadingNotDrawn));
             return;
         }
 
