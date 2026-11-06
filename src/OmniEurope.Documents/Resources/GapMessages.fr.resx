@@ -103,7 +103,7 @@
     <value>'{0}' n'est pas un booléen (true, false, 1, 0, yes, no, oui, non)</value>
   </data>
   <data name="ContentControlKindNotFillable" xml:space="preserve">
-    <value>un contrôle de type {0} ne peut pas être rempli avec du texte</value>
+    <value>ce type de contrôle ne peut pas être rempli avec du texte</value>
   </data>
   <data name="ContentControlValueNotInList" xml:space="preserve">
     <value>'{0}' n'est ni une valeur ni un texte affiché de la liste</value>

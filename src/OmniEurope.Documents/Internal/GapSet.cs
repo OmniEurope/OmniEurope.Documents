@@ -22,9 +22,6 @@ internal sealed class GapSet : IEnumerable<DocumentGap>
     /// <summary>Adds a gap unless one with the same English text is already there.</summary>
     public bool Add(DocumentGap gap) => _gaps.TryAdd(gap.Message, gap);
 
-    // TRANSITIONAL: removed once every engine gap has a code.
-    public bool Add(string text) => Add(DocumentGap.FromText(text));
-
     public void UnionWith(IEnumerable<DocumentGap> gaps)
     {
         foreach (var gap in gaps)

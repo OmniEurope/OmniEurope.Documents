@@ -8,6 +8,11 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- Localizable gaps: every gap of the engine carries a stable code (`DocumentGap`: `Code`, `Arguments`, `Message`),
+  described in the language of a culture by `DocumentGap.Describe` (English and French shipped, the current UI
+  culture by default). The results that list gaps gain `GapDetails`, in the order of their `Gaps`, whose English
+  texts are unchanged; a text the caller adds to `WordDocument.Gaps` or `XlsxWorkbook.Gaps` has no code and reads
+  as a generic label in French. A refused content control value carries its `ReasonDetail`.
 - Word content controls: `WordEditor.ContentControls()` lists the `w:sdt` of every text part (tag, alias, id, kind,
   text, placeholder state, date format and language, list entries, check state). `FillContentControls` fills them by
   tag (dates written in the control's own format with `w:fullDate` updated, list entries by value or display text,

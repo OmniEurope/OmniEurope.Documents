@@ -68,6 +68,15 @@ A consumer that shows only the page body must now include the style sheet too. H
 rules of a page's own `style` elements (those for `all` or `screen` media and `text/css`), so such a page converts back to Word with its formatting; a linked style
 sheet is never fetched and is reported in the gaps.
 
+What a read or a conversion could not render faithfully is listed in the `Gaps` of its result, in English. Each
+entry of `GapDetails` is the same gap with a stable code, which `Describe` gives in the language of a culture
+(English and French shipped, the current UI culture by default):
+
+```csharp
+var result = WordToPdf.Convert(docx);
+var remarks = result.GapDetails.Select(g => g.Describe(CultureInfo.GetCultureInfo("fr-FR")));
+```
+
 Companion tools: HTML parsing and sanitising, text diff (lines and words).
 
 ## What it does not do
