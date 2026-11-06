@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: EUPL-1.2
 using OmniEurope.Documents.Imaging;
-using OmniEurope.Documents.Pdf;
+using OmniEurope.Documents.Internal;
 using OmniEurope.Documents.Pdf.Rendering;
+using OmniEurope.Documents.Pdf;
 using OmniEurope.Documents.Word;
 
 namespace OmniEurope.Documents.Conversion.WordHtml;
@@ -13,7 +14,7 @@ namespace OmniEurope.Documents.Conversion.WordHtml;
 /// as PNG, an Enhanced Metafile is drawn by the PDF conversion and rendered to PNG. Any other picture (WMF,
 /// unreadable data) is left out and reported.
 /// </summary>
-internal sealed class HtmlImages(ISet<string> gaps, string? prefix)
+internal sealed class HtmlImages(GapSet gaps, string? prefix)
 {
     private const double MetafileDpi = 144;
     private readonly Dictionary<WordImage, string?> _sources = new(ReferenceEqualityComparer.Instance);

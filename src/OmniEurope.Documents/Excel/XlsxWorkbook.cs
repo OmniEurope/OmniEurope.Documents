@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: EUPL-1.2
+using OmniEurope.Documents.Internal;
+
 namespace OmniEurope.Documents.Excel;
 
 /// <summary>
@@ -9,6 +11,7 @@ namespace OmniEurope.Documents.Excel;
 /// </summary>
 public sealed class XlsxWorkbook
 {
+    private readonly List<DocumentGap> _gapDetails = [];
     private readonly List<XlsxWorksheet> _worksheets = [];
 
     /// <summary>The worksheets, in tab order.</summary>
@@ -17,6 +20,17 @@ public sealed class XlsxWorkbook
     /// <summary>Features met while loading that the model does not hold (a damaged chart, drawing or theme that was
     /// skipped); the conversions add them to their own gaps.</summary>
     public List<string> Gaps { get; } = [];
+
+    /// <summary>The <see cref="Gaps"/> in their order, each with its code, to describe them in another language
+    /// (<see cref="DocumentGap.Describe"/>); a text the caller added to <see cref="Gaps"/> is a gap without a code.</summary>
+    public IReadOnlyList<DocumentGap> GapDetails => GapSet.Of(Gaps, _gapDetails).ToList();
+
+    // Records a gap of the engine: its English text in Gaps, its code in the details.
+    internal void AddGap(DocumentGap gap)
+    {
+        _gapDetails.Add(gap);
+        Gaps.Add(gap.Message);
+    }
 
     /// <summary>The document title (core properties).</summary>
     public string? Title { get; set; }

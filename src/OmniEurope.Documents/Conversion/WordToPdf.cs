@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 using OmniEurope.Documents.Conversion.WordLayout;
 using OmniEurope.Documents.Fonts;
+using OmniEurope.Documents.Internal;
 using OmniEurope.Documents.Pdf.Writing;
 using OmniEurope.Documents.Word;
 
@@ -26,6 +27,10 @@ public sealed record WordPdfResult(byte[] Pdf, int PageCount, IReadOnlyList<stri
     /// <summary>Each font family the document asks for, in order of first use, with the font that drew it and
     /// whether it is the requested one (Calibri drawn with Carlito, Segoe UI with Selawik...).</summary>
     public IReadOnlyList<FontUse> Fonts { get; init; } = [];
+
+    /// <summary>The <see cref="Gaps"/> in their order, each with its code, to describe them in another language
+    /// (<see cref="DocumentGap.Describe"/>).</summary>
+    public IReadOnlyList<DocumentGap> GapDetails { get; init; } = Gaps.Select(DocumentGap.FromText).ToList();
 }
 
 /// <summary>
@@ -63,11 +68,12 @@ public static class WordToPdf
         new PagePainter(context, options.Bookmarks).Paint(pages);
         if (builder.OmittedCharacters > 0)
         {
-            context.Gaps.Add("characters without a glyph in any font left out (PDF/A forbids the .notdef glyph)");
+            context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.GlyphlessCharactersOmitted));
         }
 
-        var gaps = document.Gaps.Concat(context.Gaps).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToList();
-        return new WordPdfResult(builder.ToArray(), pages.Count, gaps) { Fonts = context.FontUses.ToList() };
+        var gaps = new GapSet(document.GapDetails);
+        gaps.UnionWith(context.Gaps);
+        return new WordPdfResult(builder.ToArray(), pages.Count, gaps.Messages) { Fonts = context.FontUses.ToList(), GapDetails = gaps.ToList() };
     }
 
     // Footnotes restarting at each page are numbered after the pages of the previous layout, until the
@@ -79,7 +85,7 @@ public static class WordToPdf
         {
             if (pass == MaxPasses)
             {
-                context.Gaps.Add("footnote numbers restarting at each page may not match their final page");
+                context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.FootnoteRestartUnsettled));
                 break;
             }
 
@@ -99,19 +105,19 @@ public static class WordToPdf
         var wrapping = paragraphs.SelectMany(p => p.Inlines).OfType<WordShape>().Where(s => s.Floating is { Wrap: not WordWrap.None }).ToList();
         if (wrapping.Exists(s => s.Floating!.Wrap is WordWrap.Tight or WordWrap.Through))
         {
-            context.Gaps.Add("tight and through wrapping follows the bounding box of floating shapes");
+            context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.TightWrapByBoundingBox));
         }
 
         var elsewhere = document.Blocks.OfType<WordTable>().SelectMany(Shapes)
             .Concat(document.Sections.SelectMany(s => s.Headers.Values.Concat(s.Footers.Values)).SelectMany(h => h.Blocks.OfType<WordParagraph>()).SelectMany(p => p.Inlines).OfType<WordShape>());
         if (elsewhere.Any(s => s.Floating is { Wrap: not WordWrap.None }))
         {
-            context.Gaps.Add("text does not flow around floating shapes in tables, headers and footers");
+            context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.NoWrapOutsideBody));
         }
 
         if (paragraphs.Exists(p => p.Text.Any(c => c is >= '؀' and <= 'ۿ' or >= 'ݐ' and <= 'ࣿ')))
         {
-            context.Gaps.Add("Arabic letters drawn without joining forms");
+            context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.ArabicWithoutJoining));
         }
     }
 

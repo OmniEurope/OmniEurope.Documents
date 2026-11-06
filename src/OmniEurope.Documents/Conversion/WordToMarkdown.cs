@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: EUPL-1.2
 using OmniEurope.Documents.Conversion.WordMarkdown;
+using OmniEurope.Documents.Internal;
 using OmniEurope.Documents.Word;
 
 namespace OmniEurope.Documents.Conversion;
@@ -17,7 +18,12 @@ public sealed record WordMarkdownImage(string Path, string ContentType, byte[] D
 
 /// <summary>A converted document: the Markdown, the pictures it refers to and what the conversion leaves out
 /// or only approximates.</summary>
-public sealed record WordMarkdownResult(string Markdown, IReadOnlyList<WordMarkdownImage> Images, IReadOnlyList<string> Gaps);
+public sealed record WordMarkdownResult(string Markdown, IReadOnlyList<WordMarkdownImage> Images, IReadOnlyList<string> Gaps)
+{
+    /// <summary>The <see cref="Gaps"/> in their order, each with its code, to describe them in another language
+    /// (<see cref="DocumentGap.Describe"/>).</summary>
+    public IReadOnlyList<DocumentGap> GapDetails { get; init; } = Gaps.Select(DocumentGap.FromText).ToList();
+}
 
 /// <summary>
 /// Converts a Word document into GitHub-flavoured Markdown: paragraphs with outline levels 1 to 6 as headings
@@ -43,8 +49,9 @@ public static class WordToMarkdown
         ArgumentNullException.ThrowIfNull(document);
         var context = new MarkdownContext(document, options ?? new WordMarkdownOptions());
         var markdown = new MarkdownDocumentWriter(context).Write();
-        var gaps = document.Gaps.Concat(context.Gaps).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToList();
-        return new WordMarkdownResult(markdown, context.Images.All, gaps);
+        var gaps = new GapSet(document.GapDetails);
+        gaps.UnionWith(context.Gaps);
+        return new WordMarkdownResult(markdown, context.Images.All, gaps.Messages) { GapDetails = gaps.ToList() };
     }
 
     /// <summary>Loads a .docx package and converts it.</summary>

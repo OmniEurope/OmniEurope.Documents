@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: EUPL-1.2
 using System.Globalization;
+using OmniEurope.Documents.Internal;
 using OmniEurope.Documents.Word;
 
 namespace OmniEurope.Documents.Conversion.WordMarkdown;
@@ -20,7 +21,7 @@ internal sealed class MarkdownContext(WordDocument document, WordMarkdownOptions
 
     public WordListCounter HeadingLabels { get; } = new(document.Numbering);
 
-    public SortedSet<string> Gaps { get; } = new(StringComparer.Ordinal);
+    public GapSet Gaps { get; } = new();
 
     /// <summary>The notes referred to, with their labels, in order of first reference.</summary>
     public List<(WordNoteKind Kind, int Id, string Label)> Notes { get; } = [];

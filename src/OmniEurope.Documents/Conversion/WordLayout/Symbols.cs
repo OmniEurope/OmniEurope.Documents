@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 using System.Text;
 using OmniEurope.Documents.Fonts;
+using OmniEurope.Documents.Internal;
 using OmniEurope.Documents.Pdf.Writing;
 
 namespace OmniEurope.Documents.Conversion.WordLayout;
@@ -84,7 +85,7 @@ internal static class Symbols
         SymbolCodes.Value.TryGetValue(drawn, out var code) ? SymbolMetrics.Advance(code) : null;
 
     /// <summary>The text with symbol-font characters replaced by look-alikes.</summary>
-    public static string Map(string text, string? font, ISet<string> gaps)
+    public static string Map(string text, string? font, GapSet gaps)
     {
         var symbol = IsSymbol(font);
         var dingbats = IsSymbolFont(font) && !symbol;

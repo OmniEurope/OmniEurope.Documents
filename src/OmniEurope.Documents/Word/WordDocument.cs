@@ -13,6 +13,8 @@ namespace OmniEurope.Documents.Word;
 /// </summary>
 public sealed class WordDocument
 {
+    private readonly List<DocumentGap> _gapDetails = [];
+
     /// <summary>A new document: one A4 section, the default styles (Calibri 11 pt) in
     /// <paramref name="language"/>.</summary>
     public WordDocument(string? language = "fr-FR")
@@ -59,6 +61,17 @@ public sealed class WordDocument
 
     /// <summary>Features met while loading that the model does not hold (charts, linked pictures...).</summary>
     public List<string> Gaps { get; } = [];
+
+    /// <summary>The <see cref="Gaps"/> in their order, each with its code, to describe them in another language
+    /// (<see cref="DocumentGap.Describe"/>); a text the caller added to <see cref="Gaps"/> is a gap without a code.</summary>
+    public IReadOnlyList<DocumentGap> GapDetails => GapSet.Of(Gaps, _gapDetails).ToList();
+
+    // Records a gap of the engine: its English text in Gaps, its code in the details.
+    internal void AddGap(DocumentGap gap)
+    {
+        _gapDetails.Add(gap);
+        Gaps.Add(gap.Message);
+    }
 
     /// <summary>The visible text of the body: one line per paragraph, table cells separated by tabs.</summary>
     public string Text => WordBlock.TextOf(Blocks);

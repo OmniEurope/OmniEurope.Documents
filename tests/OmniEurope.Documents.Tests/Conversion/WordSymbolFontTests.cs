@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: EUPL-1.2
-using OmniEurope.Documents.Conversion;
 using OmniEurope.Documents.Conversion.WordLayout;
+using OmniEurope.Documents.Conversion;
 using OmniEurope.Documents.Fonts;
-using OmniEurope.Documents.Pdf;
+using OmniEurope.Documents.Internal;
 using OmniEurope.Documents.Pdf.Text;
+using OmniEurope.Documents.Pdf;
 using OmniEurope.Documents.Word;
 
 namespace OmniEurope.Documents.Tests.Conversion;
@@ -79,7 +80,7 @@ public sealed class WordSymbolFontTests
     [Fact]
     public void Every_wingdings_look_alike_has_a_glyph_in_the_bundled_faces()
     {
-        var gaps = new HashSet<string>();
+        var gaps = new GapSet();
         var codes = string.Concat(Enumerable.Range(0xF020, 0xE0).Select(c => (char)c));
 
         var drawn = Symbols.Map(codes, "Wingdings", gaps).Distinct().ToList();

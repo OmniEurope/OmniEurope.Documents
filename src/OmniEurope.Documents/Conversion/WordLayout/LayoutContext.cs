@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: EUPL-1.2
 using OmniEurope.Documents.Fonts;
+using OmniEurope.Documents.Internal;
 using OmniEurope.Documents.Pdf.Writing;
 using OmniEurope.Documents.Word;
 
@@ -51,7 +52,7 @@ internal sealed class LayoutContext
     /// <summary>Each family met, with the font that draws it, in order of first use.</summary>
     public List<FontUse> FontUses { get; } = [];
 
-    public SortedSet<string> Gaps { get; } = new(StringComparer.Ordinal);
+    public GapSet Gaps { get; } = new();
 
     public double Measure(string text, TextStyle style) =>
         style.SymbolAdvances ? MeasureSymbol(text, style) : Builder.MeasureText(text, style.Font, style.Size, style.CharacterSpacing);

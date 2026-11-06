@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: EUPL-1.2
 using OmniEurope.Documents.Conversion.WordHtml;
+using OmniEurope.Documents.Internal;
 using OmniEurope.Documents.Word;
 
 namespace OmniEurope.Documents.Conversion;
@@ -75,6 +76,10 @@ public sealed record WordHtmlResult(string Html, IReadOnlyList<string> Gaps)
     /// <summary>The pictures to serve at <see cref="WordHtmlOptions.ImageUrlPrefix"/>; empty when the page embeds
     /// them.</summary>
     public IReadOnlyList<WordHtmlImage> Images { get; init; } = [];
+
+    /// <summary>The <see cref="Gaps"/> in their order, each with its code, to describe them in another language
+    /// (<see cref="DocumentGap.Describe"/>).</summary>
+    public IReadOnlyList<DocumentGap> GapDetails { get; init; } = Gaps.Select(DocumentGap.FromText).ToList();
 }
 
 /// <summary>
@@ -110,8 +115,9 @@ public static class WordToHtml
         ArgumentNullException.ThrowIfNull(document);
         var context = new HtmlContext(document, options ?? new WordHtmlOptions());
         var (html, css) = new HtmlPageWriter(context).Write();
-        var gaps = document.Gaps.Concat(context.Gaps).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToList();
-        return new WordHtmlResult(html, gaps) { StyleSheet = css, Images = context.Images.Resources };
+        var gaps = new GapSet(document.GapDetails);
+        gaps.UnionWith(context.Gaps);
+        return new WordHtmlResult(html, gaps.Messages) { StyleSheet = css, Images = context.Images.Resources, GapDetails = gaps.ToList() };
     }
 
     /// <summary>Loads a .docx package and converts it; every paragraph is addressed.</summary>

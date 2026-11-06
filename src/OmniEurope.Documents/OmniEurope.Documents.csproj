@@ -17,6 +17,9 @@
     <PackageProjectUrl>https://github.com/OmniEurope/OmniEurope.Documents</PackageProjectUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <IsPackable>true</IsPackable>
+    <!-- Gap messages: English in the assembly, French in the fr satellite (Resources/GapMessages*.resx). -->
+    <NeutralLanguage>en</NeutralLanguage>
+    <SatelliteResourceLanguages>en;fr</SatelliteResourceLanguages>
     <!-- Portable PDB shipped as a separate .snupkg symbol package, never embedded in the .nupkg. -->
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>

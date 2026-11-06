@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="UnknownGap" xml:space="preserve">
+    <value></value>
+    <comment>Empty: a gap without a code is shown by its own text.</comment>
+  </data>
+  <data name="GlyphlessCharactersOmitted" xml:space="preserve">
+    <value>characters without a glyph in any font left out (PDF/A forbids the .notdef glyph)</value>
+  </data>
+  <data name="FootnoteRestartUnsettled" xml:space="preserve">
+    <value>footnote numbers restarting at each page may not match their final page</value>
+  </data>
+  <data name="TightWrapByBoundingBox" xml:space="preserve">
+    <value>tight and through wrapping follows the bounding box of floating shapes</value>
+  </data>
+  <data name="NoWrapOutsideBody" xml:space="preserve">
+    <value>text does not flow around floating shapes in tables, headers and footers</value>
+  </data>
+  <data name="ArabicWithoutJoining" xml:space="preserve">
+    <value>Arabic letters drawn without joining forms</value>
+  </data>
+</root>

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: EUPL-1.2
+using OmniEurope.Documents.Internal;
 using OmniEurope.Documents.Word;
 
 namespace OmniEurope.Documents.Conversion.WordHtml;
@@ -30,7 +31,7 @@ internal sealed class HtmlContext
 
     public HtmlImages Images { get; }
 
-    public SortedSet<string> Gaps { get; } = new(StringComparer.Ordinal);
+    public GapSet Gaps { get; } = new();
 
     public bool Marked => Options.Revisions == WordHtmlRevisions.Marked;
 
