@@ -37,7 +37,7 @@ internal static class XlsxChartReader
             catch (Exception exception) when (ChartReader.IsUnreadable(exception))
             {
                 // A drawing that cannot be read costs the charts it holds, not the workbook.
-                sheet.Workbook.Gaps.Add("unreadable drawing skipped");
+                sheet.Workbook.AddGap(DocumentGap.Of(ExcelGapCodes.ExcelDrawingUnreadable));
             }
         }
     }
@@ -51,7 +51,7 @@ internal static class XlsxChartReader
         }
         catch (Exception exception) when (ChartReader.IsUnreadable(exception))
         {
-            sheet.Workbook.Gaps.Add("unreadable drawing skipped");
+            sheet.Workbook.AddGap(DocumentGap.Of(ExcelGapCodes.ExcelDrawingUnreadable));
             return [];
         }
     }
@@ -72,7 +72,7 @@ internal static class XlsxChartReader
             }
             catch (Exception exception) when (ChartReader.IsUnreadable(exception))
             {
-                sheet.Workbook.Gaps.Add("unreadable chart skipped");
+                sheet.Workbook.AddGap(DocumentGap.Of(Word.Reading.ReadGapCodes.ReadChartUnreadable));
             }
         }
     }

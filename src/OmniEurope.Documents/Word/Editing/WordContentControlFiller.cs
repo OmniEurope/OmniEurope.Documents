@@ -19,18 +19,18 @@ internal sealed class WordContentControlFiller(IReadOnlyList<ScannedControl> con
         Run(values.Keys, (tag, control) => FillOne(control, values[tag] ?? string.Empty));
 
     public WordContentControlFill SetDate(string tag, DateOnly date) =>
-        Run([tag], (_, control) => control.Info.Kind == WordContentControlKind.Date ? WriteDate(control, date) : "the control is not a date control");
+        Run([tag], (_, control) => control.Info.Kind == WordContentControlKind.Date ? WriteDate(control, date) : DocumentGap.Of(ContentControlGapCodes.ContentControlNotDate));
 
     public WordContentControlFill SelectItem(string tag, string valueOrDisplayText) =>
         Run([tag], (_, control) => control.Info.Kind is WordContentControlKind.ComboBox or WordContentControlKind.DropDownList
             ? FillList(control, valueOrDisplayText)
-            : "the control is not a combo box or drop-down list");
+            : DocumentGap.Of(ContentControlGapCodes.ContentControlNotList));
 
     public WordContentControlFill SetChecked(string tag, bool value) =>
-        Run([tag], (_, control) => control.Info.Kind == WordContentControlKind.Checkbox ? WriteChecked(control, value) : "the control is not a check box");
+        Run([tag], (_, control) => control.Info.Kind == WordContentControlKind.Checkbox ? WriteChecked(control, value) : DocumentGap.Of(ContentControlGapCodes.ContentControlNotCheckbox));
 
     // Applies an action to every control of every tag; the action returns null, or why it refused.
-    private WordContentControlFill Run(IEnumerable<string> tags, Func<string, ScannedControl, string?> apply)
+    private WordContentControlFill Run(IEnumerable<string> tags, Func<string, ScannedControl, DocumentGap?> apply)
     {
         var filled = new List<string>();
         var unknown = new List<string>();
@@ -49,7 +49,7 @@ internal sealed class WordContentControlFiller(IReadOnlyList<ScannedControl> con
             {
                 if (apply(tag, control) is { } reason)
                 {
-                    gaps.Add(new WordContentControlGap(tag, reason));
+                    gaps.Add(new WordContentControlGap(tag, reason.Message) { ReasonDetail = reason });
                     continue;
                 }
 
@@ -64,16 +64,16 @@ internal sealed class WordContentControlFiller(IReadOnlyList<ScannedControl> con
         return new WordContentControlFill(filled, unknown, gaps, count);
     }
 
-    private string? FillOne(ScannedControl control, string value) => control.Info.Kind switch
+    private DocumentGap? FillOne(ScannedControl control, string value) => control.Info.Kind switch
     {
         WordContentControlKind.Text or WordContentControlKind.RichText => WordContentControlText.Replace(control, value, isPlaceholderStyle),
         WordContentControlKind.Date => FillDate(control, value),
         WordContentControlKind.ComboBox or WordContentControlKind.DropDownList => FillList(control, value),
-        WordContentControlKind.Checkbox => ParseBool(value) is { } state ? WriteChecked(control, state) : $"'{value}' is not a boolean (true, false, 1, 0, yes, no, oui, non)",
-        _ => $"a {control.Info.Kind} control cannot be filled with text",
+        WordContentControlKind.Checkbox => ParseBool(value) is { } state ? WriteChecked(control, state) : DocumentGap.Of(ContentControlGapCodes.ContentControlNotBoolean, value),
+        _ => DocumentGap.Of(ContentControlGapCodes.ContentControlKindNotFillable, control.Info.Kind.ToString()),
     };
 
-    private string? FillList(ScannedControl control, string value)
+    private DocumentGap? FillList(ScannedControl control, string value)
     {
         var items = control.Info.ListItems;
         var item = items.FirstOrDefault(i => i.Value == value)
@@ -82,13 +82,13 @@ internal sealed class WordContentControlFiller(IReadOnlyList<ScannedControl> con
         // A combo box accepts free text, as Word does; a drop-down list stays closed on its entries.
         if (item is null && items.Count > 0 && control.Info.Kind != WordContentControlKind.ComboBox)
         {
-            return $"'{value}' is neither a value nor a display text of the list";
+            return DocumentGap.Of(ContentControlGapCodes.ContentControlValueNotInList, value);
         }
 
         return WordContentControlText.Replace(control, item?.DisplayText ?? value, isPlaceholderStyle);
     }
 
-    private string? FillDate(ScannedControl control, string value)
+    private DocumentGap? FillDate(ScannedControl control, string value)
     {
         var (format, culture, cultureMissing) = Settings(control.Info.Date);
         value = value.Trim();
@@ -103,13 +103,16 @@ internal sealed class WordContentControlFiller(IReadOnlyList<ScannedControl> con
         }
         else
         {
-            return $"'{value}' is neither yyyy-MM-dd nor the control format '{format}'" + (cultureMissing ? " (its language is unavailable)" : string.Empty);
+            return DocumentGap.Of(
+                cultureMissing ? ContentControlGapCodes.ContentControlDateUnparsableLanguageMissing : ContentControlGapCodes.ContentControlDateUnparsable,
+                value,
+                format);
         }
 
         return WriteDate(control, date);
     }
 
-    private string? WriteDate(ScannedControl control, DateOnly date)
+    private DocumentGap? WriteDate(ScannedControl control, DateOnly date)
     {
         var (format, culture, _) = Settings(control.Info.Date);
         var text = date.ToString(format, culture);
@@ -142,7 +145,7 @@ internal sealed class WordContentControlFiller(IReadOnlyList<ScannedControl> con
         return (string.IsNullOrEmpty(date?.Format) ? culture.DateTimeFormat.ShortDatePattern : date.Format, culture, missing);
     }
 
-    private string? WriteChecked(ScannedControl control, bool value)
+    private DocumentGap? WriteChecked(ScannedControl control, bool value)
     {
         var checkbox = control.Sdt.Element(W + "sdtPr")!.Element(WordContentControlScanner.W14 + "checkbox")!;
         var state = checkbox.Element(WordContentControlScanner.W14 + (value ? "checkedState" : "uncheckedState"));

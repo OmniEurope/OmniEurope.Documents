@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Xml.Linq;
 using OmniEurope.Documents.Conversion.WordFields;
 using OmniEurope.Documents.Fonts;
+using OmniEurope.Documents.Internal;
 using OmniEurope.Documents.Word;
 using OmniEurope.Documents.Word.Editing;
 using static OmniEurope.Documents.Word.WordXml;
@@ -24,7 +25,12 @@ public sealed record WordFieldOptions
 
 /// <summary>What an update did: the fields computed, the table of contents entries written, the page count of the
 /// layout used, and what was left as it was.</summary>
-public sealed record WordFieldUpdate(int Fields, int TableOfContentsEntries, int PageCount, IReadOnlyList<string> Gaps);
+public sealed record WordFieldUpdate(int Fields, int TableOfContentsEntries, int PageCount, IReadOnlyList<string> Gaps)
+{
+    /// <summary>The <see cref="Gaps"/> in their order, each with its code, to describe them in another language
+    /// (<see cref="DocumentGap.Describe"/>).</summary>
+    public IReadOnlyList<DocumentGap> GapDetails { get; init; } = Gaps.Select(DocumentGap.FromText).ToList();
+}
 
 /// <summary>
 /// Updates the tables of contents and the simple fields of a document edited with <see cref="WordEditor"/>, from the
@@ -44,7 +50,7 @@ public static class WordFieldUpdater
     {
         ArgumentNullException.ThrowIfNull(editor);
         options ??= new WordFieldOptions();
-        var gaps = new SortedSet<string>(StringComparer.Ordinal);
+        var gaps = new GapSet();
         var entries = RebuildContents(editor, gaps);
         var fonts = options.Fonts ?? FontLibrary.Default;
         var evaluator = new FieldEvaluator(editor, options, gaps);
@@ -63,16 +69,16 @@ public static class WordFieldUpdater
 
             if (pass == MaxPasses)
             {
-                gaps.Add("page numbers still moving after four layouts");
+                gaps.Add(DocumentGap.Of(FieldGapCodes.FieldPageNumbersStillMoving));
                 break;
             }
         }
 
-        return new WordFieldUpdate(fields, entries, pages, gaps.ToList());
+        return new WordFieldUpdate(fields, entries, pages, gaps.Messages) { GapDetails = gaps.ToList() };
     }
 
     // Each table of contents is rebuilt from a fresh reading, as the previous one changed the paragraphs.
-    private static int RebuildContents(WordEditor editor, SortedSet<string> gaps)
+    private static int RebuildContents(WordEditor editor, GapSet gaps)
     {
         var entries = 0;
         for (var index = 0; ; index++)
@@ -94,7 +100,7 @@ public static class WordFieldUpdater
         }
     }
 
-    private sealed class FieldEvaluator(WordEditor editor, WordFieldOptions options, SortedSet<string> gaps)
+    private sealed class FieldEvaluator(WordEditor editor, WordFieldOptions options, GapSet gaps)
     {
         private readonly CultureInfo _culture = options.Culture ?? CultureInfo.InvariantCulture;
         private readonly DateTimeOffset _now = options.Now ?? DateTimeOffset.Now;
@@ -147,7 +153,7 @@ public static class WordFieldUpdater
                 return DateField(field, document);
             }
 
-            return kind is "PAGEREF" or "REF" ? Bookmarked(field, field.Tokens, context, page: kind == "PAGEREF") : Missing($"{kind} fields not updated");
+            return kind is "PAGEREF" or "REF" ? Bookmarked(field, field.Tokens, context, page: kind == "PAGEREF") : Missing(FieldGapCodes.FieldKindNotUpdated, kind);
         }
 
         private string? PageField(XmlField field, PartContext context)
@@ -176,30 +182,30 @@ public static class WordFieldUpdater
             };
             return date is { } known
                 ? WordFieldValues.Date(known, Picture(field.Tokens, field.Kind == "TIME" ? "TIME" : "DATE"), _culture)
-                : Missing($"{field.Kind} without the date in the core properties not updated");
+                : Missing(FieldGapCodes.FieldDateWithoutCoreDate, field.Kind);
         }
 
         private string? Laid(XmlField field, string? label, IReadOnlyList<string> tokens) =>
-            label is not null ? WordFieldValues.Page(label, tokens) : Missing($"{field.Kind} fields outside the laid-out body and notes not updated");
+            label is not null ? WordFieldValues.Page(label, tokens) : Missing(FieldGapCodes.FieldOutsideLaidOutBody, field.Kind);
 
         private string? Bookmarked(XmlField field, IReadOnlyList<string> tokens, PartContext context, bool page)
         {
             var name = tokens.Count > 1 && !tokens[1].StartsWith('\\') ? tokens[1] : string.Empty;
             if (context.Bookmark(name) is not { } start)
             {
-                return Missing($"{field.Kind} to a missing bookmark not updated");
+                return Missing(FieldGapCodes.FieldBookmarkMissing, field.Kind);
             }
 
             if (!page)
             {
                 return WordXmlFields.Switch(tokens, "n", hasArgument: false) is not null || WordXmlFields.Switch(tokens, "r", hasArgument: false) is not null
                     || WordXmlFields.Switch(tokens, "w", hasArgument: false) is not null
-                    ? Missing("REF fields giving a paragraph number not updated")
+                    ? Missing(FieldGapCodes.FieldRefParagraphNumber)
                     : PartContext.BookmarkText(start);
             }
 
             return WordXmlFields.Switch(tokens, "p", hasArgument: false) is not null
-                ? Missing("PAGEREF fields with \\p (above or below) not updated")
+                ? Missing(FieldGapCodes.FieldPageRefRelativePosition)
                 : Laid(field, context.PageOf(PartContext.BookmarkParagraph(start)), tokens);
         }
 
@@ -208,9 +214,9 @@ public static class WordFieldUpdater
                 : kind == "TIME" ? _culture.DateTimeFormat.ShortTimePattern.Replace("tt", "AM/PM", StringComparison.Ordinal)
                 : _culture.DateTimeFormat.ShortDatePattern;
 
-        private string? Missing(string gap)
+        private string? Missing(GapCode code, params string[] arguments)
         {
-            gaps.Add(gap);
+            gaps.Add(DocumentGap.Of(code, arguments));
             return null;
         }
     }

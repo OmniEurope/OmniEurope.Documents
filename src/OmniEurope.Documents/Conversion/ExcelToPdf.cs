@@ -58,7 +58,11 @@ public static class ExcelToPdf
         }
 
         var document = new WordDocument { Information = new WordInformation { Title = workbook.Title, Author = workbook.Author } };
-        document.Gaps.AddRange(workbook.Gaps.Distinct(StringComparer.Ordinal));
+        foreach (var gap in workbook.GapDetails.Distinct())
+        {
+            document.AddGap(gap);
+        }
+
         document.Styles.DefaultParagraphProperties = new WordParagraphProperties { SpacingAfter = 0, LineSpacing = 1, LineSpacingRule = WordLineSpacingRule.Multiple };
         for (var i = 0; i < workbook.Worksheets.Count; i++)
         {

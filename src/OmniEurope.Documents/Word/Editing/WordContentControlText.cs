@@ -17,17 +17,17 @@ internal static class WordContentControlText
         "pPr", "r", "proofErr", "bookmarkStart", "bookmarkEnd",
     };
 
-    /// <summary>Replaces the content with <paramref name="text"/>; returns null, or the reason the control was left unchanged.</summary>
+    /// <summary>Replaces the content with <paramref name="text"/>; returns null, or the gap giving the reason the control was left unchanged.</summary>
     /// <param name="control">The control.</param>
     /// <param name="text">The new text (<c>\n</c> becomes a line break, or a new paragraph in a block control).</param>
     /// <param name="isPlaceholderStyle">Tells whether a character style id is the placeholder text style, dropped once the control is filled.</param>
     /// <param name="font">A font to set on the new run (the glyph font of a check box state), or null.</param>
-    public static string? Replace(ScannedControl control, string text, Func<string, bool> isPlaceholderStyle, string? font = null)
+    public static DocumentGap? Replace(ScannedControl control, string text, Func<string, bool> isPlaceholderStyle, string? font = null)
     {
         var sdt = control.Sdt;
         if (control.Info.Level is WordContentControlLevel.Row or WordContentControlLevel.Cell)
         {
-            return "a row or cell control holds table structure, not text";
+            return DocumentGap.Of(ContentControlGapCodes.ContentControlTableStructure);
         }
 
         var content = sdt.Element(W + "sdtContent");
@@ -40,7 +40,7 @@ internal static class WordContentControlText
         var runs = WordContentControlScanner.Runs(content, sdt).ToList();
         if (runs.Any(r => r.Elements().Any(e => !TextRunContent.Contains(e.Name.LocalName))))
         {
-            return "the control holds more than text (a field, picture or note)";
+            return DocumentGap.Of(ContentControlGapCodes.ContentControlHoldsMoreThanText);
         }
 
         var template = Template(sdt, runs, control.Info.ShowingPlaceholder, isPlaceholderStyle, font);
@@ -55,7 +55,7 @@ internal static class WordContentControlText
         return reason;
     }
 
-    private static string? Inline(XElement content, List<XElement> runs, string text, XElement? template)
+    private static DocumentGap? Inline(XElement content, List<XElement> runs, string text, XElement? template)
     {
         var run = WordRunBuilder.NewRun(new WordTextPiece(text), template, null);
         if (runs.Count == 0)
@@ -75,11 +75,11 @@ internal static class WordContentControlText
         return null;
     }
 
-    private static string? Block(XElement content, string text, XElement? template)
+    private static DocumentGap? Block(XElement content, string text, XElement? template)
     {
         if (content.Elements().Any(e => e.Name != W + "p") || content.Elements(W + "p").Any(p => p.Elements().Any(e => !TransparentParagraphContent.Contains(e.Name.LocalName))))
         {
-            return "the control holds more than paragraphs of text (a table, nested control or field)";
+            return DocumentGap.Of(ContentControlGapCodes.ContentControlHoldsMoreThanParagraphs);
         }
 
         var properties = content.Elements(W + "p").FirstOrDefault()?.Element(W + "pPr");
