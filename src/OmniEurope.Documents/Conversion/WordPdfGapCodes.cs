@@ -5,9 +5,9 @@ namespace OmniEurope.Documents.Conversion;
 /// <c>Resources/GapMessages.resx</c>.</summary>
 internal static class WordPdfGapCodes
 {
-    public static readonly GapCode GlyphlessCharactersOmitted = new(nameof(GlyphlessCharactersOmitted));
-    public static readonly GapCode FootnoteRestartUnsettled = new(nameof(FootnoteRestartUnsettled));
-    public static readonly GapCode TightWrapByBoundingBox = new(nameof(TightWrapByBoundingBox));
-    public static readonly GapCode NoWrapOutsideBody = new(nameof(NoWrapOutsideBody));
-    public static readonly GapCode ArabicWithoutJoining = new(nameof(ArabicWithoutJoining));
+    public static readonly GapCode PdfGlyphlessCharactersOmitted = new(nameof(PdfGlyphlessCharactersOmitted));
+    public static readonly GapCode PdfFootnoteRestartUnsettled = new(nameof(PdfFootnoteRestartUnsettled));
+    public static readonly GapCode PdfTightWrapByBoundingBox = new(nameof(PdfTightWrapByBoundingBox));
+    public static readonly GapCode PdfNoWrapOutsideBody = new(nameof(PdfNoWrapOutsideBody));
+    public static readonly GapCode PdfArabicWithoutJoining = new(nameof(PdfArabicWithoutJoining));
 }

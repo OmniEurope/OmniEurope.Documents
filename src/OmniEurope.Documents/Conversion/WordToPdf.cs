@@ -68,7 +68,7 @@ public static class WordToPdf
         new PagePainter(context, options.Bookmarks).Paint(pages);
         if (builder.OmittedCharacters > 0)
         {
-            context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.GlyphlessCharactersOmitted));
+            context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.PdfGlyphlessCharactersOmitted));
         }
 
         var gaps = new GapSet(document.GapDetails);
@@ -85,7 +85,7 @@ public static class WordToPdf
         {
             if (pass == MaxPasses)
             {
-                context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.FootnoteRestartUnsettled));
+                context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.PdfFootnoteRestartUnsettled));
                 break;
             }
 
@@ -105,19 +105,19 @@ public static class WordToPdf
         var wrapping = paragraphs.SelectMany(p => p.Inlines).OfType<WordShape>().Where(s => s.Floating is { Wrap: not WordWrap.None }).ToList();
         if (wrapping.Exists(s => s.Floating!.Wrap is WordWrap.Tight or WordWrap.Through))
         {
-            context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.TightWrapByBoundingBox));
+            context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.PdfTightWrapByBoundingBox));
         }
 
         var elsewhere = document.Blocks.OfType<WordTable>().SelectMany(Shapes)
             .Concat(document.Sections.SelectMany(s => s.Headers.Values.Concat(s.Footers.Values)).SelectMany(h => h.Blocks.OfType<WordParagraph>()).SelectMany(p => p.Inlines).OfType<WordShape>());
         if (elsewhere.Any(s => s.Floating is { Wrap: not WordWrap.None }))
         {
-            context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.NoWrapOutsideBody));
+            context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.PdfNoWrapOutsideBody));
         }
 
         if (paragraphs.Exists(p => p.Text.Any(c => c is >= '؀' and <= 'ۿ' or >= 'ݐ' and <= 'ࣿ')))
         {
-            context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.ArabicWithoutJoining));
+            context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.PdfArabicWithoutJoining));
         }
     }
 

@@ -8,19 +8,27 @@
     <value>Limite de conversion non détaillée</value>
     <comment>Generic label of a gap without a code.</comment>
   </data>
-  <data name="GlyphlessCharactersOmitted" xml:space="preserve">
+  <!-- Word reading, Excel, fields and content controls: Read*, Excel*, Field*, ContentControl* -->
+  <!-- end of Word reading, Excel, fields and content controls -->
+
+  <!-- Word and Excel to PDF, PDF rendering and redaction: Pdf*, Render*, Redact* -->
+  <data name="PdfGlyphlessCharactersOmitted" xml:space="preserve">
     <value>caractères sans glyphe dans aucune police omis (PDF/A interdit le glyphe .notdef)</value>
   </data>
-  <data name="FootnoteRestartUnsettled" xml:space="preserve">
+  <data name="PdfFootnoteRestartUnsettled" xml:space="preserve">
     <value>les numéros de notes de bas de page recommençant à chaque page peuvent ne pas correspondre à leur page finale</value>
   </data>
-  <data name="TightWrapByBoundingBox" xml:space="preserve">
+  <data name="PdfTightWrapByBoundingBox" xml:space="preserve">
     <value>l'habillage serré et traversant suit le cadre englobant des formes flottantes</value>
   </data>
-  <data name="NoWrapOutsideBody" xml:space="preserve">
+  <data name="PdfNoWrapOutsideBody" xml:space="preserve">
     <value>le texte ne contourne pas les formes flottantes dans les tableaux, en-têtes et pieds de page</value>
   </data>
-  <data name="ArabicWithoutJoining" xml:space="preserve">
+  <data name="PdfArabicWithoutJoining" xml:space="preserve">
     <value>lettres arabes dessinées sans leurs formes liées</value>
   </data>
+  <!-- end of Word and Excel to PDF, PDF rendering and redaction -->
+
+  <!-- HTML, Markdown and HTML to Word: Html*, Markdown*, HtmlToWord* -->
+  <!-- end of HTML, Markdown and HTML to Word -->
 </root>

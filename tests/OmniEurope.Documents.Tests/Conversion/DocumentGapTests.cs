@@ -59,7 +59,7 @@ public sealed class DocumentGapTests
     {
         var result = WordToPdf.Convert(Document(new WordParagraph("بت 12")));
 
-        var gap = Assert.Single(result.GapDetails, g => g.Code == "ArabicWithoutJoining");
+        var gap = Assert.Single(result.GapDetails, g => g.Code == "PdfArabicWithoutJoining");
         Assert.Contains("Arabic letters drawn without joining forms", result.Gaps);
         Assert.Equal("Arabic letters drawn without joining forms", gap.Message);
         Assert.Equal("lettres arabes dessinées sans leurs formes liées", gap.Describe(French));
@@ -70,7 +70,7 @@ public sealed class DocumentGapTests
     [Fact]
     public void Describe_follows_the_current_ui_culture()
     {
-        var gap = Assert.Single(WordToPdf.Convert(Document(new WordParagraph("بت 12"))).GapDetails, g => g.Code == "ArabicWithoutJoining");
+        var gap = Assert.Single(WordToPdf.Convert(Document(new WordParagraph("بت 12"))).GapDetails, g => g.Code == "PdfArabicWithoutJoining");
         var previous = CultureInfo.CurrentUICulture;
         try
         {
