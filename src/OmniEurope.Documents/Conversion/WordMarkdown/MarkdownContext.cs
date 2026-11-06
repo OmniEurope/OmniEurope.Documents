@@ -41,7 +41,7 @@ internal sealed class MarkdownContext(WordDocument document, WordMarkdownOptions
         var notes = kind == WordNoteKind.Footnote ? Document.Footnotes : Document.Endnotes;
         if (!notes.ContainsKey(id))
         {
-            Gaps.Add("references to notes the document does not hold are left out");
+            Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownReferencesToMissingNotesLeftOut));
             return null;
         }
 
@@ -50,7 +50,7 @@ internal sealed class MarkdownContext(WordDocument document, WordMarkdownOptions
             : "e" + (++_endnotes).ToString(CultureInfo.InvariantCulture);
         if (kind == WordNoteKind.Endnote)
         {
-            Gaps.Add("endnotes are written as footnotes");
+            Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownEndnotesAsFootnotes));
         }
 
         _notes[(kind, id)] = label;

@@ -71,11 +71,11 @@ internal sealed class HtmlWordWriter
         _lists.AddRange(lists);
     }
 
-    public void AddGap(string gap)
+    public void AddGap(DocumentGap gap)
     {
-        if (!_document.Gaps.Contains(gap))
+        if (!_document.Gaps.Contains(gap.Message))
         {
-            _document.Gaps.Add(gap);
+            _document.AddGap(gap);
         }
     }
 
@@ -297,7 +297,7 @@ internal sealed class HtmlWordWriter
         var data = DataUri(source);
         if (data is null)
         {
-            AddGap("images that are not data: URIs are not loaded");
+            AddGap(DocumentGap.Of(HtmlToWordGapCodes.HtmlToWordImagesNotDataUris));
             return;
         }
 
@@ -308,7 +308,7 @@ internal sealed class HtmlWordWriter
         }
         catch (ArgumentException)
         {
-            AddGap("unrecognised embedded image skipped");
+            AddGap(DocumentGap.Of(HtmlToWordGapCodes.HtmlToWordUnrecognisedImageSkipped));
             return;
         }
 

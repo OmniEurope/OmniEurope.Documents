@@ -28,7 +28,7 @@ public static class HtmlToWord
 
         if (parsed.QuerySelectorAll("link").Any(l => l.GetAttribute("rel")?.Split(' ', StringSplitOptions.RemoveEmptyEntries).Contains("stylesheet", StringComparer.OrdinalIgnoreCase) == true))
         {
-            document.Gaps.Add(LinkedStyleSheetsGap);
+            document.AddGap(DocumentGap.Of(HtmlToWordGapCodes.HtmlToWordLinkedStyleSheetsNotRead));
         }
 
         new HtmlWordWriter(document, CssClassRules.From(parsed)).Write(parsed.Body);
@@ -36,7 +36,7 @@ public static class HtmlToWord
     }
 
     /// <summary>The gap of a page that links a style sheet: it is never fetched, so its rules are not read.</summary>
-    internal const string LinkedStyleSheetsGap = "linked style sheets are not read (nothing is fetched)";
+    internal static string LinkedStyleSheetsGap => DocumentGap.Of(HtmlToWordGapCodes.HtmlToWordLinkedStyleSheetsNotRead).Message;
 
     /// <summary>Appends the content of an HTML tree to the last section of <paramref name="document"/>; the
     /// <c>style</c> attributes count, not the rules of the page's style elements (the tree may not be a page).</summary>

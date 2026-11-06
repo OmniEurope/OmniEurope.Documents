@@ -99,5 +99,140 @@
   <!-- end of Word and Excel to PDF, PDF rendering and redaction -->
 
   <!-- HTML, Markdown and HTML to Word: Html*, Markdown*, HtmlToWord* -->
+  <data name="HtmlParagraphWithoutAddress" xml:space="preserve">
+    <value>les paragraphes sans adresse source (créés par le code, ou lus dans un balisage de repli de contenu alternatif) n'ont pas de data-address</value>
+  </data>
+  <data name="HtmlUnreadablePictureLeftOut" xml:space="preserve">
+    <value>image illisible omise</value>
+  </data>
+  <data name="HtmlPictureFormatLeftOut" xml:space="preserve">
+    <value>format d'image {0} omis</value>
+  </data>
+  <data name="HtmlTabStopsAsFixedTabs" xml:space="preserve">
+    <value>les taquets de tabulation sont rendus par des caractères de tabulation de largeur fixe</value>
+  </data>
+  <data name="HtmlInkLeftOut" xml:space="preserve">
+    <value>l'encre est omise</value>
+  </data>
+  <data name="HtmlChartsLeftOut" xml:space="preserve">
+    <value>les graphiques sont omis</value>
+  </data>
+  <data name="HtmlColumnBreaksAsLineBreaks" xml:space="preserve">
+    <value>les sauts de colonne sont rendus par des sauts de ligne</value>
+  </data>
+  <data name="HtmlPageNumberFieldsLastValue" xml:space="preserve">
+    <value>les champs de numéro de page affichent leur dernière valeur calculée</value>
+  </data>
+  <data name="HtmlLinksOtherSchemeWithoutAddress" xml:space="preserve">
+    <value>les liens dont l'adresse n'est ni http, ni https, ni mailto sont laissés sans leur adresse</value>
+  </data>
+  <data name="HtmlBookmarksNotKept" xml:space="preserve">
+    <value>les signets ne sont pas conservés : les liens qui y mènent pointent vers des ancres que la page ne définit pas</value>
+  </data>
+  <data name="HtmlFloatingShapesInTextFlow" xml:space="preserve">
+    <value>les formes flottantes sont placées dans le flux du texte</value>
+  </data>
+  <data name="HtmlBreaksComputedByBrowser" xml:space="preserve">
+    <value>les sauts de ligne et de page sont calculés par le navigateur</value>
+  </data>
+  <data name="HtmlLineHeightsApproximated" xml:space="preserve">
+    <value>les hauteurs de ligne sont approximées (l'interligne simple est pris égal à 1,15 fois la taille de police)</value>
+  </data>
+  <data name="HtmlCommentsLeftOut" xml:space="preserve">
+    <value>les commentaires sont omis</value>
+  </data>
+  <data name="HtmlFootnoteRestartContinues" xml:space="preserve">
+    <value>la numérotation des notes de bas de page qui repart à chaque page se poursuit, la page web n'a pas de pages</value>
+  </data>
+  <data name="HtmlUnequalColumnsAsEqual" xml:space="preserve">
+    <value>les colonnes inégales sont rendues par des colonnes égales</value>
+  </data>
+  <data name="HtmlHeadersFootersLeftOut" xml:space="preserve">
+    <value>les en-têtes et pieds de page autres que ceux par défaut de la première section sont omis</value>
+  </data>
+  <data name="HtmlFootnotesAtPageEnd" xml:space="preserve">
+    <value>les notes de bas de page sont listées à la fin de la page</value>
+  </data>
+  <data name="MarkdownReferencesToMissingNotesLeftOut" xml:space="preserve">
+    <value>les références à des notes que le document ne contient pas sont omises</value>
+  </data>
+  <data name="MarkdownEndnotesAsFootnotes" xml:space="preserve">
+    <value>les notes de fin sont écrites comme des notes de bas de page</value>
+  </data>
+  <data name="MarkdownHeadersFootersLeftOut" xml:space="preserve">
+    <value>les en-têtes et pieds de page sont omis</value>
+  </data>
+  <data name="MarkdownCommentsLeftOut" xml:space="preserve">
+    <value>les commentaires sont omis</value>
+  </data>
+  <data name="MarkdownTextBoxesAfterAnchor" xml:space="preserve">
+    <value>les zones de texte sont écrites comme des paragraphes après le paragraphe qui les ancre</value>
+  </data>
+  <data name="MarkdownEmptyParagraphsLeftOut" xml:space="preserve">
+    <value>les paragraphes vides sont omis</value>
+  </data>
+  <data name="MarkdownListNumbersAsDigits" xml:space="preserve">
+    <value>les numéros de liste en lettres, en chiffres romains ou en mots sont écrits en chiffres</value>
+  </data>
+  <data name="MarkdownMergedCellsKeepFirstText" xml:space="preserve">
+    <value>les cellules de tableau fusionnées gardent leur texte dans la première cellule, les cellules qu'elles couvrent sont vides</value>
+  </data>
+  <data name="MarkdownNestedTablesAsText" xml:space="preserve">
+    <value>les tableaux dans des cellules de tableau sont écrits sous forme de texte</value>
+  </data>
+  <data name="MarkdownCellParagraphsJoined" xml:space="preserve">
+    <value>plusieurs paragraphes dans une cellule de tableau ou une note sont joints sur une seule ligne</value>
+  </data>
+  <data name="MarkdownCellListItemsAsParagraphs" xml:space="preserve">
+    <value>les éléments de liste dans des cellules de tableau et des notes sont écrits comme de simples paragraphes</value>
+  </data>
+  <data name="MarkdownCellTextBoxesLeftOut" xml:space="preserve">
+    <value>les zones de texte dans des cellules de tableau et des notes sont omises</value>
+  </data>
+  <data name="MarkdownParagraphFormattingNotPreserved" xml:space="preserve">
+    <value>la mise en forme des paragraphes n'est pas conservée</value>
+  </data>
+  <data name="MarkdownTabsAsTabCharacters" xml:space="preserve">
+    <value>les tabulations sont écrites comme des caractères de tabulation</value>
+  </data>
+  <data name="MarkdownInkLeftOut" xml:space="preserve">
+    <value>l'encre est omise</value>
+  </data>
+  <data name="MarkdownChartsLeftOut" xml:space="preserve">
+    <value>les graphiques sont omis</value>
+  </data>
+  <data name="MarkdownFontsNotPreserved" xml:space="preserve">
+    <value>les polices et leurs tailles ne sont pas conservées</value>
+  </data>
+  <data name="MarkdownColoursNotPreserved" xml:space="preserve">
+    <value>les couleurs du texte, le surlignage et la trame de fond ne sont pas conservés</value>
+  </data>
+  <data name="MarkdownUnderlineScriptsAsPlainText" xml:space="preserve">
+    <value>le soulignement, l'exposant et l'indice sont écrits comme du texte brut</value>
+  </data>
+  <data name="MarkdownPageBreaksLeftOut" xml:space="preserve">
+    <value>les sauts de page sont omis</value>
+  </data>
+  <data name="MarkdownColumnBreaksAsLineBreaks" xml:space="preserve">
+    <value>les sauts de colonne sont écrits comme des sauts de ligne</value>
+  </data>
+  <data name="MarkdownLinksOtherSchemeTextOnly" xml:space="preserve">
+    <value>les liens dont l'adresse n'est ni http, ni https, ni mailto ne gardent que leur texte</value>
+  </data>
+  <data name="MarkdownBookmarkLinksTextOnly" xml:space="preserve">
+    <value>les liens vers des signets ne gardent que leur texte</value>
+  </data>
+  <data name="MarkdownFloatingPicturesInTextFlow" xml:space="preserve">
+    <value>les images flottantes sont écrites dans le flux du texte</value>
+  </data>
+  <data name="HtmlToWordLinkedStyleSheetsNotRead" xml:space="preserve">
+    <value>les feuilles de style liées ne sont pas lues (rien n'est téléchargé)</value>
+  </data>
+  <data name="HtmlToWordImagesNotDataUris" xml:space="preserve">
+    <value>les images qui ne sont pas des URI data: ne sont pas chargées</value>
+  </data>
+  <data name="HtmlToWordUnrecognisedImageSkipped" xml:space="preserve">
+    <value>image intégrée non reconnue ignorée</value>
+  </data>
   <!-- end of HTML, Markdown and HTML to Word -->
 </root>

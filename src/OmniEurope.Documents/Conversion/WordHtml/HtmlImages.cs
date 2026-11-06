@@ -52,11 +52,11 @@ internal sealed class HtmlImages(GapSet gaps, string? prefix)
         }
         catch (Exception exception) when (exception is InvalidDataException or NotSupportedException or ArgumentException or IOException)
         {
-            gaps.Add("unreadable picture left out");
+            gaps.Add(DocumentGap.Of(HtmlGapCodes.HtmlUnreadablePictureLeftOut));
             return null;
         }
 
-        gaps.Add("picture format " + Format(picture.Image) + " left out");
+        gaps.Add(DocumentGap.Of(HtmlGapCodes.HtmlPictureFormatLeftOut, Format(picture.Image)));
         return null;
     }
 

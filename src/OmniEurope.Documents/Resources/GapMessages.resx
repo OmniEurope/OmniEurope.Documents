@@ -99,5 +99,140 @@
   <!-- end of Word and Excel to PDF, PDF rendering and redaction -->
 
   <!-- HTML, Markdown and HTML to Word: Html*, Markdown*, HtmlToWord* -->
+  <data name="HtmlParagraphWithoutAddress" xml:space="preserve">
+    <value>paragraphs without a source address (built in code, or read from alternate-content fallback markup) have no data-address</value>
+  </data>
+  <data name="HtmlUnreadablePictureLeftOut" xml:space="preserve">
+    <value>unreadable picture left out</value>
+  </data>
+  <data name="HtmlPictureFormatLeftOut" xml:space="preserve">
+    <value>picture format {0} left out</value>
+  </data>
+  <data name="HtmlTabStopsAsFixedTabs" xml:space="preserve">
+    <value>tab stops shown as tab characters of fixed width</value>
+  </data>
+  <data name="HtmlInkLeftOut" xml:space="preserve">
+    <value>ink is left out</value>
+  </data>
+  <data name="HtmlChartsLeftOut" xml:space="preserve">
+    <value>charts are left out</value>
+  </data>
+  <data name="HtmlColumnBreaksAsLineBreaks" xml:space="preserve">
+    <value>column breaks shown as line breaks</value>
+  </data>
+  <data name="HtmlPageNumberFieldsLastValue" xml:space="preserve">
+    <value>page number fields show their last computed value</value>
+  </data>
+  <data name="HtmlLinksOtherSchemeWithoutAddress" xml:space="preserve">
+    <value>links with an address other than http, https or mailto are left without their address</value>
+  </data>
+  <data name="HtmlBookmarksNotKept" xml:space="preserve">
+    <value>bookmarks are not kept: links to them point to anchors the page does not define</value>
+  </data>
+  <data name="HtmlFloatingShapesInTextFlow" xml:space="preserve">
+    <value>floating shapes are shown in the text flow</value>
+  </data>
+  <data name="HtmlBreaksComputedByBrowser" xml:space="preserve">
+    <value>line and page breaks are computed by the browser</value>
+  </data>
+  <data name="HtmlLineHeightsApproximated" xml:space="preserve">
+    <value>line heights are approximated (single spacing taken as 1.15 times the font size)</value>
+  </data>
+  <data name="HtmlCommentsLeftOut" xml:space="preserve">
+    <value>comments are left out</value>
+  </data>
+  <data name="HtmlFootnoteRestartContinues" xml:space="preserve">
+    <value>footnote numbering restarting at each page continues, the page has no pages</value>
+  </data>
+  <data name="HtmlUnequalColumnsAsEqual" xml:space="preserve">
+    <value>unequal columns shown as equal columns</value>
+  </data>
+  <data name="HtmlHeadersFootersLeftOut" xml:space="preserve">
+    <value>headers and footers other than the first section's default ones are left out</value>
+  </data>
+  <data name="HtmlFootnotesAtPageEnd" xml:space="preserve">
+    <value>footnotes are listed at the end of the page</value>
+  </data>
+  <data name="MarkdownReferencesToMissingNotesLeftOut" xml:space="preserve">
+    <value>references to notes the document does not hold are left out</value>
+  </data>
+  <data name="MarkdownEndnotesAsFootnotes" xml:space="preserve">
+    <value>endnotes are written as footnotes</value>
+  </data>
+  <data name="MarkdownHeadersFootersLeftOut" xml:space="preserve">
+    <value>headers and footers are left out</value>
+  </data>
+  <data name="MarkdownCommentsLeftOut" xml:space="preserve">
+    <value>comments are left out</value>
+  </data>
+  <data name="MarkdownTextBoxesAfterAnchor" xml:space="preserve">
+    <value>text boxes are written as paragraphs after the paragraph that anchors them</value>
+  </data>
+  <data name="MarkdownEmptyParagraphsLeftOut" xml:space="preserve">
+    <value>empty paragraphs are left out</value>
+  </data>
+  <data name="MarkdownListNumbersAsDigits" xml:space="preserve">
+    <value>list numbers in letters, roman numerals or words are written as numbers</value>
+  </data>
+  <data name="MarkdownMergedCellsKeepFirstText" xml:space="preserve">
+    <value>merged table cells keep their text in the first cell, the cells they cover are empty</value>
+  </data>
+  <data name="MarkdownNestedTablesAsText" xml:space="preserve">
+    <value>tables inside table cells are written as their text</value>
+  </data>
+  <data name="MarkdownCellParagraphsJoined" xml:space="preserve">
+    <value>several paragraphs in a table cell or a note are joined on one line</value>
+  </data>
+  <data name="MarkdownCellListItemsAsParagraphs" xml:space="preserve">
+    <value>list items inside table cells and notes are written as plain paragraphs</value>
+  </data>
+  <data name="MarkdownCellTextBoxesLeftOut" xml:space="preserve">
+    <value>text boxes inside table cells and notes are left out</value>
+  </data>
+  <data name="MarkdownParagraphFormattingNotPreserved" xml:space="preserve">
+    <value>paragraph formatting is not preserved</value>
+  </data>
+  <data name="MarkdownTabsAsTabCharacters" xml:space="preserve">
+    <value>tabs are written as tab characters</value>
+  </data>
+  <data name="MarkdownInkLeftOut" xml:space="preserve">
+    <value>ink is left out</value>
+  </data>
+  <data name="MarkdownChartsLeftOut" xml:space="preserve">
+    <value>charts are left out</value>
+  </data>
+  <data name="MarkdownFontsNotPreserved" xml:space="preserve">
+    <value>fonts and font sizes are not preserved</value>
+  </data>
+  <data name="MarkdownColoursNotPreserved" xml:space="preserve">
+    <value>text colours, highlighting and shading are not preserved</value>
+  </data>
+  <data name="MarkdownUnderlineScriptsAsPlainText" xml:space="preserve">
+    <value>underline, superscript and subscript are written as plain text</value>
+  </data>
+  <data name="MarkdownPageBreaksLeftOut" xml:space="preserve">
+    <value>page breaks are left out</value>
+  </data>
+  <data name="MarkdownColumnBreaksAsLineBreaks" xml:space="preserve">
+    <value>column breaks are written as line breaks</value>
+  </data>
+  <data name="MarkdownLinksOtherSchemeTextOnly" xml:space="preserve">
+    <value>links with an address other than http, https or mailto keep their text only</value>
+  </data>
+  <data name="MarkdownBookmarkLinksTextOnly" xml:space="preserve">
+    <value>links to bookmarks keep their text only</value>
+  </data>
+  <data name="MarkdownFloatingPicturesInTextFlow" xml:space="preserve">
+    <value>floating pictures are written in the text flow</value>
+  </data>
+  <data name="HtmlToWordLinkedStyleSheetsNotRead" xml:space="preserve">
+    <value>linked style sheets are not read (nothing is fetched)</value>
+  </data>
+  <data name="HtmlToWordImagesNotDataUris" xml:space="preserve">
+    <value>images that are not data: URIs are not loaded</value>
+  </data>
+  <data name="HtmlToWordUnrecognisedImageSkipped" xml:space="preserve">
+    <value>unrecognised embedded image skipped</value>
+  </data>
   <!-- end of HTML, Markdown and HTML to Word -->
 </root>

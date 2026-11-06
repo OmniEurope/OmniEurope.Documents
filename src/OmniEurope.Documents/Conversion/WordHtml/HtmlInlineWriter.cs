@@ -80,7 +80,7 @@ internal sealed class HtmlInlineWriter(HtmlContext context, HtmlOutput output, W
                 Text(text.Value, inline, null);
                 break;
             case WordTab:
-                context.Gaps.Add("tab stops shown as tab characters of fixed width");
+                context.Gaps.Add(DocumentGap.Of(HtmlGapCodes.HtmlTabStopsAsFixedTabs));
                 Text("\t", inline, null);
                 break;
             case WordSymbol symbol:
@@ -116,10 +116,10 @@ internal sealed class HtmlInlineWriter(HtmlContext context, HtmlOutput output, W
                 TextBoxes.Add(box);
                 break;
             case WordInk:
-                context.Gaps.Add("ink is left out");
+                context.Gaps.Add(DocumentGap.Of(HtmlGapCodes.HtmlInkLeftOut));
                 break;
             case WordChart:
-                context.Gaps.Add("charts are left out");
+                context.Gaps.Add(DocumentGap.Of(HtmlGapCodes.HtmlChartsLeftOut));
                 break;
         }
     }
@@ -149,7 +149,7 @@ internal sealed class HtmlInlineWriter(HtmlContext context, HtmlOutput output, W
 
         if (lineBreak.Kind == WordBreakKind.Column)
         {
-            context.Gaps.Add("column breaks shown as line breaks");
+            context.Gaps.Add(DocumentGap.Of(HtmlGapCodes.HtmlColumnBreaksAsLineBreaks));
         }
 
         output.Raw("<br>");
@@ -160,7 +160,7 @@ internal sealed class HtmlInlineWriter(HtmlContext context, HtmlOutput output, W
     {
         if (field.Kind is "PAGE" or "NUMPAGES" or "SECTIONPAGES")
         {
-            context.Gaps.Add("page number fields show their last computed value");
+            context.Gaps.Add(DocumentGap.Of(HtmlGapCodes.HtmlPageNumberFieldsLastValue));
         }
 
         Write(field.Result, field.ContentControls.Count);
@@ -194,13 +194,13 @@ internal sealed class HtmlInlineWriter(HtmlContext context, HtmlOutput output, W
                 return MarkdownUrl.Normalize(compact);
             }
 
-            context.Gaps.Add("links with an address other than http, https or mailto are left without their address");
+            context.Gaps.Add(DocumentGap.Of(HtmlGapCodes.HtmlLinksOtherSchemeWithoutAddress));
             return null;
         }
 
         if (link.Anchor is { Length: > 0 } anchor)
         {
-            context.Gaps.Add("bookmarks are not kept: links to them point to anchors the page does not define");
+            context.Gaps.Add(DocumentGap.Of(HtmlGapCodes.HtmlBookmarksNotKept));
             return "#" + MarkdownUrl.Normalize(anchor);
         }
 
@@ -239,7 +239,7 @@ internal sealed class HtmlInlineWriter(HtmlContext context, HtmlOutput output, W
     {
         if (shape.Floating is not null)
         {
-            context.Gaps.Add("floating shapes are shown in the text flow");
+            context.Gaps.Add(DocumentGap.Of(HtmlGapCodes.HtmlFloatingShapesInTextFlow));
         }
     }
 
