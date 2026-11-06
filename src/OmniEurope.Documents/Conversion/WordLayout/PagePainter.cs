@@ -69,8 +69,7 @@ internal sealed class PagePainter(LayoutContext context, bool bookmarks)
 
         var y = page.BodyBottom - page.NotesHeight;
         paint.Column = (page.BodyLeft, page.BodyWidth);
-        RuleItem.Separator(page.SeparatorHeight).Paint(paint, page.BodyLeft, y, page.BodyWidth);
-        y += page.SeparatorHeight;
+        y = Stack(paint, page.SeparatorItems, page.BodyLeft, y, page.BodyWidth);
         foreach (var note in page.Footnotes)
         {
             y = Stack(paint, note.Items, page.BodyLeft, y, page.BodyWidth);

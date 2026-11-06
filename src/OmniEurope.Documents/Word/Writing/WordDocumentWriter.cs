@@ -123,7 +123,7 @@ internal static class WordDocumentWriter
     {
         if (document.Footnotes.Count > 0)
         {
-            AddWrittenPart(parts, relationships, context, "word/footnotes.xml", w => WordPartsWriter.Notes("footnote", document.Footnotes.Values, w), FootnotesType, FootnotesContentType);
+            AddWrittenPart(parts, relationships, context, "word/footnotes.xml", w => WordPartsWriter.Notes("footnote", document.Footnotes.Values, w, document.FootnoteSeparator), FootnotesType, FootnotesContentType);
         }
 
         if (document.Endnotes.Count > 0)

@@ -176,6 +176,13 @@ internal static class WordStructureWriter
             new XAttribute(W + "gutter", ToTwips(page.Gutter))));
         Add(element, PageNumbers(page));
         element.Add(Columns(page));
+        Add(element, page.VerticalAlignment switch
+        {
+            WordPageVerticalAlignment.Center => ValElement("vAlign", "center"),
+            WordPageVerticalAlignment.Both => ValElement("vAlign", "both"),
+            WordPageVerticalAlignment.Bottom => ValElement("vAlign", "bottom"),
+            _ => null,
+        });
         Add(element, page.TitlePage ? new XElement(W + "titlePg") : null);
         return element;
     }

@@ -59,8 +59,14 @@ internal sealed class PageFrame
     /// <summary>The floating shapes anchored in the body paragraphs placed on the page.</summary>
     public List<PlacedFloat> Floats { get; } = [];
 
-    /// <summary>Height of the separator line drawn above the footnotes.</summary>
-    public double SeparatorHeight { get; set; }
+    /// <summary>The separator drawn above the footnotes, laid out at the page's body width.</summary>
+    public List<FlowItem> SeparatorItems { get; set; } = [];
+
+    /// <summary>Height of the separator drawn above the footnotes.</summary>
+    public double SeparatorHeight => SeparatorItems.Sum(i => i.SpaceBefore + i.Height + i.SpaceAfter);
+
+    /// <summary>The page ended where its body was full, not at a page or section break.</summary>
+    public bool Full { get; set; }
 
     public double NotesHeight => Footnotes.Count == 0 ? 0 : SeparatorHeight + Footnotes.Sum(n => n.Height);
 }

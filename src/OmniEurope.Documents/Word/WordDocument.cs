@@ -47,6 +47,11 @@ public sealed class WordDocument
     /// <summary>Footnotes by id (separators excluded).</summary>
     public Dictionary<int, WordNote> Footnotes { get; } = [];
 
+    /// <summary>The content of the separator drawn above the footnotes (the <c>w:separator</c> footnote) when it is
+    /// not Word's default rule, for example a paragraph with a top border and a right indent; null for the default
+    /// rule (a 144 pt line), which a separator holding Word's separator mark also gives.</summary>
+    public List<WordBlock>? FootnoteSeparator { get; set; }
+
     /// <summary>Endnotes by id (separators excluded).</summary>
     public Dictionary<int, WordNote> Endnotes { get; } = [];
 

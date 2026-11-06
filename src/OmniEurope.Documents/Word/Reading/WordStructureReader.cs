@@ -173,8 +173,17 @@ internal static class WordStructureReader
             PageNumberStart = Int(Attr(numbers, "start")),
             PageNumberFormat = NumberFormat(Attr(numbers, "fmt")) ?? WordNumberFormat.Decimal,
             FootnoteNumbering = NoteNumbering(sectPr.Element(W + "footnotePr")),
+            VerticalAlignment = VerticalAlignment(Val(sectPr, "vAlign")),
         };
     }
+
+    private static WordPageVerticalAlignment VerticalAlignment(string? value) => value switch
+    {
+        "center" => WordPageVerticalAlignment.Center,
+        "both" => WordPageVerticalAlignment.Both,
+        "bottom" => WordPageVerticalAlignment.Bottom,
+        _ => WordPageVerticalAlignment.Top,
+    };
 
     private static WordNoteNumbering? NoteNumbering(XElement? properties)
     {

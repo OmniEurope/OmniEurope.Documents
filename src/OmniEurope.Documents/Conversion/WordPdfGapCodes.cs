@@ -15,6 +15,7 @@ internal static class WordPdfGapCodes
     public static readonly GapCode PdfFontReplaced = new(nameof(PdfFontReplaced));
     public static readonly GapCode PdfCalibriLightReplaced = new(nameof(PdfCalibriLightReplaced));
     public static readonly GapCode PdfContentTallerThanPage = new(nameof(PdfContentTallerThanPage));
+    public static readonly GapCode PdfVerticalAlignmentNotApplied = new(nameof(PdfVerticalAlignmentNotApplied));
     public static readonly GapCode PdfSymbolCharactersApproximated = new(nameof(PdfSymbolCharactersApproximated));
     public static readonly GapCode PdfChartTypeNotDrawn = new(nameof(PdfChartTypeNotDrawn));
     public static readonly GapCode PdfChartPointLimit = new(nameof(PdfChartPointLimit));

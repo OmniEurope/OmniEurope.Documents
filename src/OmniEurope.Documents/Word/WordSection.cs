@@ -20,6 +20,23 @@ public enum WordSectionStart
     NextColumn,
 }
 
+/// <summary>Where the text of a section's pages stands between the top and bottom margins (<c>w:vAlign</c>).</summary>
+public enum WordPageVerticalAlignment
+{
+    /// <summary>At the top (the default).</summary>
+    Top,
+
+    /// <summary>Centred between the margins.</summary>
+    Center,
+
+    /// <summary>Spread from the top to the bottom margin: the free space of a full page goes between its paragraphs
+    /// (Word's "Justified"); the last page of the section and a page ended by a break stay at the top.</summary>
+    Both,
+
+    /// <summary>Against the bottom margin.</summary>
+    Bottom,
+}
+
 /// <summary>Which pages a header or footer applies to.</summary>
 public enum WordHeaderFooterKind
 {
@@ -103,6 +120,9 @@ public sealed record WordPageSetup
     /// <summary>Footnote numbering of the section (<c>w:sectPr/w:footnotePr</c>); null, or a member left null,
     /// follows <see cref="WordSettings"/>.</summary>
     public WordNoteNumbering? FootnoteNumbering { get; init; }
+
+    /// <summary>Where the text stands between the top and bottom margins (<c>w:vAlign</c>).</summary>
+    public WordPageVerticalAlignment VerticalAlignment { get; init; }
 
     /// <summary>The same setup turned to landscape (width and height swapped).</summary>
     public WordPageSetup ToLandscape() => Landscape ? this : this with { Landscape = true, Width = Height, Height = Width };

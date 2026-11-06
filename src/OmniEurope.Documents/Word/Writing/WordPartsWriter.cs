@@ -153,11 +153,14 @@ internal static class WordPartsWriter
         }
     }
 
-    /// <summary>A footnotes or endnotes part: the two separators, then the notes.</summary>
-    public static XElement Notes(string kind, IEnumerable<WordNote> notes, WordContentWriter writer)
+    /// <summary>A footnotes or endnotes part: the two separators (the first with <paramref name="separator"/> as its
+    /// content when given), then the notes.</summary>
+    public static XElement Notes(string kind, IEnumerable<WordNote> notes, WordContentWriter writer, List<WordBlock>? separator = null)
     {
         var root = new XElement(W + kind + "s", Namespaces());
-        root.Add(Separator(kind, -1, "separator"), Separator(kind, 0, "continuationSeparator"));
+        var first = separator is null ? Separator(kind, -1, "separator")
+            : new XElement(W + kind, new XAttribute(W + "type", "separator"), new XAttribute(W + "id", "-1"), writer.Container(separator));
+        root.Add(first, Separator(kind, 0, "continuationSeparator"));
         foreach (var note in notes.Where(n => n.Id > 0).OrderBy(n => n.Id))
         {
             root.Add(new XElement(W + kind, new XAttribute(W + "id", Format(note.Id)), writer.Container(note.Blocks)));

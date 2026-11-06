@@ -8,6 +8,15 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- Word to PDF draws the document's own footnote separator: `WordDocument.FootnoteSeparator` holds the content of the
+  `w:separator` footnote when it is not Word's default rule (for example a paragraph with a top border and a right
+  indent), read, written back on save and laid out above the footnotes, its height taken from the body; a separator
+  holding Word's separator mark keeps the 144 pt rule.
+- Vertical page alignment: `WordPageSetup.VerticalAlignment` (`w:vAlign`: top, centre, justified, bottom) is read,
+  written and honoured by Word to PDF. A justified full page shares its free space between its paragraphs so that its
+  last line ends on the bottom margin (above the footnotes); the last page of the section and a page ended by a break
+  stay at the top, as in Word. A page with floating shapes or a continuous section break stays at the top and is
+  reported.
 - Localizable gaps: every gap of the engine carries a stable code (`DocumentGap`: `Code`, `Arguments`, `Message`),
   described in the language of a culture by `DocumentGap.Describe` (English and French shipped, the current UI
   culture by default). The results that list gaps gain `GapDetails`, in the order of their `Gaps`, whose English

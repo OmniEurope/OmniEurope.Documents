@@ -54,6 +54,7 @@ internal static class WordDocumentReader
         };
         document.Numbering = WordPartsReader.Numbering(Part(package, relationships, NumberingType), document.Styles);
         ReadNotes(context, relationships, FootnotesType, "footnote", document.Footnotes);
+        document.FootnoteSeparator = FootnoteSeparator(context, relationships);
         ReadNotes(context, relationships, EndnotesType, "endnote", document.Endnotes);
         ReadComments(context, relationships, document.Comments);
         ReadBody(context, main, document);
@@ -186,6 +187,14 @@ internal static class WordDocumentReader
             result.Blocks.AddRange(new WordContentReader(context, part!, id).Blocks(note));
             notes[id] = result;
         }
+    }
+
+    // The w:separator footnote, unless it holds Word's separator mark (the default rule).
+    private static List<WordBlock>? FootnoteSeparator(WordReadContext context, List<OpcRelationship> relationships)
+    {
+        var part = relationships.Find(r => r.Type == FootnotesType && !r.External)?.Target;
+        var separator = part is null ? null : context.Package.GetXml(part)?.Root?.Elements(W + "footnote").FirstOrDefault(n => Attr(n, "type") == "separator");
+        return separator is null || separator.Descendants(W + "separator").Any() ? null : [.. new WordContentReader(context, part!).Blocks(separator)];
     }
 
     private static void ReadComments(WordReadContext context, List<OpcRelationship> relationships, List<WordComment> comments)

@@ -156,6 +156,9 @@
   <data name="PdfContentTallerThanPage" xml:space="preserve">
     <value>content taller than a page runs past its bottom</value>
   </data>
+  <data name="PdfVerticalAlignmentNotApplied" xml:space="preserve">
+    <value>vertical page alignment left at the top on a page with floating shapes or a continuous section break</value>
+  </data>
   <data name="PdfSymbolCharactersApproximated" xml:space="preserve">
     <value>symbol font characters approximated</value>
   </data>

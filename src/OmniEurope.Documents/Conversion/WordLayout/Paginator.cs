@@ -19,6 +19,7 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
     private readonly List<PageFrame> _pages = [];
     private readonly Dictionary<(WordHeaderFooter, double), List<FlowItem>> _headerCache = [];
     private readonly Dictionary<int, PlacedNote> _noteCache = [];
+    private readonly Dictionary<double, List<FlowItem>> _separatorCache = [];
     private List<FlowItem> _queue = [];
     private PageFrame _page = null!;
     private Region _region = null!;
@@ -53,6 +54,11 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
 
             StartSection(s);
             Place(items);
+        }
+
+        foreach (var page in _pages)
+        {
+            PageAlignment.Apply(page, context.Gaps);
         }
 
         return _pages;
@@ -304,7 +310,7 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
     private double Bottom(FlowItem item)
     {
         var notes = NewNotes(item).ToList();
-        var extra = notes.Sum(n => n.Height) + (notes.Count > 0 && _page.Footnotes.Count == 0 ? Separator() : 0);
+        var extra = notes.Sum(n => n.Height) + (notes.Count > 0 && _page.Footnotes.Count == 0 ? FootnoteSeparator(_page.BodyWidth).Sum(i => i.SpaceBefore + i.Height + i.SpaceAfter) : 0);
         return Math.Min(_page.BodyBottom - _page.NotesHeight - extra, _limit ?? double.PositiveInfinity);
     }
 
@@ -317,7 +323,7 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
         _region.Bottoms[_column] = Math.Max(_region.Bottoms[_column], Math.Min(_y, _page.BodyBottom));
         foreach (var note in NewNotes(item).ToList())
         {
-            _page.SeparatorHeight = Separator();
+            _page.SeparatorItems = FootnoteSeparator(_page.BodyWidth);
             _page.Footnotes.Add(note);
         }
 
@@ -363,6 +369,11 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
 
     private void NewPage(bool firstOfSection, bool natural = false)
     {
+        if (_pages.Count > 0)
+        {
+            _page.Full = natural;
+        }
+
         var setup = _section.Page;
         var number = firstOfSection && setup.PageNumberStart is { } start ? start : (_pages.Count == 0 ? 1 : _pages[^1].PageNumber + 1);
         var width = setup.ContentWidth;
@@ -435,6 +446,18 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
     }
 
     private double Separator() => context.Metrics(DefaultStyle()).LineHeight;
+
+    // The footnote separator of the document laid out at a width, or Word's default rule.
+    private List<FlowItem> FootnoteSeparator(double width)
+    {
+        if (!_separatorCache.TryGetValue(width, out var items))
+        {
+            items = context.Document.FootnoteSeparator is { } separator ? blocks.Layout(separator, width, numbering: false) : [RuleItem.Separator(Separator())];
+            _separatorCache[width] = items;
+        }
+
+        return items;
+    }
 
     private TextStyle DefaultStyle() => TextStyle.From(context.Styles.ResolveRun(WordParagraphProperties.Empty, WordRunProperties.Empty));
 
