@@ -34,9 +34,13 @@ internal sealed class PageFrame
 
     public int PageNumber { get; init; }
 
-    public List<FlowItem> Header { get; init; } = [];
+    public List<FlowItem> Header { get; set; } = [];
 
-    public List<FlowItem> Footer { get; init; } = [];
+    public List<FlowItem> Footer { get; set; } = [];
+
+    /// <summary>The header and footer parts drawn on the page, which <see cref="PageFields"/> lays out again with the
+    /// page's own field values.</summary>
+    public (WordHeaderFooter? Header, WordHeaderFooter? Footer) Parts { get; init; }
 
     public double HeaderHeight => Header.Sum(i => i.SpaceBefore + i.Height + i.SpaceAfter);
 

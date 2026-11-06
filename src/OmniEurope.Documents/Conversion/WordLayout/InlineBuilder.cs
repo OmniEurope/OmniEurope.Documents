@@ -117,7 +117,7 @@ internal sealed class InlineBuilder(RunResolver resolver, ShapeFactory shapes, b
         switch (inline)
         {
             case WordField field when field.Kind is "PAGE" or "NUMPAGES" or "SECTIONPAGES":
-                var sample = field.Result.Count > 0 ? WordInline.TextOf(field.Result) : "1";
+                var sample = Context.Fields?.Text(field.Kind) ?? (field.Result.Count > 0 ? WordInline.TextOf(field.Result) : "1");
                 Add(new FieldToken(style, field.Kind) { Width = Context.Measure(sample.Length > 0 ? sample : "1", style) });
                 break;
             case WordField field:

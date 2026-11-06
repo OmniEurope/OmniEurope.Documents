@@ -75,6 +75,10 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Fixed
 
+- Word to PDF lays headers and footers out again for each page, so a PAGE, NUMPAGES or SECTIONPAGES field takes the
+  width of the value it shows there instead of that of its cached result: a "10/27" footer no longer overlaps itself.
+- Word to PDF keeps the header rows of a table (`w:tblHeader`) with its first body row: when that row does not fit
+  under them at the bottom of a page, both move to the next page, as in Word.
 - PDF redaction removes `ActualText`, `Alt` and `E` from named marked-content properties, including those shared with
   aliases, forms and other pages.
 - Deeply nested indirect stream lengths are refused with `InvalidDataException` instead of overflowing the stack.

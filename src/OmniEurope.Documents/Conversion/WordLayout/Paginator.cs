@@ -56,6 +56,7 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
             Place(items);
         }
 
+        PageFields.Apply(_pages, context, blocks);
         foreach (var page in _pages)
         {
             PageAlignment.Apply(page, context.Gaps);
@@ -382,21 +383,26 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
             Section = _section,
             Setup = setup,
             PageNumber = number,
-            Header = HeaderFooter(_section.Headers, setup, firstOfSection, number, width),
-            Footer = HeaderFooter(_section.Footers, setup, firstOfSection, number, width),
+            Parts = (Part(_section.Headers, setup, firstOfSection, number), Part(_section.Footers, setup, firstOfSection, number)),
         };
+        (_page.Header, _page.Footer) = (HeaderFooter(_page.Parts.Header, width), HeaderFooter(_page.Parts.Footer, width));
         _pages.Add(_page);
         _region = NewRegion(_page.BodyTop, setup);
         _page.Regions.Add(_region);
         (_column, _y, _natural) = (0, _region.Top, natural);
     }
 
-    private List<FlowItem> HeaderFooter(Dictionary<WordHeaderFooterKind, WordHeaderFooter> parts, WordPageSetup setup, bool firstOfSection, int number, double width)
+    private WordHeaderFooter? Part(Dictionary<WordHeaderFooterKind, WordHeaderFooter> parts, WordPageSetup setup, bool firstOfSection, int number)
     {
         var kind = setup.TitlePage && firstOfSection ? WordHeaderFooterKind.First
             : context.Document.Settings.EvenAndOddHeaders && number % 2 == 0 ? WordHeaderFooterKind.Even
             : WordHeaderFooterKind.Default;
-        if (!parts.TryGetValue(kind, out var content))
+        return parts.GetValueOrDefault(kind);
+    }
+
+    private List<FlowItem> HeaderFooter(WordHeaderFooter? content, double width)
+    {
+        if (content is null)
         {
             return [];
         }

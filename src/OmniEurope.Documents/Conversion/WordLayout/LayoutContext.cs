@@ -29,6 +29,10 @@ internal sealed class LayoutContext
 
     public WordStyleSheet Styles => Document.Styles;
 
+    /// <summary>The field values of the page a header or footer is laid out for; null while the page count is unknown,
+    /// when page fields take the width of their cached result.</summary>
+    public FieldValues? Fields { get; set; }
+
     public WordListCounter Lists { get; private set; }
 
     /// <summary>Runs <paramref name="layout"/> with other list counters, then puts the current ones back.</summary>

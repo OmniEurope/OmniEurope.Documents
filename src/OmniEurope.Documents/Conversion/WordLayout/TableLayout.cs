@@ -43,6 +43,12 @@ internal sealed class TableLayout(LayoutContext context, BlockLayout blocks)
             rows.Add(row);
         }
 
+        // Word keeps the header rows together and with the first body row: none of them ends a page alone.
+        foreach (var kept in rows.Skip(1).Take(shared.HeaderRows.Count))
+        {
+            kept.CanBreakBefore = false;
+        }
+
         MergeVertically(rows);
         return rows;
     }

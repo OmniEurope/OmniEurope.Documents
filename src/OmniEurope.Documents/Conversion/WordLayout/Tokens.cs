@@ -36,11 +36,17 @@ internal sealed class PaintContext(PdfCanvas canvas, LayoutContext layout)
     /// <summary>Where the floating shapes of the page body were placed, by anchor.</summary>
     public IReadOnlyDictionary<AnchorToken, (double X, double Y)> Floats { get; init; } = new Dictionary<AnchorToken, (double X, double Y)>();
 
-    public string FieldText(string kind) => kind switch
+    public string FieldText(string kind) => new FieldValues(PageNumber, PageFormat, PageCount, SectionPages).Text(kind);
+}
+
+/// <summary>The values the page fields of one page show: its number, the page count and the page count of its section.</summary>
+internal sealed record FieldValues(int Page, WordNumberFormat Format, int Pages, int SectionPages)
+{
+    public string Text(string kind) => kind switch
     {
-        "NUMPAGES" => PageCount.ToString(CultureInfo.InvariantCulture),
+        "NUMPAGES" => Pages.ToString(CultureInfo.InvariantCulture),
         "SECTIONPAGES" => SectionPages.ToString(CultureInfo.InvariantCulture),
-        _ => WordNumbering.FormatNumber(PageNumber, PageFormat),
+        _ => WordNumbering.FormatNumber(Page, Format),
     };
 }
 
