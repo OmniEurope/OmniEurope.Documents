@@ -133,7 +133,7 @@ internal static class WordPartsWriter
                 W + "compatSetting",
                 new XAttribute(W + "name", "compatibilityMode"),
                 new XAttribute(W + "uri", "http://schemas.microsoft.com/office/word"),
-                new XAttribute(W + "val", "15"))));
+                new XAttribute(W + "val", Format(settings.CompatibilityMode)))));
         return root;
     }
 

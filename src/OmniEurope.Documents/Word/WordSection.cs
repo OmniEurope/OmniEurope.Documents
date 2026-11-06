@@ -271,6 +271,10 @@ public sealed record WordSettings
 
     /// <summary>Ask the editing application to update fields on open.</summary>
     public bool UpdateFieldsOnOpen { get; init; }
+
+    /// <summary>The Word version whose layout rules the document follows (<c>w:compatSetting compatibilityMode</c>): 15 for
+    /// Word 2013 and later, 14 for Word 2010, 12 for Word 2007 and for a loaded document that names none.</summary>
+    public int CompatibilityMode { get; init; } = 15;
 }
 
 /// <summary>Core document properties.</summary>

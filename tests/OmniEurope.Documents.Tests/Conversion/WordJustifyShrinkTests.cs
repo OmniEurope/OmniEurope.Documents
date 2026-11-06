@@ -51,6 +51,29 @@ public sealed class WordJustifyShrinkTests
         Assert.Equal(["a b c d", "e f"], Texts(lines));
     }
 
+    [Theory]
+    [InlineData(14)]
+    [InlineData(12)]
+    public void A_document_in_an_earlier_compatibility_mode_pushes_the_word_to_the_next_line(int mode)
+    {
+        var context = new LayoutContext(new WordDocument { Settings = new WordSettings { CompatibilityMode = mode } }, new PdfDocumentBuilder());
+
+        var lines = Break(WordAlignment.Justify, Words(16.5, 6), context);
+
+        Assert.Equal(["a b c d", "e f"], Texts(lines));
+    }
+
+    [Theory]
+    [InlineData(14)]
+    [InlineData(15)]
+    public void The_compatibility_mode_survives_a_round_trip(int mode)
+    {
+        var document = new WordDocument { Settings = new WordSettings { CompatibilityMode = mode } };
+        document.AddParagraph("Texte");
+
+        Assert.Equal(mode, WordDocument.Load(document.ToArray()).Settings.CompatibilityMode);
+    }
+
     [Fact]
     public void Carlito_text_of_a_synthetic_paragraph_breaks_where_the_shrunk_line_fits()
     {
@@ -105,8 +128,8 @@ public sealed class WordJustifyShrinkTests
         return tokens;
     }
 
-    private static List<Line> Break(WordAlignment alignment, List<Token> tokens) =>
-        new LineBreaker(Context, new LineGeometry(100, 0, 100, 0, [], 36, alignment, null, WordLineSpacingRule.Multiple, Style)).Break(tokens);
+    private static List<Line> Break(WordAlignment alignment, List<Token> tokens, LayoutContext? context = null) =>
+        new LineBreaker(context ?? Context, new LineGeometry(100, 0, 100, 0, [], 36, alignment, null, WordLineSpacingRule.Multiple, Style)).Break(tokens);
 
     private static string[] Texts(List<Line> lines) =>
         lines.Select(l => string.Concat(l.Items.Select(i => i.Token is TextToken t ? t.Text : string.Empty)).TrimEnd()).ToArray();

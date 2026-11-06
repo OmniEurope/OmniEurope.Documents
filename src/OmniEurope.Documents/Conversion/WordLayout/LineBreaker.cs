@@ -73,8 +73,9 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
     private const double Epsilon = 0.01;
 
     // Word 2013 and later (compatibility mode 15) fit a word on a justified line by shrinking the spaces of the line,
-    // by a quarter of their width at most. Measured on Word 365 exports: spaces shrunk by 23 % on a line that took one
-    // more word, while another line needing 26 % for its next word did not take it.
+    // by a quarter of their width at most; earlier modes push the word to the next line. Measured on Word 365 exports:
+    // spaces shrunk by 23 % on a line that took one more word, while another line needing 26 % for its next word did not
+    // take it.
     private const double MaxSpaceShrink = 0.25;
     private List<Token> _tokens = [];
 
@@ -225,6 +226,7 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
 
         // A justified line takes a word it overflows by no more than its spaces can give up (see MaxSpaceShrink).
         return !(geometry.Alignment == WordAlignment.Justify
+            && context.Document.Settings.CompatibilityMode >= 15
             && state.X + token.Width - (state.SpaceWidth * MaxSpaceShrink) <= state.Right + Epsilon
             && ContinuesAfter(k));
     }

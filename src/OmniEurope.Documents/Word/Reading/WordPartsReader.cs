@@ -211,7 +211,7 @@ internal static class WordPartsReader
         var result = new WordSettings();
         if (root is null)
         {
-            return result;
+            return result with { CompatibilityMode = 12 };
         }
 
         var footnotes = root.Element(W + "footnotePr");
@@ -226,8 +226,13 @@ internal static class WordPartsReader
             FootnoteRestart = WordStructureReader.NoteRestart(Val(footnotes, "numRestart")) ?? WordNoteRestart.Continuous,
             EndnoteFormat = WordStructureReader.NumberFormat(Val(endnotes, "numFmt")) ?? result.EndnoteFormat,
             EndnoteStart = Int(Val(endnotes, "numStart")) ?? result.EndnoteStart,
+            CompatibilityMode = CompatibilityMode(root),
         };
     }
+
+    // Word opens a document whose settings name no compatibility mode as a Word 2007 one.
+    private static int CompatibilityMode(XElement settings) =>
+        Int(Attr(settings.Element(W + "compat")?.Elements(W + "compatSetting").FirstOrDefault(s => Attr(s, "name") == "compatibilityMode"), "val")) ?? 12;
 
     public static WordInformation Information(XDocument? core)
     {

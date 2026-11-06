@@ -85,8 +85,10 @@ Notable changes to this project are documented here, following the Keep a Change
 - `CsvReader` detects the delimiter whatever the read sizes of the `TextReader`, and `CsvWriter` keeps the encoder and
   decoder fallbacks of the given encoding.
 - `ROUND`, `ROUNDUP` and `ROUNDDOWN` no longer abort a recalculation on extreme digit counts or values.
-- A justified line takes a word that overflows it by shrinking its spaces by a quarter of their width at most, as Word
-  does, so its line breaks match Word's.
+- A justified line of a document in compatibility mode 15 (Word 2013 and later) takes a word that overflows it by
+  shrinking its spaces by a quarter of their width at most, as Word does, so its line breaks match Word's; a document
+  in an earlier mode (Word 2010 and before) keeps pushing the word to the next line. `WordSettings.CompatibilityMode`
+  is read from and written to the settings part.
 - Word to PDF reports Calibri Light drawn with Carlito Regular (same widths, no light weight).
 - A document saved from the model writes a theme part holding its theme fonts, so styles that name a theme font keep
   their font after a save (the colour scheme written is Office's default).
