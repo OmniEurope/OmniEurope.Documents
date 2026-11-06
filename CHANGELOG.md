@@ -4,39 +4,6 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ## [Unreleased]
 
-### Added
-
-- HTML under a strict Content-Security-Policy: `WordHtmlOptions.StyleSheetHref` and `ExcelHtmlOptions.StyleSheetHref`
-  link the style sheet instead of embedding it, `StyleSheetNonce` (both options) writes a nonce on the `style` or
-  `link` element (only a CSP base64 value is accepted, anything else throws `ArgumentException`),
-  `WordHtmlOptions.ImageUrlPrefix` serves pictures apart (`WordHtmlResult.Images`: name, media type, bytes) instead
-  of `data:` URIs. `WordHtmlResult.StyleSheet` and `ExcelToHtml.ConvertWithStyleSheet` (`ExcelHtmlResult`) give the
-  sheet to serve as a file.
-
-### Changed
-
-- Filling a combo box content control (`FillContentControls`, `SelectItem`) with text that matches no entry writes it as free text, as Word does (placeholder state cleared, run formatting kept, no entry selected); a drop-down list still refuses a value outside its entries and reports a gap.
-- A Word document loaded from a .docx that carries a theme part keeps that theme on save (colour scheme, format scheme and the rest), only the latin theme fonts follow the model's `MajorFont` and `MinorFont`; a document without a theme part keeps the previous behaviour.
-- Word to HTML writes no `style` attribute any more: the formatting of each element is a generated class
-  (`omni-sN`, identical formatting sharing one class) of the page's style sheet; the page renders as before. A
-  consumer that keeps only the body must now include the style sheet.
-- `HtmlToWord.Convert` reads the rules of the page's own `style` elements whose selector is a single class (or a list
-  of single classes), in sheet order, under the `style` attribute: a page of Word to HTML converts back to Word with
-  the same formatting as the former page with `style` attributes (the screen highlight of `HighlightAddress`, a
-  display mark, is not carried into the document). Other selectors and at-rules are ignored; a linked
-  style sheet is never fetched and is reported in the gaps. `HtmlToWord.Append` (a tree, not a page) is unchanged.
-- Rendering a Word 365 export is about ten times faster: a clip rectangle covering the whole page (Word opens many drawings with one) no longer builds a full-page mask; the rendered pixels are unchanged.
-- `PdfPageComparison` is about five times faster on the comparison itself (a pixel close to the one at the same position skips the neighbourhood scans, RGB images are read in place) and PNG encoding filters each row in a dedicated loop; results and PNG bytes are unchanged.
-
-### Fixed
-
-- `HtmlToWord.Convert` reads a page's class rules in time proportional to the sheet and the elements, whatever
-  the sheet repeats (each rule is parsed once and only the properties the conversion reads are kept), and skips a
-  `style` element meant for another medium (`media` other than `all` or `screen`) or another language (`type`
-  other than `text/css`), so a print-only `display:none` no longer drops content.
-- An ink part holding a value past any real coordinate (or a number too long to be finite) is refused and
-  reported as unreadable, its picture drawn instead, rather than scaled into invalid coordinates.
-
 ## [1.1.0] - 2026-11-04
 
 ### Added
@@ -65,6 +32,12 @@ Notable changes to this project are documented here, following the Keep a Change
   The core does not reference it, so a WebAssembly host may load it lazily.
 - `WordPdfResult.Fonts` lists each font family a converted document asks for, with the font that drew it (`FontUse`).
   `FontLibrary` gains `Register(TrueTypeFont)`, `AddSubstitute`, `SetClassFallbacks` and `Describe`.
+- HTML under a strict Content-Security-Policy: `WordHtmlOptions.StyleSheetHref` and `ExcelHtmlOptions.StyleSheetHref`
+  link the style sheet instead of embedding it, `StyleSheetNonce` (both options) writes a nonce on the `style` or
+  `link` element (only a CSP base64 value is accepted, anything else throws `ArgumentException`),
+  `WordHtmlOptions.ImageUrlPrefix` serves pictures apart (`WordHtmlResult.Images`: name, media type, bytes) instead
+  of `data:` URIs. `WordHtmlResult.StyleSheet` and `ExcelToHtml.ConvertWithStyleSheet` (`ExcelHtmlResult`) give the
+  sheet to serve as a file.
 
 ### Changed
 
@@ -73,6 +46,18 @@ Notable changes to this project are documented here, following the Keep a Change
   `COUNTIFS` and their kin now return `#VALUE!` for ranges of one cell count but different shapes.
 - `WordTable.Text` and Word to PDF leave out rows deleted with change tracking, as HTML and Markdown already did.
 - `WordToMarkdown` reports fonts, colours and paragraph formatting that differ from the defaults of the document.
+- Filling a combo box content control (`FillContentControls`, `SelectItem`) with text that matches no entry writes it as free text, as Word does (placeholder state cleared, run formatting kept, no entry selected); a drop-down list still refuses a value outside its entries and reports a gap.
+- A Word document loaded from a .docx that carries a theme part keeps that theme on save (colour scheme, format scheme and the rest), only the latin theme fonts follow the model's `MajorFont` and `MinorFont`; a document without a theme part keeps the previous behaviour.
+- Word to HTML writes no `style` attribute any more: the formatting of each element is a generated class
+  (`omni-sN`, identical formatting sharing one class) of the page's style sheet; the page renders as before. A
+  consumer that keeps only the body must now include the style sheet.
+- `HtmlToWord.Convert` reads the rules of the page's own `style` elements whose selector is a single class (or a list
+  of single classes), in sheet order, under the `style` attribute: a page of Word to HTML converts back to Word with
+  the same formatting as the former page with `style` attributes (the screen highlight of `HighlightAddress`, a
+  display mark, is not carried into the document). Other selectors and at-rules are ignored; a linked
+  style sheet is never fetched and is reported in the gaps. `HtmlToWord.Append` (a tree, not a page) is unchanged.
+- Rendering a Word 365 export is about ten times faster: a clip rectangle covering the whole page (Word opens many drawings with one) no longer builds a full-page mask; the rendered pixels are unchanged.
+- `PdfPageComparison` is about five times faster on the comparison itself (a pixel close to the one at the same position skips the neighbourhood scans, RGB images are read in place) and PNG encoding filters each row in a dedicated loop; results and PNG bytes are unchanged.
 
 ### Fixed
 
@@ -91,6 +76,12 @@ Notable changes to this project are documented here, following the Keep a Change
 - Word to PDF reports Calibri Light drawn with Carlito Regular (same widths, no light weight).
 - A document saved from the model writes a theme part holding its theme fonts, so styles that name a theme font keep
   their font after a save (the colour scheme written is Office's default).
+- `HtmlToWord.Convert` reads a page's class rules in time proportional to the sheet and the elements, whatever
+  the sheet repeats (each rule is parsed once and only the properties the conversion reads are kept), and skips a
+  `style` element meant for another medium (`media` other than `all` or `screen`) or another language (`type`
+  other than `text/css`), so a print-only `display:none` no longer drops content.
+- An ink part holding a value past any real coordinate (or a number too long to be finite) is refused and
+  reported as unreadable, its picture drawn instead, rather than scaled into invalid coordinates.
 
 ### Known limits
 
