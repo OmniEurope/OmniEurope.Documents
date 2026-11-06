@@ -100,7 +100,12 @@ public sealed record WordContentControl
 /// <summary>A value that <see cref="WordEditor.FillContentControls"/> refused; the control is left unchanged.</summary>
 /// <param name="Tag">The tag of the control.</param>
 /// <param name="Reason">Why the value was refused.</param>
-public sealed record WordContentControlGap(string Tag, string Reason);
+public sealed record WordContentControlGap(string Tag, string Reason)
+{
+    /// <summary>The reason with its code, to describe it in another language (<see cref="DocumentGap.Describe"/>);
+    /// its <see cref="DocumentGap.Message"/> is <see cref="Reason"/>.</summary>
+    public DocumentGap ReasonDetail { get; init; } = DocumentGap.FromText(Reason);
+}
 
 /// <summary>What filling content controls did.</summary>
 /// <param name="Filled">The tags of which at least one control was filled, in the order given.</param>

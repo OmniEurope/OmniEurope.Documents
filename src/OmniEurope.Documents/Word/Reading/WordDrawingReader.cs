@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: EUPL-1.2
 using System.Globalization;
 using System.Xml.Linq;
+using OmniEurope.Documents.Internal;
 using static OmniEurope.Documents.Word.WordXml;
 
 namespace OmniEurope.Documents.Word.Reading;
@@ -46,7 +47,7 @@ internal sealed class WordDrawingReader(WordContentReader owner)
         PictureUri => Picture(data!.Descendants(A + "blip").FirstOrDefault()?.Attribute(R + "embed")?.Value, width, height),
         ChartUri => Chart(data!, width, height),
         InkUri => (_ink ??= new WordInkReader(owner, this)).Read(data!, width, height),
-        ShapeUri => Fitted(TextBox(data!.Descendants(W + "txbxContent").FirstOrDefault(), width, height, "shape without text"), data!.Descendants(A + "spAutoFit").Any()),
+        ShapeUri => Fitted(TextBox(data!.Descendants(W + "txbxContent").FirstOrDefault(), width, height, ReadGapCodes.ReadShapeWithoutTextSkipped), data!.Descendants(A + "spAutoFit").Any()),
         var uri => Unsupported(uri),
     };
 
@@ -69,7 +70,7 @@ internal sealed class WordDrawingReader(WordContentReader owner)
         var box = container.Descendants(W + "txbxContent").FirstOrDefault();
         WordShape? result = imageData is not null ? Picture(imageData.Attribute(R + "id")?.Value, width, height)
             : box is null ? Unsupported("VML shape")
-            : TextBox(box, width, height, "VML shape");
+            : TextBox(box, width, height, ReadGapCodes.ReadVmlShapeSkipped);
         if (result is not null)
         {
             result.Floating = VmlFloating(style, container);
@@ -152,7 +153,7 @@ internal sealed class WordDrawingReader(WordContentReader owner)
         var relationship = owner.Relationship(relationshipId);
         if (relationship is null || relationship.External)
         {
-            owner.Context.Gaps.Add("linked or missing picture skipped");
+            owner.Context.Gaps.Add(DocumentGap.Of(ReadGapCodes.ReadPictureLinkedSkipped));
             return null;
         }
 
@@ -173,22 +174,22 @@ internal sealed class WordDrawingReader(WordContentReader owner)
                 return new WordChart(Charts.ChartReader.Read(part, owner.Context.Palette), width, height, part);
             }
 
-            owner.Context.Gaps.Add("linked or missing chart skipped");
+            owner.Context.Gaps.Add(DocumentGap.Of(ReadGapCodes.ReadChartLinkedSkipped));
         }
         catch (Exception exception) when (Charts.ChartReader.IsUnreadable(exception))
         {
             // A chart part that cannot be read costs the chart, not the document.
-            owner.Context.Gaps.Add("unreadable chart skipped");
+            owner.Context.Gaps.Add(DocumentGap.Of(ReadGapCodes.ReadChartUnreadable));
         }
 
         return null;
     }
 
-    private WordTextBox? TextBox(XElement? content, double width, double height, string gap)
+    private WordTextBox? TextBox(XElement? content, double width, double height, GapCode gap)
     {
         if (content is null)
         {
-            owner.Context.Gaps.Add(gap + " skipped");
+            owner.Context.Gaps.Add(DocumentGap.Of(gap));
             return null;
         }
 
@@ -199,16 +200,16 @@ internal sealed class WordDrawingReader(WordContentReader owner)
 
     private WordShape? Unsupported(string? kind)
     {
-        var name = kind switch
+        var code = kind switch
         {
-            null => "drawing",
-            _ when kind.Contains("chartex", StringComparison.OrdinalIgnoreCase) => "chart of a type introduced by Office 2016 (waterfall, treemap, funnel...)",
-            _ when kind.Contains("chart", StringComparison.OrdinalIgnoreCase) => "chart",
-            _ when kind.Contains("diagram", StringComparison.OrdinalIgnoreCase) => "diagram",
-            _ when kind.Contains("Group", StringComparison.OrdinalIgnoreCase) => "group of shapes",
-            _ => "drawing",
+            null => ReadGapCodes.ReadDrawingSkipped,
+            _ when kind.Contains("chartex", StringComparison.OrdinalIgnoreCase) => ReadGapCodes.ReadChartExSkipped,
+            _ when kind.Contains("chart", StringComparison.OrdinalIgnoreCase) => ReadGapCodes.ReadChartSkipped,
+            _ when kind.Contains("diagram", StringComparison.OrdinalIgnoreCase) => ReadGapCodes.ReadDiagramSkipped,
+            _ when kind.Contains("Group", StringComparison.OrdinalIgnoreCase) => ReadGapCodes.ReadShapeGroupSkipped,
+            _ => ReadGapCodes.ReadDrawingSkipped,
         };
-        owner.Context.Gaps.Add(name + " skipped");
+        owner.Context.Gaps.Add(DocumentGap.Of(code));
         return null;
     }
 

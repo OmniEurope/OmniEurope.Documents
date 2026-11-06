@@ -74,7 +74,7 @@ internal static class XlsxPackageReader
         }
         catch (Exception exception) when (Charts.ChartReader.IsUnreadable(exception))
         {
-            workbook.Gaps.Add("unreadable theme skipped");
+            workbook.AddGap(DocumentGap.Of(Word.Reading.ReadGapCodes.ReadThemeUnreadable));
             return Charts.ChartPalette.Default;
         }
     }

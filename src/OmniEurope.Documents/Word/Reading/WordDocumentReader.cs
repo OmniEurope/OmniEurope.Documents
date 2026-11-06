@@ -57,7 +57,11 @@ internal static class WordDocumentReader
         ReadNotes(context, relationships, EndnotesType, "endnote", document.Endnotes);
         ReadComments(context, relationships, document.Comments);
         ReadBody(context, main, document);
-        document.Gaps.AddRange(context.Gaps);
+        foreach (var gap in context.Gaps)
+        {
+            document.AddGap(gap);
+        }
+
         return document;
     }
 
@@ -71,7 +75,7 @@ internal static class WordDocumentReader
         }
         catch (Exception exception) when (Charts.ChartReader.IsUnreadable(exception))
         {
-            context.Gaps.Add("unreadable theme skipped");
+            context.Gaps.Add(DocumentGap.Of(ReadGapCodes.ReadThemeUnreadable));
             return null;
         }
     }

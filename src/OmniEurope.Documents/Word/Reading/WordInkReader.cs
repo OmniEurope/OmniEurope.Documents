@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: EUPL-1.2
 using System.Xml.Linq;
+using OmniEurope.Documents.Internal;
 using static OmniEurope.Documents.Word.WordXml;
 
 namespace OmniEurope.Documents.Word.Reading;
@@ -26,7 +27,7 @@ internal sealed class WordInkReader(WordContentReader owner, WordDrawingReader d
         var fallback = data.Ancestors(Mc + "Choice").FirstOrDefault()?.Parent?.Element(Mc + "Fallback");
         if (fallback is null || fallback.Descendants(V + "imagedata").FirstOrDefault() is null)
         {
-            owner.Context.Gaps.Add("ink skipped");
+            owner.Context.Gaps.Add(DocumentGap.Of(ReadGapCodes.ReadInkSkipped));
             return null;
         }
 
@@ -55,7 +56,7 @@ internal sealed class WordInkReader(WordContentReader owner, WordDrawingReader d
         catch (Exception exception) when (exception is DocumentFormatException or System.Xml.XmlException)
         {
             // An ink part that cannot be read costs the strokes, not the document; its saved picture may stand in.
-            owner.Context.Gaps.Add($"unreadable ink part: {exception.Message}");
+            owner.Context.Gaps.Add(DocumentGap.Of(ReadGapCodes.ReadInkPartUnreadable, exception.Message));
             return [];
         }
     }

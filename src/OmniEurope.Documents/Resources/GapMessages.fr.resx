@@ -9,6 +9,120 @@
     <comment>Generic label of a gap without a code.</comment>
   </data>
   <!-- Word reading, Excel, fields and content controls: Read*, Excel*, Field*, ContentControl* -->
+  <data name="ReadImagePartMissing" xml:space="preserve">
+    <value>partie image manquante</value>
+  </data>
+  <data name="ReadAltChunkSkipped" xml:space="preserve">
+    <value>contenu importé (altChunk) ignoré</value>
+  </data>
+  <data name="ReadEquationsAsPlainText" xml:space="preserve">
+    <value>équations lues comme du texte brut</value>
+  </data>
+  <data name="ReadThemeUnreadable" xml:space="preserve">
+    <value>thème illisible ignoré</value>
+  </data>
+  <data name="ReadPictureLinkedSkipped" xml:space="preserve">
+    <value>image liée ou manquante ignorée</value>
+  </data>
+  <data name="ReadChartLinkedSkipped" xml:space="preserve">
+    <value>graphique lié ou manquant ignoré</value>
+  </data>
+  <data name="ReadChartUnreadable" xml:space="preserve">
+    <value>graphique illisible ignoré</value>
+  </data>
+  <data name="ReadShapeWithoutTextSkipped" xml:space="preserve">
+    <value>forme sans texte ignorée</value>
+  </data>
+  <data name="ReadVmlShapeSkipped" xml:space="preserve">
+    <value>forme VML ignorée</value>
+  </data>
+  <data name="ReadDrawingSkipped" xml:space="preserve">
+    <value>dessin ignoré</value>
+  </data>
+  <data name="ReadChartSkipped" xml:space="preserve">
+    <value>graphique ignoré</value>
+  </data>
+  <data name="ReadChartExSkipped" xml:space="preserve">
+    <value>graphique d'un type introduit par Office 2016 (cascade, treemap, entonnoir...) ignoré</value>
+  </data>
+  <data name="ReadDiagramSkipped" xml:space="preserve">
+    <value>diagramme ignoré</value>
+  </data>
+  <data name="ReadShapeGroupSkipped" xml:space="preserve">
+    <value>groupe de formes ignoré</value>
+  </data>
+  <data name="ReadInkSkipped" xml:space="preserve">
+    <value>encre ignorée</value>
+  </data>
+  <data name="ReadInkPartUnreadable" xml:space="preserve">
+    <value>partie d'encre illisible</value>
+  </data>
+  <data name="ExcelDrawingUnreadable" xml:space="preserve">
+    <value>dessin illisible ignoré</value>
+  </data>
+  <data name="FieldTocSwitchLeftAsIs" xml:space="preserve">
+    <value>table des matières avec le commutateur \{0} laissée telle quelle</value>
+  </data>
+  <data name="FieldTocNotWholeParagraphs" xml:space="preserve">
+    <value>table des matières qui n'est pas faite de paragraphes entiers d'un même conteneur laissée telle quelle</value>
+  </data>
+  <data name="FieldTocTcEntriesNotCollected" xml:space="preserve">
+    <value>entrées de table des matières issues de champs TC non collectées</value>
+  </data>
+  <data name="FieldPageNumbersStillMoving" xml:space="preserve">
+    <value>numéros de page encore changeants après quatre mises en page</value>
+  </data>
+  <data name="FieldKindNotUpdated" xml:space="preserve">
+    <value>champs {0} non mis à jour</value>
+  </data>
+  <data name="FieldDateWithoutCoreDate" xml:space="preserve">
+    <value>champ {0} sans date dans les propriétés du document non mis à jour</value>
+  </data>
+  <data name="FieldOutsideLaidOutBody" xml:space="preserve">
+    <value>champs {0} hors du corps et des notes mis en page non mis à jour</value>
+  </data>
+  <data name="FieldBookmarkMissing" xml:space="preserve">
+    <value>champ {0} vers un signet manquant non mis à jour</value>
+  </data>
+  <data name="FieldRefParagraphNumber" xml:space="preserve">
+    <value>champs REF donnant un numéro de paragraphe non mis à jour</value>
+  </data>
+  <data name="FieldPageRefRelativePosition" xml:space="preserve">
+    <value>champs PAGEREF avec \p (au-dessus ou en dessous) non mis à jour</value>
+  </data>
+  <data name="ContentControlNotDate" xml:space="preserve">
+    <value>le contrôle n'est pas un contrôle de date</value>
+  </data>
+  <data name="ContentControlNotList" xml:space="preserve">
+    <value>le contrôle n'est ni une zone de liste déroulante ni une liste déroulante</value>
+  </data>
+  <data name="ContentControlNotCheckbox" xml:space="preserve">
+    <value>le contrôle n'est pas une case à cocher</value>
+  </data>
+  <data name="ContentControlNotBoolean" xml:space="preserve">
+    <value>'{0}' n'est pas un booléen (true, false, 1, 0, yes, no, oui, non)</value>
+  </data>
+  <data name="ContentControlKindNotFillable" xml:space="preserve">
+    <value>un contrôle de type {0} ne peut pas être rempli avec du texte</value>
+  </data>
+  <data name="ContentControlValueNotInList" xml:space="preserve">
+    <value>'{0}' n'est ni une valeur ni un texte affiché de la liste</value>
+  </data>
+  <data name="ContentControlDateUnparsable" xml:space="preserve">
+    <value>'{0}' n'est ni au format yyyy-MM-dd ni au format du contrôle '{1}'</value>
+  </data>
+  <data name="ContentControlDateUnparsableLanguageMissing" xml:space="preserve">
+    <value>'{0}' n'est ni au format yyyy-MM-dd ni au format du contrôle '{1}' (sa langue n'est pas disponible)</value>
+  </data>
+  <data name="ContentControlTableStructure" xml:space="preserve">
+    <value>un contrôle de ligne ou de cellule contient une structure de tableau, pas du texte</value>
+  </data>
+  <data name="ContentControlHoldsMoreThanText" xml:space="preserve">
+    <value>le contrôle contient plus que du texte (un champ, une image ou une note)</value>
+  </data>
+  <data name="ContentControlHoldsMoreThanParagraphs" xml:space="preserve">
+    <value>le contrôle contient plus que des paragraphes de texte (un tableau, un contrôle imbriqué ou un champ)</value>
+  </data>
   <!-- end of Word reading, Excel, fields and content controls -->
 
   <!-- Word and Excel to PDF, PDF rendering and redaction: Pdf*, Render*, Redact* -->

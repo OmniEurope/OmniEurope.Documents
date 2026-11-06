@@ -15,7 +15,7 @@ internal sealed class WordReadContext(OpcPackage package)
 
     public OpcPackage Package { get; } = package;
 
-    public SortedSet<string> Gaps { get; } = new(StringComparer.Ordinal);
+    public GapSet Gaps { get; } = new();
 
     /// <summary>The theme colours charts take their automatic colours from.</summary>
     public Charts.ChartPalette Palette { get; set; } = Charts.ChartPalette.Default;
@@ -49,7 +49,7 @@ internal sealed class WordReadContext(OpcPackage package)
         var bytes = Package.GetBytes(partName);
         if (bytes is null)
         {
-            Gaps.Add("missing image part");
+            Gaps.Add(DocumentGap.Of(ReadGapCodes.ReadImagePartMissing));
             return null;
         }
 
@@ -159,7 +159,7 @@ internal sealed class WordContentReader
         }
         else if (element.Name == W + "altChunk")
         {
-            Context.Gaps.Add("imported content (altChunk) skipped");
+            Context.Gaps.Add(DocumentGap.Of(ReadGapCodes.ReadAltChunkSkipped));
         }
     }
 
@@ -301,7 +301,7 @@ internal sealed class WordContentReader
     {
         if (element.Name.LocalName is "oMath" or "oMathPara")
         {
-            Context.Gaps.Add("equations read as plain text");
+            Context.Gaps.Add(DocumentGap.Of(ReadGapCodes.ReadEquationsAsPlainText));
             Emit(list, new WordText(string.Concat(element.Descendants(M + "t").Select(t => t.Value))), WordRunProperties.Empty, revision);
         }
     }

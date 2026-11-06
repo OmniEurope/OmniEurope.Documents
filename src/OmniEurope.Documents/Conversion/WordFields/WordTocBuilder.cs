@@ -28,19 +28,19 @@ internal sealed class WordTocBuilder(OpcPackage package, string mainPart, XEleme
     private int _bookmarkId = -1;
 
     /// <summary>Rebuilds the field; returns the number of entries, or null (with the reason) when it cannot.</summary>
-    public (int? Entries, string? Gap) Rebuild(XmlField field)
+    public (int? Entries, DocumentGap? Gap) Rebuild(XmlField field)
     {
         var tokens = field.Tokens;
         if (Refused.FirstOrDefault(s => WordXmlFields.Switch(tokens, s, hasArgument: false) is not null) is { } refused)
         {
-            return (null, $"table of contents with the \\{refused} switch left as it was");
+            return (null, DocumentGap.Of(FieldGapCodes.FieldTocSwitchLeftAsIs, refused));
         }
 
         var first = field.Paragraph;
         var last = field.End?.Ancestors(W + "p").FirstOrDefault();
         if (first is null || last is null || first.Parent != last.Parent || first.Parent is null || last.IsBefore(first))
         {
-            return (null, "table of contents not made of whole paragraphs of one container left as it was");
+            return (null, DocumentGap.Of(FieldGapCodes.FieldTocNotWholeParagraphs));
         }
 
         var range = first == last ? [first] : new[] { first }.Concat(first.ElementsAfterSelf().TakeWhile(e => e != last)).Append(last).ToList();
@@ -55,7 +55,7 @@ internal sealed class WordTocBuilder(OpcPackage package, string mainPart, XEleme
         }
 
         return (headings.Count, WordXmlFields.Switch(tokens, "f", hasArgument: false) is not null || WordXmlFields.Switch(tokens, "l") is not null
-            ? "table of contents entries from TC fields not collected"
+            ? DocumentGap.Of(FieldGapCodes.FieldTocTcEntriesNotCollected)
             : null);
     }
 
