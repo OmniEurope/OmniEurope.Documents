@@ -107,6 +107,9 @@ Notable changes to this project are documented here, following the Keep a Change
 
 - Word to PDF: a floating shape anchored in a table row of exact height is not clipped to its cell and may draw past
   the row.
+- Word to PDF: a header or footer whose page field would change its height on a page (a wider number wrapping onto
+  another line) keeps the layout of its cached result there, since the body was paginated against that height.
+- Word to HTML keeps drawing a 144 pt rule above the footnotes, whatever the document's own separator.
 
 ## [1.0.0] - 2026-10-20
 
