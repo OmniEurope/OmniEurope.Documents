@@ -55,7 +55,7 @@ internal sealed class MarkdownInlineWriter(MarkdownContext context, WordParagrap
                 Text(text.Value, inline.Properties, null);
                 break;
             case WordTab:
-                context.Gaps.Add("tabs are written as tab characters");
+                context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownTabsAsTabCharacters));
                 Text("\t", inline.Properties, null);
                 break;
             case WordSymbol symbol:
@@ -90,13 +90,13 @@ internal sealed class MarkdownInlineWriter(MarkdownContext context, WordParagrap
                 TextBoxes.Add(box);
                 break;
             case WordCommentReference:
-                context.Gaps.Add("comments are left out");
+                context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownCommentsLeftOut));
                 break;
             case WordInk:
-                context.Gaps.Add("ink is left out");
+                context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownInkLeftOut));
                 break;
             case WordChart:
-                context.Gaps.Add("charts are left out");
+                context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownChartsLeftOut));
                 break;
         }
     }
@@ -142,12 +142,12 @@ internal sealed class MarkdownInlineWriter(MarkdownContext context, WordParagrap
         // The defaults of the document are the look of plain text, not formatting met in it.
         var plain = context.Document.Styles.DefaultRunProperties;
         if (properties.Font != plain.Font || properties.FontEastAsia != plain.FontEastAsia || properties.FontComplex != plain.FontComplex || properties.FontSize != plain.FontSize || properties.FontSizeComplex != plain.FontSizeComplex)
-            context.Gaps.Add("fonts and font sizes are not preserved");
+            context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownFontsNotPreserved));
         if (properties.Color != plain.Color || properties.Highlight != plain.Highlight || properties.Shading != plain.Shading)
-            context.Gaps.Add("text colours, highlighting and shading are not preserved");
+            context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownColoursNotPreserved));
         if ((!_inLink && properties.Underline is { } underline and not WordUnderline.None) || properties.VerticalPosition is WordVerticalPosition.Superscript or WordVerticalPosition.Subscript)
         {
-            context.Gaps.Add("underline, superscript and subscript are written as plain text");
+            context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownUnderlineScriptsAsPlainText));
         }
     }
 
@@ -240,13 +240,13 @@ internal sealed class MarkdownInlineWriter(MarkdownContext context, WordParagrap
     {
         if (lineBreak.Kind == WordBreakKind.Page)
         {
-            context.Gaps.Add("page breaks are left out");
+            context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownPageBreaksLeftOut));
             return;
         }
 
         if (lineBreak.Kind == WordBreakKind.Column)
         {
-            context.Gaps.Add("column breaks are written as line breaks");
+            context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownColumnBreaksAsLineBreaks));
         }
 
         if (singleLine)
@@ -294,13 +294,13 @@ internal sealed class MarkdownInlineWriter(MarkdownContext context, WordParagrap
                 return MarkdownUrl.Normalize(compact);
             }
 
-            context.Gaps.Add("links with an address other than http, https or mailto keep their text only");
+            context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownLinksOtherSchemeTextOnly));
             return null;
         }
 
         if (link.Anchor is { Length: > 0 })
         {
-            context.Gaps.Add("links to bookmarks keep their text only");
+            context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownBookmarkLinksTextOnly));
         }
 
         return null;
@@ -321,7 +321,7 @@ internal sealed class MarkdownInlineWriter(MarkdownContext context, WordParagrap
     {
         if (picture.Floating is not null)
         {
-            context.Gaps.Add("floating pictures are written in the text flow");
+            context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownFloatingPicturesInTextFlow));
         }
 
         var name = context.Images.Reference(picture.Image);

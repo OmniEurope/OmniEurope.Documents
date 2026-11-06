@@ -41,8 +41,8 @@ internal sealed class HtmlPageWriter
     /// The body is written first, so the head can hold every class it uses.</summary>
     public (string Html, string StyleSheet) Write()
     {
-        _context.Gaps.Add("line and page breaks are computed by the browser");
-        _context.Gaps.Add("line heights are approximated (single spacing taken as 1.15 times the font size)");
+        _context.Gaps.Add(DocumentGap.Of(HtmlGapCodes.HtmlBreaksComputedByBrowser));
+        _context.Gaps.Add(DocumentGap.Of(HtmlGapCodes.HtmlLineHeightsApproximated));
         ReportLeftOut();
         Body();
         var classes = new System.Text.StringBuilder(StyleSheet);
@@ -85,17 +85,17 @@ internal sealed class HtmlPageWriter
     {
         if (Document.Comments.Count > 0)
         {
-            _context.Gaps.Add("comments are left out");
+            _context.Gaps.Add(DocumentGap.Of(HtmlGapCodes.HtmlCommentsLeftOut));
         }
 
         if (Enumerable.Range(0, Document.Sections.Count).Any(s => _context.Notes.Rule(s).Restart == WordNoteRestart.EachPage))
         {
-            _context.Gaps.Add("footnote numbering restarting at each page continues, the page has no pages");
+            _context.Gaps.Add(DocumentGap.Of(HtmlGapCodes.HtmlFootnoteRestartContinues));
         }
 
         if (Document.Sections.Any(s => s.Page.ColumnWidths is { Count: > 1 } widths && widths.Distinct().Count() > 1))
         {
-            _context.Gaps.Add("unequal columns shown as equal columns");
+            _context.Gaps.Add(DocumentGap.Of(HtmlGapCodes.HtmlUnequalColumnsAsEqual));
         }
 
         var first = Document.Sections.Count > 0 ? Document.Sections[0] : null;
@@ -103,7 +103,7 @@ internal sealed class HtmlPageWriter
             .Any(pair => pair.Key != WordHeaderFooterKind.Default || (!ReferenceEquals(first?.Headers.GetValueOrDefault(pair.Key), pair.Value) && !ReferenceEquals(first?.Footers.GetValueOrDefault(pair.Key), pair.Value)));
         if (others)
         {
-            _context.Gaps.Add("headers and footers other than the first section's default ones are left out");
+            _context.Gaps.Add(DocumentGap.Of(HtmlGapCodes.HtmlHeadersFootersLeftOut));
         }
     }
 
@@ -167,7 +167,7 @@ internal sealed class HtmlPageWriter
 
         if (kind == WordNoteKind.Footnote)
         {
-            _context.Gaps.Add("footnotes are listed at the end of the page");
+            _context.Gaps.Add(DocumentGap.Of(HtmlGapCodes.HtmlFootnotesAtPageEnd));
         }
 
         _output.Open("section", ("class", "omni-notes omni-" + (kind == WordNoteKind.Footnote ? "footnotes" : "endnotes")), ("style", Box(first.Page, 0, 0)));

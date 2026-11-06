@@ -30,12 +30,12 @@ internal sealed class MarkdownDocumentWriter(MarkdownContext context)
     {
         if (context.Document.Sections.Any(s => s.Headers.Values.Concat(s.Footers.Values).Any(h => h.Blocks.Count > 0)))
         {
-            context.Gaps.Add("headers and footers are left out");
+            context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownHeadersFootersLeftOut));
         }
 
         if (context.Document.Comments.Count > 0)
         {
-            context.Gaps.Add("comments are left out");
+            context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownCommentsLeftOut));
         }
     }
 
@@ -77,7 +77,7 @@ internal sealed class MarkdownDocumentWriter(MarkdownContext context)
 
         foreach (var box in boxes)
         {
-            context.Gaps.Add("text boxes are written as paragraphs after the paragraph that anchors them");
+            context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownTextBoxesAfterAnchor));
             Blocks(box.Blocks);
         }
     }
@@ -90,7 +90,7 @@ internal sealed class MarkdownDocumentWriter(MarkdownContext context)
         var text = writer.Write(paragraph.Inlines);
         if (text.Length == 0)
         {
-            context.Gaps.Add("empty paragraphs are left out");
+            context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownEmptyParagraphsLeftOut));
         }
 
         return (text, writer.TextBoxes);
@@ -115,7 +115,7 @@ internal sealed class MarkdownDocumentWriter(MarkdownContext context)
         var bullet = level.Format is WordNumberFormat.Bullet or WordNumberFormat.None;
         if (!bullet && level.Format is not (WordNumberFormat.Decimal or WordNumberFormat.DecimalZero))
         {
-            context.Gaps.Add("list numbers in letters, roman numerals or words are written as numbers");
+            context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownListNumbersAsDigits));
         }
 
         var marker = bullet ? "- " : number.ToString(CultureInfo.InvariantCulture) + ". ";
@@ -164,7 +164,7 @@ internal sealed class MarkdownDocumentWriter(MarkdownContext context)
             var continued = cell.Properties.VerticalMerge == WordVerticalMerge.Continue;
             if (span > 1 || continued)
             {
-                context.Gaps.Add("merged table cells keep their text in the first cell, the cells they cover are empty");
+                context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownMergedCellsKeepFirstText));
             }
 
             cells.Add(continued ? string.Empty : Cell(cell.Blocks));
@@ -182,7 +182,7 @@ internal sealed class MarkdownDocumentWriter(MarkdownContext context)
         {
             if (block is WordTable nested)
             {
-                context.Gaps.Add("tables inside table cells are written as their text");
+                context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownNestedTablesAsText));
                 parts.Add(MarkdownWriter.Escape(nested.Text.Replace('\t', ' ')));
                 continue;
             }
@@ -192,7 +192,7 @@ internal sealed class MarkdownDocumentWriter(MarkdownContext context)
 
         if (parts.Count(p => p.Length > 0) > 1)
         {
-            context.Gaps.Add("several paragraphs in a table cell or a note are joined on one line");
+            context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownCellParagraphsJoined));
         }
 
         return string.Join(' ', parts.Where(p => p.Length > 0));
@@ -204,14 +204,14 @@ internal sealed class MarkdownDocumentWriter(MarkdownContext context)
         NoteParagraphFormatting(resolved);
         if (resolved.NumberingId is > 0)
         {
-            context.Gaps.Add("list items inside table cells and notes are written as plain paragraphs");
+            context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownCellListItemsAsParagraphs));
         }
 
         var writer = new MarkdownInlineWriter(context, resolved, string.Empty, singleLine: true);
         var text = writer.Write(paragraph.Inlines);
         if (writer.TextBoxes.Count > 0)
         {
-            context.Gaps.Add("text boxes inside table cells and notes are left out");
+            context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownCellTextBoxesLeftOut));
         }
 
         return text;
@@ -221,7 +221,7 @@ internal sealed class MarkdownDocumentWriter(MarkdownContext context)
     {
         // The defaults of the document are the look of plain text, not formatting met in it.
         static WordParagraphProperties Visible(WordParagraphProperties p) => p with { StyleId = null, OutlineLevel = null, NumberingId = null, NumberingLevel = null, MarkProperties = null };
-        if (Visible(properties) != Visible(context.Document.Styles.DefaultParagraphProperties)) context.Gaps.Add("paragraph formatting is not preserved");
+        if (Visible(properties) != Visible(context.Document.Styles.DefaultParagraphProperties)) context.Gaps.Add(DocumentGap.Of(MarkdownGapCodes.MarkdownParagraphFormattingNotPreserved));
     }
 
     // Notes referred to inside other notes are numbered as they are met, so the loop runs to the end of a

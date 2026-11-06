@@ -43,7 +43,7 @@ internal sealed class HtmlBlockWriter(HtmlContext context, HtmlOutput output)
         var address = paragraph.SourceAddress;
         if (address is null)
         {
-            context.Gaps.Add("paragraphs without a source address (built in code, or read from alternate-content fallback markup) have no data-address");
+            context.Gaps.Add(DocumentGap.Of(HtmlGapCodes.HtmlParagraphWithoutAddress));
         }
 
         var highlighted = context.IsHighlighted(address);
