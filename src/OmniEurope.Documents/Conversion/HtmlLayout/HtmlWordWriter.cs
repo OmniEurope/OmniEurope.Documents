@@ -62,6 +62,7 @@ internal sealed class HtmlWordWriter
         var alignment = CssStyle.Alignment(_rules.Of(node), node.GetAttribute("align"));
         (_paragraph, _sink, _block) = (null, null, new WordParagraphProperties { Alignment = alignment });
         _run = overlay is null ? _run : _run.Overlay(overlay);
+        _run = CssStyle.Run(_rules.Of(node), _run, BaseSize);
         _lists.Clear();
         Children(node);
         Flush();
@@ -90,7 +91,7 @@ internal sealed class HtmlWordWriter
             switch (child)
             {
                 case HtmlText text:
-                    Text(text.Data);
+                    Text(text.Data, text.NextSibling is null && node is HtmlElement { TagName: var tag } && tag.Equals("pre", StringComparison.OrdinalIgnoreCase));
                     break;
                 case HtmlElement element:
                     Element(element);
@@ -372,12 +373,15 @@ internal sealed class HtmlWordWriter
         return (info.Width * 72 / (info.DpiX > 0 ? info.DpiX : 96), info.Height * 72 / (info.DpiY > 0 ? info.DpiY : 96));
     }
 
-    private void Text(string data)
+    private void Text(string data, bool endsPreBlock)
     {
         if (_pre)
         {
             EnsureParagraph();
-            foreach (var inline in WordText.Split(data.Replace("\r\n", "\n", StringComparison.Ordinal).TrimEnd('\n'), _run))
+
+            // Only the newline closing the pre block is dropped; inner fragments keep their line ends.
+            var preformatted = data.Replace("\r\n", "\n", StringComparison.Ordinal);
+            foreach (var inline in WordText.Split(endsPreBlock ? preformatted.TrimEnd('\n') : preformatted, _run))
             {
                 Sink.Add(inline);
             }
