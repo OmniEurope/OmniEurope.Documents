@@ -4,6 +4,56 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ## [Unreleased]
 
+### Added
+
+- `ExcelHtmlResult` gains `Gaps` and `GapDetails`: Excel to HTML now reports what the workbook could not carry (an
+  unreadable drawing that was skipped...), as Excel to PDF does. The two-parameter constructor and its
+  deconstruction are unchanged.
+- PDF rendering reports a content stream that could not be decoded (`RenderContentStreamUnreadable`) instead of
+  drawing a silently blank page; the readable streams of the page still draw.
+- A test guard keeps every production source file within 600 effective lines.
+
+### Changed
+
+- PDF rendering records in the image the resolution it actually used: `PdfRenderOptions.Dpi` is pinched to 1..1200,
+  and the PNG now carries the pinched value instead of the requested one.
+- `PdfFormField.MaxLength` is null for a field declaring `MaxLen 0` (no limit), as for a field without `MaxLen`.
+- An OOXML Strict workbook is refused by `XlsxWorkbook.Load` and `XlsxEditor.Open` with a `DocumentFormatException`
+  naming the profile, instead of being read as a workbook without worksheet.
+- xunit.v3 4.0.3 for the test projects.
+
+### Fixed
+
+- Word: the markup compatibility validator splits `Ignorable`, `ProcessContent` and `Requires` lists on every XML
+  white space (tab, line feed, carriage return), not on spaces only.
+- Word: merging into a document whose body has no final section properties no longer fails; the section ends with
+  default page settings.
+- Word: a drop-down list content control without entries refuses any value (`ContentControlValueNotInList`); a combo
+  box still accepts free text.
+- Word: a culture-sensitive text replacement removes the real length of each match (an ignorable character such as a
+  soft hyphen inside the match) instead of the length of the searched text.
+- Excel: the editor decodes and encodes the Office escapes (`_xHHHH_`) as the model does, so a text that looks like
+  an escape is kept as written.
+- Excel formulas: `IFERROR` and `IFNA` evaluate their first operand once; `CEILING` and `FLOOR` of very large finite
+  numbers no longer stop the whole recalculation (a non-finite result gives `#NUM!`).
+- PDF: page operations (rotate, extract, merge, encrypt, compress) keep the creation and modification dates of the
+  source.
+- PDF forms: an inherited `MaxLen` is read, enforced when filling and used for comb fields; a terminal value wins.
+- PDF tables: the first header row no longer draws past the bottom margin; the headers move to the next page with the
+  first body row.
+- HTML: descendant selectors after an attribute or a pseudo-class (`div[title] span`, `li:not(.x) a`) match again.
+- HTML to Word: `font-weight` and `font-style` keywords are case-insensitive; the character styles of a table cell
+  apply to its content without leaking to the next cell; line breaks of preformatted text survive inline elements.
+- Charts: finite values near the limits of a double give a finite axis instead of a NaN scale.
+- Word to Markdown: an image folder holding a space is written as an angle-bracket destination (`<my images/a.png>`).
+- Word to PDF: breaking a word never cuts a surrogate pair in two; a `NextColumn` section starts at the top of the
+  following column (from the last column, on a new page).
+- TIFF: associated alpha (`ExtraSamples` 1) is divided out of the colour channels, so the image is no longer too dark.
+
+### Known limits
+
+- Excel: the OOXML Strict profile is not supported (Excel saves Transitional by default).
+
 ## [1.1.0] - 2026-11-07
 
 ### Added
