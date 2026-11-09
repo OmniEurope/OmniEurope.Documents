@@ -85,8 +85,8 @@ public sealed class XlsxWorkbook
     /// <summary>Removes a worksheet.</summary>
     public void RemoveWorksheet(XlsxWorksheet worksheet) => _worksheets.Remove(worksheet);
 
-    /// <summary>Loads a workbook.</summary>
-    /// <exception cref="DocumentFormatException">The file is not a valid workbook or breaks the limits.</exception>
+    /// <summary>Loads a workbook (OOXML Transitional, the format Excel saves by default; the OOXML Strict profile is not supported).</summary>
+    /// <exception cref="DocumentFormatException">The file is not a valid workbook, uses the OOXML Strict profile or breaks the limits.</exception>
     public static XlsxWorkbook Load(Stream stream, PackageLimits? limits = null) => XlsxPackageReader.Read(stream, limits);
 
     /// <summary>Loads a workbook from bytes.</summary>

@@ -42,7 +42,16 @@ public sealed record ExcelHtmlOptions
 
 /// <summary>A converted workbook: the HTML page and its style sheet, the one it embeds or links
 /// (<see cref="ExcelHtmlOptions.StyleSheetHref"/>).</summary>
-public sealed record ExcelHtmlResult(string Html, string StyleSheet);
+public sealed record ExcelHtmlResult(string Html, string StyleSheet)
+{
+    /// <summary>What the workbook holds that the page does not carry faithfully (a drawing that could not be read
+    /// and was skipped...), in English; empty when nothing was lost.</summary>
+    public IReadOnlyList<string> Gaps { get; init; } = [];
+
+    /// <summary>The <see cref="Gaps"/> in their order, each with its code, to describe them in another language
+    /// (<see cref="DocumentGap.Describe"/>).</summary>
+    public IReadOnlyList<DocumentGap> GapDetails { get => field ?? Gaps.Select(DocumentGap.FromText).ToList(); init; }
+}
 
 /// <summary>
 /// A workbook to one HTML page (UTF-8, style sheet embedded or linked, nothing else fetched): each sheet's used range

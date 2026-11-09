@@ -12,8 +12,8 @@ internal static class LogicalFunctions
     {
         registry["IF"] = new(1, 3, If);
         registry["IFS"] = new(2, Many, Ifs);
-        registry["IFERROR"] = new(2, 2, (e, a) => e.Evaluate(a[0]) is { IsError: true } ? e.Evaluate(a[1]) : e.Evaluate(a[0]));
-        registry["IFNA"] = new(2, 2, (e, a) => e.Evaluate(a[0]) is { IsError: true, Text: "#N/A" } ? e.Evaluate(a[1]) : e.Evaluate(a[0]));
+        registry["IFERROR"] = new(2, 2, (e, a) => OrElse(e, a, v => v.IsError));
+        registry["IFNA"] = new(2, 2, (e, a) => OrElse(e, a, v => v is { IsError: true, Text: "#N/A" }));
         registry["AND"] = new(1, Many, (e, a) => Combine(e, a, values => values.All(v => v)));
         registry["OR"] = new(1, Many, (e, a) => Combine(e, a, values => values.Any(v => v)));
         registry["XOR"] = new(1, Many, (e, a) => Combine(e, a, values => values.Count(v => v) % 2 == 1));
@@ -33,6 +33,13 @@ internal static class LogicalFunctions
         registry["ISNA"] = new(1, 1, (e, a) => Is(e, a, v => v.IsError && v.Text == "#N/A"));
         registry["ISEVEN"] = new(1, 1, (e, a) => Parity(e, a, even: true));
         registry["ISODD"] = new(1, 1, (e, a) => Parity(e, a, even: false));
+    }
+
+    // The first operand is evaluated once (the evaluation spends the calculation budget); the second only when the first is an error of the kind.
+    private static FormulaValue OrElse(FormulaEvaluator evaluator, IReadOnlyList<FormulaNode> arguments, Func<FormulaValue, bool> replaced)
+    {
+        var value = evaluator.Evaluate(arguments[0]);
+        return replaced(value) ? evaluator.Evaluate(arguments[1]) : value;
     }
 
     private static FormulaValue If(FormulaEvaluator evaluator, IReadOnlyList<FormulaNode> arguments)

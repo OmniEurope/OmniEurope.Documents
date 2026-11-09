@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Xml;
 using System.Xml.Linq;
+using OmniEurope.Documents.Internal;
 using static OmniEurope.Documents.Excel.Editing.XlsxEditor;
 
 namespace OmniEurope.Documents.Excel.Editing;
@@ -60,7 +61,8 @@ public sealed class XlsxEditableSheet
         {
             "s" => int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var index) ? _editor.SharedString(index) : null,
             "b" => value == "1",
-            "str" or "e" or "d" => value,
+            "str" => OpenXmlPackageWriter.UnescapeOfficeText(value),
+            "e" or "d" => value,
             _ => double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var number) ? number : value,
         };
     }
@@ -116,8 +118,9 @@ public sealed class XlsxEditableSheet
         _editor.CellChanged(formulaChanged: true);
     }
 
-    internal static string InlineText(XElement container) =>
-        string.Concat(container.Elements(S + "t").Concat(container.Elements(S + "r").Elements(S + "t")).InDocumentOrder().Select(t => t.Value));
+    // The escapes of Office (_xHHHH_) are decoded once, as the reader of the model does.
+    internal static string InlineText(XElement container) => OpenXmlPackageWriter.UnescapeOfficeText(
+        string.Concat(container.Elements(S + "t").Concat(container.Elements(S + "r").Elements(S + "t")).InDocumentOrder().Select(t => t.Value)));
 
     private static (int Row, int Column) Parse(string reference)
     {
@@ -140,7 +143,7 @@ public sealed class XlsxEditableSheet
     private static bool IsNumber(TypeCode code) => code is >= TypeCode.SByte and <= TypeCode.Decimal;
 
     private static XElement Inline(string text) => text.Length <= MaxText && IsXmlText(text)
-        ? new XElement(S + "is", new XElement(S + "t", new XAttribute(XNamespace.Xml + "space", "preserve"), text))
+        ? new XElement(S + "is", new XElement(S + "t", new XAttribute(XNamespace.Xml + "space", "preserve"), OpenXmlPackageWriter.EscapeOfficeText(text)))
         : throw new ArgumentException("A text holds at most 32,767 characters XML can carry.", "value");
 
     private static XElement Number(double number) => double.IsFinite(number)

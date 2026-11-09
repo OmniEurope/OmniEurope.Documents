@@ -38,6 +38,11 @@ public sealed class XlsxEditor
         _package = package;
         _workbookPart = package.Relationships(string.Empty).Find(r => r.Type == OfficeDocumentType && !r.External)?.Target ?? "xl/workbook.xml";
         var workbook = package.GetXml(_workbookPart)?.Root ?? throw new DocumentFormatException("The package has no workbook part.");
+        if (workbook.Name.Namespace == XlsxStrictProfile.MainNamespace)
+        {
+            throw XlsxStrictProfile.Unsupported();
+        }
+
         Date1904 = (string?)workbook.Element(S + "workbookPr")?.Attribute("date1904") is "1" or "true";
         _sheets = Worksheets(package, workbook, package.Relationships(_workbookPart));
         if (_sheets.Count == 0)
@@ -73,7 +78,7 @@ public sealed class XlsxEditor
 
     internal OpcPackage Package => _package;
 
-    /// <summary>Opens a workbook for editing.</summary>
+    /// <summary>Opens a workbook for editing (OOXML Transitional; the OOXML Strict profile is refused with a <see cref="DocumentFormatException"/>).</summary>
     public static XlsxEditor Open(Stream stream, PackageLimits? limits = null)
     {
         ArgumentNullException.ThrowIfNull(stream);
