@@ -348,8 +348,17 @@ internal sealed class WordMerger(WordEditor target, WordEditor source)
     // The body-level section properties move into the last paragraph (or a new one) so they end that section.
     private static void CloseLastSection(XElement body)
     {
-        var sectPr = body.Element(W + "sectPr") ?? new XElement(W + "sectPr");
-        sectPr.Remove();
+        // The final section properties are optional: without them the section ends with default page settings.
+        var sectPr = body.Element(W + "sectPr");
+        if (sectPr is null)
+        {
+            sectPr = new XElement(W + "sectPr");
+        }
+        else
+        {
+            sectPr.Remove();
+        }
+
         var last = body.Elements().LastOrDefault();
         if (last is null || last.Name != W + "p" || last.Element(W + "pPr")?.Element(W + "sectPr") is not null)
         {
