@@ -37,8 +37,8 @@ internal static class CssStyle
     [
         ("color", (v, r, _) => Color(v) is { } color ? r with { Color = color } : r),
         ("background-color", (v, r, _) => Color(v) is { } fill ? r with { Shading = fill } : r),
-        ("font-weight", (v, r, _) => r with { Bold = v is "bold" or "bolder" || (int.TryParse(v, out var weight) && weight >= 600) }),
-        ("font-style", (v, r, _) => r with { Italic = v is "italic" or "oblique" }),
+        ("font-weight", (v, r, _) => r with { Bold = v.ToLowerInvariant() is "bold" or "bolder" || (int.TryParse(v, out var weight) && weight >= 600) }),
+        ("font-style", (v, r, _) => r with { Italic = v.ToLowerInvariant() is "italic" or "oblique" }),
         ("text-decoration", Decoration),
         ("text-decoration-line", Decoration),
         ("font-size", (v, r, size) => Length(v, size) is { } points ? r with { FontSize = points, FontSizeComplex = points } : r),
