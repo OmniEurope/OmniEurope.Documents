@@ -125,7 +125,13 @@ internal sealed class SelectorReader(string text)
         if (_position < text.Length && text[_position] == c)
         {
             _position++;
-            SkipSpaces();
+
+            // Whitespace after a closing bracket may be the descendant combinator: ReadComplex reads it.
+            if (c is not (']' or ')'))
+            {
+                SkipSpaces();
+            }
+
             return true;
         }
 
