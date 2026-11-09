@@ -9,7 +9,7 @@ namespace OmniEurope.Documents.Pdf.Rendering;
 /// <summary>Options of <see cref="PdfRenderer"/>.</summary>
 public sealed record PdfRenderOptions
 {
-    /// <summary>Resolution in dots per inch (72 gives one pixel per point).</summary>
+    /// <summary>Resolution in dots per inch (72 gives one pixel per point); pinched to 1..1200, and the image records the pinched value.</summary>
     public double Dpi { get; init; } = 96;
 
     /// <summary>Fonts used for text whose font is not embedded; the bundled fonts by default.</summary>
@@ -45,7 +45,9 @@ public static class PdfRenderer
     {
         ArgumentNullException.ThrowIfNull(page);
         options ??= new PdfRenderOptions();
-        var scale = Math.Clamp(options.Dpi, 1, 1200) / 72;
+        // The resolution actually used: the requested one pinched to 1..1200, recorded in the image as well.
+        var dpi = Math.Clamp(options.Dpi, 1, 1200);
+        var scale = dpi / 72;
         var crop = page.CropBox.Normalize();
         var (width, height) = ((int)Math.Max(1, Math.Round(page.Width * scale)), (int)Math.Max(1, Math.Round(page.Height * scale)));
         if ((long)width * height > RasterImage.MaxPixels / 3)
@@ -56,14 +58,19 @@ public static class PdfRenderer
         var surface = new Surface(width, height);
         var context = new RenderContext(options.Fonts ?? FontLibrary.Default);
         var renderer = new PageRenderer(page.Store, surface, DeviceMatrix(crop, page.Rotation, scale), context);
-        renderer.Run(page.ContentBytes(), page.Resources);
+        renderer.Run(page.ContentBytes(out var unreadable), page.Resources);
+        if (unreadable > 0)
+        {
+            context.Gap(DocumentGap.Of(RenderGapCodes.RenderContentStreamUnreadable));
+        }
+
         if (options.Annotations)
         {
             AnnotationPainter.Paint(renderer, page.Dictionary, page.Resources);
         }
 
         var image = surface.ToImage();
-        image.DpiX = image.DpiY = options.Dpi;
+        image.DpiX = image.DpiY = dpi;
         return new PdfPageRendering(image, context.Gaps.Messages) { GapDetails = context.Gaps.ToList() };
     }
 

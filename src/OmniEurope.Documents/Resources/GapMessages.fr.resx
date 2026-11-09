@@ -198,6 +198,9 @@
   <data name="RenderSoftMaskTransferIgnored" xml:space="preserve">
     <value>fonctions de transfert de masque progressif illisibles ignorées</value>
   </data>
+  <data name="RenderContentStreamUnreadable" xml:space="preserve">
+    <value>flux de contenu de page indécodables non dessinés</value>
+  </data>
   <data name="RedactVectorsPaintedOver" xml:space="preserve">
     <value>les graphismes vectoriels et les dégradés sous une zone sont recouverts, non supprimés</value>
   </data>

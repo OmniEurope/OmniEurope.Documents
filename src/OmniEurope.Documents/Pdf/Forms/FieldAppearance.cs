@@ -242,7 +242,7 @@ internal sealed class FieldAppearance(PdfDocumentBuilder builder, PdfObjectStore
         return (Math.Max(rectangle.Width, 1), Math.Max(rectangle.Height, 1));
     }
 
-    private int MaxLength(FormFieldNode field) => (int)store.Number(field.Dictionary, "MaxLen");
+    private static int MaxLength(FormFieldNode field) => field.MaxLen;
 
     private PdfColor? Color(PdfArray? components)
     {

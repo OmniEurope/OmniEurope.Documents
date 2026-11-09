@@ -65,8 +65,13 @@ public sealed class PdfPage
     internal PdfObjectStore Store => Document.Store;
 
     /// <summary>The concatenated, decoded content streams of the page.</summary>
-    internal byte[] ContentBytes()
+    internal byte[] ContentBytes() => ContentBytes(out _);
+
+    /// <summary>The concatenated, decoded content streams of the page; <paramref name="unreadable"/> counts the
+    /// streams that could not be decoded and were left out.</summary>
+    internal byte[] ContentBytes(out int unreadable)
     {
+        unreadable = 0;
         var contents = Store.Get(Dictionary, "Contents");
         var parts = contents switch
         {
@@ -83,7 +88,8 @@ public sealed class PdfPage
             }
             catch (Exception exception) when (exception is InvalidDataException or NotSupportedException)
             {
-                // A broken content stream part is skipped; the others still draw.
+                // A broken content stream part is skipped, and counted so the renderer reports it; the others still draw.
+                unreadable++;
             }
 
             output.WriteByte((byte)'\n');

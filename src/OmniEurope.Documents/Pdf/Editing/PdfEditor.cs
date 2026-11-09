@@ -135,7 +135,19 @@ public static class PdfEditor
         Text("Keywords", information.Keywords);
         Text("Creator", information.Creator);
         Text("Producer", information.Producer is null ? "OmniEurope.Documents" : information.Producer + "; OmniEurope.Documents");
+        // Both dates are those of the source: the copy keeps the document's own history.
+        Date("CreationDate", information.CreationDate);
+        Date("ModDate", information.ModificationDate);
         return info;
+
+        void Date(string key, DateTimeOffset? value)
+        {
+            if (value is { } date)
+            {
+                var sign = date.Offset < TimeSpan.Zero ? '-' : '+';
+                info.Set(key, PdfString.FromText(FormattableString.Invariant($"D:{date:yyyyMMddHHmmss}{sign}{Math.Abs(date.Offset.Hours):00}'{Math.Abs(date.Offset.Minutes):00}'")));
+            }
+        }
     }
 }
 

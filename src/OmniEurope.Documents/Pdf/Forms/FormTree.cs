@@ -9,7 +9,7 @@ internal sealed record FormWidgetNode(PdfDictionary Dictionary, PdfReference? Re
 
 /// <summary>A terminal field with its inherited attributes (ISO 32000-1 §12.7.3.1, table 220).</summary>
 internal sealed record FormFieldNode(PdfDictionary Dictionary, PdfReference? Reference, string Name, string? Type, int Flags, PdfObject? Value,
-    string? DefaultAppearance, int Quadding, IReadOnlyList<FormWidgetNode> Widgets)
+    string? DefaultAppearance, int Quadding, IReadOnlyList<FormWidgetNode> Widgets, int MaxLen = 0)
 {
     public PdfFieldKind Kind => Type switch
     {
@@ -27,7 +27,7 @@ internal static class FormTree
 {
     private const int MaxDepth = 32;
 
-    private sealed record Inherited(string Name, string? Type, int Flags, PdfObject? Value, string? DefaultAppearance, int Quadding);
+    private sealed record Inherited(string Name, string? Type, int Flags, PdfObject? Value, string? DefaultAppearance, int Quadding, int MaxLen = 0);
 
     /// <summary>The interactive form dictionary of the catalog, or null.</summary>
     public static PdfDictionary? AcroForm(PdfObjectStore store) => store.Get<PdfDictionary>(store.Catalog, "AcroForm");
@@ -88,7 +88,8 @@ internal static class FormTree
             store.Get(dictionary, "Ff") is PdfNumber flags ? flags.IntValue : parent.Flags,
             store.Get(dictionary, "V") ?? parent.Value,
             (store.Get(dictionary, "DA") as PdfString)?.ToText() ?? parent.DefaultAppearance,
-            store.Get(dictionary, "Q") is PdfNumber q ? q.IntValue : parent.Quadding);
+            store.Get(dictionary, "Q") is PdfNumber q ? q.IntValue : parent.Quadding,
+            store.Get(dictionary, "MaxLen") is PdfNumber maxLen ? maxLen.IntValue : parent.MaxLen);
     }
 
     private static FormFieldNode Terminal(PdfObjectStore store, PdfDictionary dictionary, PdfReference? reference, Inherited inherited, List<PdfObject> kids,
@@ -102,7 +103,7 @@ internal static class FormTree
                 .Select(k => new FormWidgetNode(k.Dictionary!, k.Kid as PdfReference, PageOf(pages, k.Kid as PdfReference)))
                 .ToList();
         return new FormFieldNode(dictionary, reference, inherited.Name, inherited.Type, inherited.Flags, inherited.Value, inherited.DefaultAppearance,
-            inherited.Quadding, widgets);
+            inherited.Quadding, widgets, inherited.MaxLen);
     }
 
     private static int PageOf(Dictionary<int, int> pages, PdfReference? reference) =>

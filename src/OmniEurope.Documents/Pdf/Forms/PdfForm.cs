@@ -103,7 +103,7 @@ public static class PdfForm
         };
         var widgets = node.Widgets.Select(w => new PdfFormWidget(w.PageNumber, AnnotationAppearance.Rectangle(store, w.Dictionary),
             kind is PdfFieldKind.CheckBox or PdfFieldKind.RadioButton ? OnState(store, w.Dictionary) : null, AppearanceText(store, w.Dictionary))).ToList();
-        var maxLength = store.Get(node.Dictionary, "MaxLen") is PdfNumber max ? max.IntValue : (int?)null;
+        int? maxLength = node.MaxLen > 0 ? node.MaxLen : null;
         return new PdfFormField(node.Name, kind, value, value is null ? [] : kind is PdfFieldKind.ListBox ? values : [value],
             kind is PdfFieldKind.ListBox or PdfFieldKind.ComboBox ? Options(store, node.Dictionary) : [],
             widgets.Select(w => w.OnState).OfType<string>().Distinct(StringComparer.Ordinal).ToList(), widgets)

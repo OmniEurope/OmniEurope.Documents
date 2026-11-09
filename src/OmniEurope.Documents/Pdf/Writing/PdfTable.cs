@@ -94,6 +94,9 @@ internal sealed class PdfTablePainter(PdfFlowLayout flow, PdfTable table)
     public void Paint()
     {
         var headerHeight = table.HeaderRows.Sum(r => Height(r, header: true));
+        // The headers never stand alone at the bottom of a page: they move with the first body row (on a fresh page
+        // this changes nothing, so a block taller than the page still ends).
+        flow.EnsureSpace(headerHeight + (table.Rows.Count > 0 ? Height(table.Rows[0], header: false) : 0));
         PaintHeaders();
         foreach (var row in table.Rows)
         {
