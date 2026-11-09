@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: EUPL-1.2
-using System.Diagnostics;
 using OmniEurope.Documents.Pdf;
 using OmniEurope.Documents.Tests;
 
@@ -12,16 +11,15 @@ namespace OmniEurope.Documents.StressTests;
 /// </summary>
 public sealed class Jpeg2000ScaleTests
 {
-    [Fact(Skip = "Intermittent: over its 20 s limit under the parallel full run, passes alone. See docs/tests/disabled-tests.md")]
+    [Fact]
     public void A_large_tiled_image_decodes_exactly_within_the_time_limit()
     {
         var data = File.ReadAllBytes(Path.Combine(Jpeg2000Conformance.Folder, "Large", "large-4096x3072.jp2"));
         var expected = Jpeg2000Conformance.Pattern(4096, 3072);
-        var watch = Stopwatch.StartNew();
+        // The limit is on the processor time of this thread: the parallel run of the other tests does not count.
+        var (raster, time) = ThreadCpuTime.Measure(() => Assert.Single(PdfDocument.Open(Jpeg2000Conformance.Pdf(data, 4096, 3072)).GetPage(1).Images).Decode()!);
 
-        var raster = Assert.Single(PdfDocument.Open(Jpeg2000Conformance.Pdf(data, 4096, 3072)).GetPage(1).Images).Decode()!;
-
-        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(20), $"took {watch.Elapsed}");
+        Assert.True(time > TimeSpan.Zero && time < TimeSpan.FromSeconds(20), $"took {time} of processor time");
         Assert.Equal((4096, 3072), (raster.Width, raster.Height));
         var wrong = Enumerable.Range(0, expected.Length).Count(i => raster.Pixels[i] != expected[i]);
         Assert.True(wrong == 0, $"{wrong} of {expected.Length} samples differ from the pattern");
