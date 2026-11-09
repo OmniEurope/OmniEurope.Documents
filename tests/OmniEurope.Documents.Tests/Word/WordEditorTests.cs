@@ -63,6 +63,18 @@ public sealed class WordEditorTests
         Assert.Equal("X", paragraphs[1].Text);
     }
 
+    [Theory]
+    [InlineData("a­b", "X")]
+    [InlineData("a­b a­b", "X X")]
+    public void A_linguistic_match_removes_its_whole_length(string text, string expected)
+    {
+        var editor = WordEditor.Open(DocxFactory.Build($"<w:p><w:r><w:t>{text}</w:t></w:r></w:p>"));
+
+        Assert.True(editor.ReplaceText("ab", "X", StringComparison.InvariantCulture) > 0);
+
+        Assert.Equal(expected, editor.ToDocument().Blocks.First().Text);
+    }
+
     [Fact]
     public void Replacement_reaches_headers_footers_and_notes()
     {

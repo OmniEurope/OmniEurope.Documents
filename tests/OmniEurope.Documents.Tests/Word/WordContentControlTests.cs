@@ -464,6 +464,24 @@ public sealed class WordContentControlTests
         Assert.Equal("Vert", Find(editor, "couleur").Text);
     }
 
+    [Fact]
+    public void A_drop_down_list_without_entries_refuses_any_value_while_a_combo_box_takes_it()
+    {
+        static WordEditor Empty(string kind) => WordEditor.Open(DocxFactory.Build(
+            $"""<w:p><w:sdt><w:sdtPr><w:tag w:val="ville"/><w:id w:val="7"/><w:{kind}/></w:sdtPr><w:sdtContent><w:r><w:t>Paris</w:t></w:r></w:sdtContent></w:sdt></w:p>"""));
+        var editor = Empty("dropDownList");
+
+        var selected = editor.SelectItem("ville", "Lyon");
+        var filled = editor.FillContentControls(new Dictionary<string, string> { ["ville"] = "Lyon" });
+
+        Assert.Empty(selected.Filled);
+        Assert.Single(selected.Gaps);
+        Assert.Empty(filled.Filled);
+        Assert.Single(filled.Gaps);
+        Assert.Equal("Paris", Find(editor, "ville").Text);
+        Assert.Empty(Empty("comboBox").SelectItem("ville", "Lyon").Gaps);
+    }
+
     private sealed class ControlComparer : IEqualityComparer<WordContentControl>
     {
         public bool Equals(WordContentControl? x, WordContentControl? y) =>
