@@ -125,7 +125,7 @@ public sealed class WordToHtmlCspTests
             ["/documents/7/images/image1.png", "/documents/7/images/image2.jpg", "/documents/7/images/image1.png", "/documents/7/images/image3.png"],
             images.Select(i => i.GetAttribute("src")));
         Assert.Equal(["image1.png", "image2.jpg", "image3.png"], result.Images.Select(i => i.Name));
-        Assert.Equal(["image/png", "image/jpeg", "image/png"], result.Images.Select(i => i.MediaType));
+        Assert.Equal(["image/png", "image/jpeg", "image/png"], result.Images.Select(i => i.ContentType));
         Assert.Equal(png, result.Images[0].Data);
         Assert.NotSame(png, result.Images[0].Data);
         Assert.Equal(jpeg, result.Images[1].Data);

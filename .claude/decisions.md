@@ -7,4 +7,4 @@
 - 2026-11-09 : classes partial : interdites sauf utilité réelle (Entity Framework, générateurs de source comme GeneratedRegex) ; vérifié conforme, aucun garde supplémentaire.
 - 2026-11-09 : test JPEG 2000 à limite de temps : mesurer le temps processeur du thread au lieu du temps écoulé, test réactivé.
 - 2026-11-09 : OOXML Strict (Excel) : refusé pour l'instant avec une erreur explicite ; à implémenter le jour où un besoin réel apparaît.
-- 2026-11-09 : noms d'API publics (ContentType/MediaType, Worksheet/Sheet) : pas d'harmonisation.
+- 2026-11-09 : noms d'API publics : WordHtmlImage reçoit l'alias ContentType, MediaType marqué obsolète (retrait à une version majeure) ; Worksheet (modèle) et Sheet (éditeur) restent distincts, rôles différents.
