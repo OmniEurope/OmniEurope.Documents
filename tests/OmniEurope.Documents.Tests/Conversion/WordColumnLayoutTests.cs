@@ -104,6 +104,43 @@ public sealed class WordColumnLayoutTests
         Assert.True(Math.Max(first, second) < 700, "the columns were balanced, not filled to the page bottom (771 pt)");
     }
 
+    [Theory]
+    [InlineData(WordSectionStart.NextColumn, true)]
+    [InlineData(WordSectionStart.Continuous, false)]
+    public void A_next_column_section_starts_in_the_following_column(WordSectionStart start, bool nextColumn)
+    {
+        var document = Document(new WordParagraph("AAAA"));
+        var columns = WordPageSetup.A4 with { Columns = 2, ColumnWidths = [200, 200], ColumnSpacings = [20, 0] };
+        document.Sections[0].Page = columns;
+        document.AddSection(columns with { Start = start });
+        document.AddParagraph("BBBB");
+
+        var page = Convert(document);
+        var a = page.Letters.First(l => l.Value == "A");
+        var b = page.Letters.First(l => l.Value == "B");
+
+        Assert.Equal(nextColumn, b.X > Margin + 200);
+        Assert.Equal(nextColumn, Math.Abs(b.Y - a.Y) < 0.5);
+        Assert.Equal(!nextColumn, b.Y < a.Y - 1);
+    }
+
+    [Fact]
+    public void A_next_column_section_after_the_last_column_opens_a_page()
+    {
+        var document = Document(new WordParagraph("AAAA"));
+        var columns = WordPageSetup.A4 with { Columns = 2, ColumnWidths = [200, 200], ColumnSpacings = [20, 0] };
+        document.Sections[0].Page = columns;
+        document.AddSection(columns with { Start = WordSectionStart.NextColumn });
+        document.AddParagraph("BBBB");
+        document.AddSection(columns with { Start = WordSectionStart.NextColumn });
+        document.AddParagraph("CCCC");
+
+        var result = WordToPdf.Convert(WordDocument.Load(document.ToArray()));
+
+        Assert.Equal(2, result.PageCount);
+        Assert.Contains("CCCC", PdfDocument.Open(result.Pdf).GetPage(2).Text, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void A_tab_does_not_make_its_line_taller()
     {

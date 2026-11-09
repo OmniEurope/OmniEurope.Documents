@@ -271,10 +271,16 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
         }
 
         var room = state.Right - state.X;
-        var length = 1;
-        while (length < word.Text.Length - 1 && context.Measure(word.Text[..(length + 1)], word.Style) <= room)
+        var length = ScalarEnd(word.Text, 0);
+        if (length >= word.Text.Length)
         {
-            length++;
+            return;
+        }
+
+        // Cuts fall between Unicode scalars, never inside a surrogate pair.
+        while (ScalarEnd(word.Text, length) < word.Text.Length && context.Measure(word.Text[..ScalarEnd(word.Text, length)], word.Style) <= room)
+        {
+            length = ScalarEnd(word.Text, length);
         }
 
         var rest = new TextToken(word.Text[length..], word.Style) { Note = word.Note, BreakBefore = true, Levels = word.Levels?[length..] };
@@ -284,6 +290,9 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
         word.Width = context.Measure(word.Text, word.Style);
         _tokens.Insert(k + 1, rest);
     }
+
+    // The index just after the scalar starting at i.
+    private static int ScalarEnd(string text, int i) => i + (i + 1 < text.Length && char.IsHighSurrogate(text[i]) && char.IsLowSurrogate(text[i + 1]) ? 2 : 1);
 
     // Returns false when the tab must start the next line.
     private bool PlaceTab(TabToken tab, int k, LineState state)

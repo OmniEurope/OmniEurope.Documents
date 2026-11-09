@@ -85,6 +85,12 @@ internal sealed class MarkdownImages(string folder)
     /// <summary>The reference name of an image file (its file name without extension).</summary>
     public static string Name(WordMarkdownImage image) => System.IO.Path.GetFileNameWithoutExtension(image.Path);
 
+    /// <summary>The destination of a reference definition: the path as is, or between angle brackets (backslashes and angle brackets escaped) when it holds a space, a control character or an angle bracket.</summary>
+    public static string Destination(WordMarkdownImage image) =>
+        image.Path.Any(c => char.IsWhiteSpace(c) || char.IsControl(c) || c is '<' or '>')
+            ? "<" + image.Path.Replace("\\", "\\\\", StringComparison.Ordinal).Replace("<", "\\<", StringComparison.Ordinal).Replace(">", "\\>", StringComparison.Ordinal) + ">"
+            : image.Path;
+
     private static readonly Dictionary<string, string> Extensions = new(StringComparer.OrdinalIgnoreCase)
     {
         ["image/png"] = "png", ["image/jpeg"] = "jpg", ["image/gif"] = "gif", ["image/bmp"] = "bmp", ["image/tiff"] = "tif",

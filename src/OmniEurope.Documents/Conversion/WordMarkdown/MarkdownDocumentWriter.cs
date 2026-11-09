@@ -244,7 +244,7 @@ internal sealed class MarkdownDocumentWriter(MarkdownContext context)
             return;
         }
 
-        Add(string.Join('\n', images.Select(i => "[" + MarkdownImages.Name(i) + "]: " + i.Path)), isItem: false);
+        Add(string.Join('\n', images.Select(i => "[" + MarkdownImages.Name(i) + "]: " + MarkdownImages.Destination(i))), isItem: false);
     }
 
     private void Add(string block, bool isItem)

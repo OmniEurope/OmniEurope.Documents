@@ -143,7 +143,7 @@ internal sealed class TiffPage(byte[] data, Dictionary<int, uint[]> tags)
 
         var layout = new TiffLayout(width, height, samples, bits, chunkWidth, chunkHeight, Tag(-1) == 1);
         var raw = ReadChunks(layout, compression, photometric);
-        var image = new TiffSamples(layout, photometric, Tags(320), Tags(338).Length > 0).ToImage(raw);
+        var image = new TiffSamples(layout, photometric, Tags(320), Tags(338).Length > 0, Tag(338) == 1).ToImage(raw);
         ApplyResolution(image);
         return image;
     }
