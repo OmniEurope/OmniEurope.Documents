@@ -22,6 +22,9 @@ internal sealed class MarkupCompatibility
 {
     public static readonly XNamespace Mc = "http://schemas.openxmlformats.org/markup-compatibility/2006";
 
+    // The four XML white-space characters separate the names of a markup compatibility list.
+    private static readonly char[] XmlSpaces = [' ', '\t', '\r', '\n'];
+
     private readonly Func<string, bool> _understood;
     private readonly Action<XObject, string> _error;
 
@@ -127,7 +130,7 @@ internal sealed class MarkupCompatibility
         }
 
         var satisfied = true;
-        foreach (var prefix in requires.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+        foreach (var prefix in requires.Split(XmlSpaces, StringSplitOptions.RemoveEmptyEntries))
         {
             var ns = choice.GetNamespaceOfPrefix(prefix);
             if (ns is null)
@@ -189,7 +192,7 @@ internal sealed class MarkupCompatibility
 
             if (process is not null)
             {
-                foreach (var name in process.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                foreach (var name in process.Value.Split(XmlSpaces, StringSplitOptions.RemoveEmptyEntries))
                 {
                     var colon = name.IndexOf(':', StringComparison.Ordinal);
                     var ns = colon > 0 ? element.GetNamespaceOfPrefix(name[..colon]) : null;
@@ -211,7 +214,7 @@ internal sealed class MarkupCompatibility
 
         private static IEnumerable<string> Namespaces(XElement element, XAttribute attribute, Action<XObject, string> error)
         {
-            foreach (var prefix in attribute.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            foreach (var prefix in attribute.Value.Split(XmlSpaces, StringSplitOptions.RemoveEmptyEntries))
             {
                 var ns = element.GetNamespaceOfPrefix(prefix);
                 if (ns is null)

@@ -75,6 +75,21 @@ public sealed class WordMergeTests
         Assert.Contains("ajout", WordDocument.Load(merged).Text, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void A_target_without_final_section_properties_is_merged_with_defaults()
+    {
+        var target = Build("<w:p><w:r><w:t>cible</w:t></w:r></w:p>");
+        Assert.True(OmniEurope.Documents.Word.Validation.WordSchemaValidator.Validate(target).IsValid);
+
+        var merged = Merge(target, Build("<w:p><w:r><w:t>ajout</w:t></w:r></w:p>"), startOnNewPage: true);
+
+        var report = OmniEurope.Documents.Word.Validation.WordSchemaValidator.Validate(merged);
+        Assert.True(report.IsValid, string.Join("\n", report.Errors));
+        var text = WordDocument.Load(merged).Text;
+        Assert.Contains("cible", text, StringComparison.Ordinal);
+        Assert.Contains("ajout", text, StringComparison.Ordinal);
+    }
+
     private static byte[] Merge(byte[] target, byte[] source, bool startOnNewPage)
     {
         var editor = WordEditor.Open(target);

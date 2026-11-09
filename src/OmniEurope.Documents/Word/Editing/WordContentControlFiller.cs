@@ -79,8 +79,8 @@ internal sealed class WordContentControlFiller(IReadOnlyList<ScannedControl> con
         var item = items.FirstOrDefault(i => i.Value == value)
             ?? items.FirstOrDefault(i => i.DisplayText == value)
             ?? items.FirstOrDefault(i => string.Equals(i.DisplayText, value, StringComparison.OrdinalIgnoreCase));
-        // A combo box accepts free text, as Word does; a drop-down list stays closed on its entries.
-        if (item is null && items.Count > 0 && control.Info.Kind != WordContentControlKind.ComboBox)
+        // A combo box accepts free text, as Word does; a drop-down list stays closed on its entries, even when it has none.
+        if (item is null && control.Info.Kind != WordContentControlKind.ComboBox)
         {
             return DocumentGap.Of(ContentControlGapCodes.ContentControlValueNotInList, value);
         }

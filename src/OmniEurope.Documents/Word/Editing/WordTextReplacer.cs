@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: EUPL-1.2
+using System.Globalization;
 using System.Xml.Linq;
 using static OmniEurope.Documents.Word.WordXml;
 
@@ -55,16 +56,7 @@ internal static class WordTextReplacer
 
         var values = texts.Select(t => t.Value).ToArray();
         var joined = string.Concat(values);
-        var matches = new List<int>();
-        for (var at = joined.IndexOf(search, comparison); at >= 0; at = joined.IndexOf(search, at + search.Length, comparison))
-        {
-            matches.Add(at);
-            if (at + search.Length >= joined.Length)
-            {
-                break;
-            }
-        }
-
+        var matches = FindMatches(joined, search, comparison);
         if (matches.Count == 0)
         {
             return 0;
@@ -79,7 +71,7 @@ internal static class WordTextReplacer
         // Right to left: the start of each segment keeps its offset while later text changes.
         for (var m = matches.Count - 1; m >= 0; m--)
         {
-            Apply(values, starts, matches[m], search.Length, replacement);
+            Apply(values, starts, matches[m].Position, matches[m].Length, replacement);
         }
 
         for (var i = 0; i < texts.Count; i++)
@@ -91,6 +83,48 @@ internal static class WordTextReplacer
         }
 
         return matches.Count;
+    }
+
+    // A linguistic comparison can match more or fewer UTF-16 units than the search has (an ignorable
+    // character such as a soft hyphen inside the match), so each match keeps its own length.
+    private static List<(int Position, int Length)> FindMatches(string text, string search, StringComparison comparison)
+    {
+        var matches = new List<(int, int)>();
+        var linguistic = comparison is not (StringComparison.Ordinal or StringComparison.OrdinalIgnoreCase);
+        var culture = comparison is StringComparison.InvariantCulture or StringComparison.InvariantCultureIgnoreCase ? CultureInfo.InvariantCulture : CultureInfo.CurrentCulture;
+        var options = comparison is StringComparison.CurrentCultureIgnoreCase or StringComparison.InvariantCultureIgnoreCase ? CompareOptions.IgnoreCase : CompareOptions.None;
+        var start = 0;
+        while (start <= text.Length)
+        {
+            int at;
+            var length = search.Length;
+            if (linguistic)
+            {
+                at = culture.CompareInfo.IndexOf(text.AsSpan(start), search, options, out length);
+                if (at >= 0)
+                {
+                    at += start;
+                }
+            }
+            else
+            {
+                at = text.IndexOf(search, start, comparison);
+            }
+
+            if (at < 0)
+            {
+                break;
+            }
+
+            matches.Add((at, length));
+            start = at + Math.Max(length, 1);
+            if (at + length >= text.Length)
+            {
+                break;
+            }
+        }
+
+        return matches;
     }
 
     private static void Apply(string[] values, int[] starts, int position, int length, string replacement)

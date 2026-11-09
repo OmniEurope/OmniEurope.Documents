@@ -263,6 +263,22 @@ public sealed class WordSchemaValidatorTests
         Assert.Contains(message, error.Message, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData(" ")]
+    [InlineData("&#x9;")]
+    [InlineData("&#xA;")]
+    [InlineData("&#xD;")]
+    public void Markup_compatibility_lists_are_split_on_every_xml_space(string separator)
+    {
+        var declarations = $"xmlns:w14=\"{W14}\" xmlns:wps=\"{Wps}\" mc:Ignorable=\"w14{separator}wps\" mc:ProcessContent=\"w14:a{separator}wps:b\"";
+
+        var report = WordSchemaValidator.Validate(Package(Document($"<w:p>{Run}</w:p>", declarations)));
+
+        Assert.True(report.IsValid, string.Join("\n", report.Errors));
+        var missing = WordSchemaValidator.Validate(Package(Document($"<w:p>{Run}</w:p>", $"xmlns:w14=\"{W14}\" mc:Ignorable=\"w14{separator}zz\"")));
+        Assert.Contains(missing.Errors, e => e.Message.Contains("prefix 'zz'", StringComparison.Ordinal));
+    }
+
     [Fact]
     public void A_part_of_an_extension_namespace_is_read_but_not_checked()
     {
