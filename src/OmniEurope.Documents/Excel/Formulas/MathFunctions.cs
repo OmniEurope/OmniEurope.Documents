@@ -7,6 +7,7 @@ namespace OmniEurope.Documents.Excel.Formulas;
 internal static class MathFunctions
 {
     private const int Many = 255;
+    private const double MaxRoundable = 1e28; // below the largest decimal (7.9e28)
 
     public static void Register(Dictionary<string, FormulaFunction> registry)
     {
@@ -286,7 +287,10 @@ internal static class MathFunctions
             return FormulaValue.Num;
         }
 
-        var quotient = (double)Math.Round((decimal)(x.Number / significance.Number), 9);
+        var ratio = x.Number / significance.Number;
+
+        // Beyond the range of decimal every double is a whole number: nothing to round, and the cast would throw.
+        var quotient = Math.Abs(ratio) < MaxRoundable ? (double)Math.Round((decimal)ratio, 9) : ratio;
         return FormulaValue.Of(direction(quotient) * significance.Number);
     }
 }

@@ -36,7 +36,8 @@ internal sealed class ExcelHtmlWriter(ExcelHtmlOptions options)
         page.Raw("</head><body>\n");
         page.Raw(_body.ToString());
         page.Raw("</body></html>\n");
-        return new ExcelHtmlResult(page.ToString(), css);
+        var gaps = workbook.GapDetails.Distinct().ToList();
+        return new ExcelHtmlResult(page.ToString(), css) { Gaps = gaps.Select(g => g.Message).ToList(), GapDetails = gaps };
     }
 
     private void WriteSheet(XlsxWorksheet sheet)
