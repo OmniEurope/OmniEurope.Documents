@@ -159,6 +159,15 @@ public sealed class WordToMarkdownTests
     }
 
     [Fact]
+    public void An_image_folder_with_a_space_is_written_as_a_bracketed_destination()
+    {
+        var result = WordToMarkdown.Convert(OnePicture(), new WordMarkdownOptions { ImageFolder = "my images/" });
+
+        Assert.Equal("![][image1]\n\n[image1]: <my images/image1.png>\n", result.Markdown);
+        Assert.Equal("my images/image1.png", result.Images[0].Path);
+    }
+
+    [Fact]
     public void Writes_footnotes_and_endnotes_as_footnotes_defined_at_the_end()
     {
         var document = new WordDocument();

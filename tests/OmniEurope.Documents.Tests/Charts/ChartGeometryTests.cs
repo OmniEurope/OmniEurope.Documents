@@ -262,6 +262,20 @@ public sealed class ChartGeometryTests
     }
 
     [Fact]
+    public void Finite_values_near_the_double_limits_give_a_finite_axis()
+    {
+        var scale = Scale(ChartGrouping.Standard, [-1e308, 1e308]);
+
+        Assert.All(new[] { scale.Min, scale.Max, scale.Step }, v => Assert.True(double.IsFinite(v)));
+        var ticks = scale.Ticks().ToList();
+        Assert.True(ticks.Count >= 2);
+        Assert.All(ticks, t => Assert.True(double.IsFinite(t)));
+        Assert.True(scale.Min <= -1e308 && scale.Max >= 1e308);
+        Assert.Equal(0.5, scale.Fraction(0), 6);
+        Assert.Equal(1, scale.Fraction(1e308), 6);
+    }
+
+    [Fact]
     public void A_formula_naming_exactly_100000_cells_is_read()
     {
         var chart = ReadFromCells(100_000);

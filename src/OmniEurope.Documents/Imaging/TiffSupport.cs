@@ -12,7 +12,8 @@ internal sealed record TiffLayout(int Width, int Height, int Samples, int Bits, 
 }
 
 /// <summary>Turns decompressed TIFF samples into an 8-bit image.</summary>
-internal sealed class TiffSamples(TiffLayout layout, int photometric, uint[] colorMap, bool extraAlpha)
+/// <remarks>With <c>associatedAlpha</c> (ExtraSamples 1) the colour samples are already multiplied by alpha and are divided by it.</remarks>
+internal sealed class TiffSamples(TiffLayout layout, int photometric, uint[] colorMap, bool extraAlpha, bool associatedAlpha = false)
 {
     public RasterImage ToImage(byte[] raw)
     {
@@ -59,6 +60,14 @@ internal sealed class TiffSamples(TiffLayout layout, int photometric, uint[] col
                     output[o + c] = Scale(Sample(row, x, c));
                 }
 
+                if (associatedAlpha && photometric == 2 && channels == 4)
+                {
+                    for (var c = 0; c < 3; c++)
+                    {
+                        output[o + c] = Unassociate(output[o + c], output[o + 3]);
+                    }
+                }
+
                 return o + channels;
             default:
                 var gray = Scale(Sample(row, x, 0));
@@ -66,12 +75,20 @@ internal sealed class TiffSamples(TiffLayout layout, int photometric, uint[] col
                 if (extraAlpha && layout.Samples >= 2)
                 {
                     output[o + 1] = Scale(Sample(row, x, 1));
+                    if (associatedAlpha)
+                    {
+                        output[o] = Unassociate(output[o], output[o + 1]);
+                    }
+
                     return o + 2;
                 }
 
                 return o + 1;
         }
     }
+
+    // The straight colour of a channel multiplied by alpha; fully transparent pixels have no colour left.
+    private static byte Unassociate(byte channel, byte alpha) => alpha == 0 ? (byte)0 : (byte)Math.Min(255, ((channel * 255) + (alpha / 2)) / alpha);
 
     private uint Sample(ReadOnlySpan<byte> row, int x, int channel)
     {
