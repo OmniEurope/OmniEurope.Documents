@@ -72,7 +72,7 @@ internal sealed class FormFiller
     private void SetText(FormFieldNode field, PdfFieldValue value)
     {
         var text = Single(field, value);
-        var maxLength = (int)_store.Number(field.Dictionary, "MaxLen");
+        var maxLength = field.MaxLen;
         if (maxLength > 0 && text.EnumerateRunes().Count() > maxLength)
         {
             throw new ArgumentException($"Field '{field.Name}' accepts at most {maxLength} characters.", nameof(value));
