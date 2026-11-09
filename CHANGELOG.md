@@ -12,6 +12,8 @@ Notable changes to this project are documented here, following the Keep a Change
 - PDF rendering reports a content stream that could not be decoded (`RenderContentStreamUnreadable`) instead of
   drawing a silently blank page; the readable streams of the page still draw.
 - A test guard keeps every production source file within 600 effective lines.
+- `WordHtmlImage.ContentType`, the name the other image types use for the media type; `WordHtmlImage.MediaType`
+  still works and is marked obsolete.
 
 ### Changed
 

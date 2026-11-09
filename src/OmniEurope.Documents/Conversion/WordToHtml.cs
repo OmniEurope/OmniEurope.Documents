@@ -65,7 +65,13 @@ public sealed record WordHtmlOptions
 
 /// <summary>A picture of the page served apart from it (<see cref="WordHtmlOptions.ImageUrlPrefix"/>): its file name,
 /// the one its <c>src</c> ends with, its media type (<c>image/png</c>...) and its bytes.</summary>
-public sealed record WordHtmlImage(string Name, string MediaType, byte[] Data);
+public sealed record WordHtmlImage(string Name, [property: Obsolete("Use ContentType, the name the other image types use.")] string MediaType, byte[] Data)
+{
+    /// <summary>The media type of the picture (<c>image/png</c>...), named as in <see cref="WordImage"/> and <see cref="WordMarkdownImage"/>.</summary>
+#pragma warning disable CS0618 // the alias reads the positional value it replaces
+    public string ContentType => MediaType;
+#pragma warning restore CS0618
+}
 
 /// <summary>A converted document: a standalone HTML page and what the conversion only approximates.</summary>
 public sealed record WordHtmlResult(string Html, IReadOnlyList<string> Gaps)
