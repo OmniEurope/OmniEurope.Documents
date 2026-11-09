@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "parameters": "--outdated",
+  "sources": [
+    "https://api.nuget.org/v3/index.json"
+  ],
+  "projects": [
+    {
+      "path": "C:/Dev/OmniEurope/OmniEurope.Documents/src/OmniEurope.Documents.Fonts/OmniEurope.Documents.Fonts.csproj"
+    },
+    {
+      "path": "C:/Dev/OmniEurope/OmniEurope.Documents/src/OmniEurope.Documents/OmniEurope.Documents.csproj"
+    },
+    {
+      "path": "C:/Dev/OmniEurope/OmniEurope.Documents/tests/OmniEurope.Documents.StressTests/OmniEurope.Documents.StressTests.csproj",
+      "frameworks": [
+        {
+          "framework": "net10.0",
+          "topLevelPackages": [
+            {
+              "id": "xunit.v3",
+              "requestedVersion": "4.0.2",
+              "resolvedVersion": "4.0.2",
+              "latestVersion": "4.0.3"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "C:/Dev/OmniEurope/OmniEurope.Documents/tests/OmniEurope.Documents.Tests/OmniEurope.Documents.Tests.csproj",
+      "frameworks": [
+        {
+          "framework": "net10.0",
+          "topLevelPackages": [
+            {
+              "id": "xunit.v3",
+              "requestedVersion": "4.0.2",
+              "resolvedVersion": "4.0.2",
+              "latestVersion": "4.0.3"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

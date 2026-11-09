@@ -1,0 +1,152 @@
+[
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/ConversionDetailTests.cs",
+    "contentHash": "e7d4e47b81c883bca6c4f6f8296b815ef631c6ce097fc582569454cf5e6d0bac",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/ConvertersTests.cs",
+    "contentHash": "2d815031161ff52558b0981c9126313c81e260dafcdf3672c90db806e69eb946",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/DocumentGapTests.cs",
+    "contentHash": "0c966202ba3d68d7b4b245e243580ecfb9ba081da9b0b8793167e3f4fa6abad7",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/EmfFixture.cs",
+    "contentHash": "cf00224d69af203701a71227599a695e79dd65588ee240f8595000ea3ab84348",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/EmfPlaybackTests.cs",
+    "contentHash": "c301218a536b5a2259d57dc24d508688d947288a393d854f8e073de0eed2c4f1",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/ExcelTextOverflowTests.cs",
+    "contentHash": "4b408845aee44e7188c5ab4a9baafe7423c44ac15bb71d42e54e226c4d7c8fb2",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/ExcelToHtmlTests.cs",
+    "contentHash": "9a2af4418630238f5c70e30cda49c8e164f2d13352321706908dd66cfad33869",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/HtmlMarkdownGapCodeTests.cs",
+    "contentHash": "18ac405eddb4952bd7cf4678be10d163e38be0aae6ca1548cf20647151091887",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/HtmlStyleRules.cs",
+    "contentHash": "5fd555e57a90645d4f6b35bf3634a664076e28ca0a47ccbc40665afce009bf88",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/HtmlToWordClassRulesTests.cs",
+    "contentHash": "9dd4d3ae7b3140b1b7deed4e69ee70057bcbe54cddb91734dee547d5b6c2382b",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/LineBreakerTests.cs",
+    "contentHash": "a8aec0e7cc6ab4a64c4d0a7ff1ec3ace7331e5d4913ff96f5084fb47c49c0d7e",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/RenderingDetailsTests.cs",
+    "contentHash": "be0733aae1d6983869651ac1ebb57b8dace0021d9e9922bddc9e6137af2c1597",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/WordCalibriGapTests.cs",
+    "contentHash": "c1e672b1cac37d051398d48782b8921b0748c3371a5795c3899fc2738654ee71",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/WordColumnLayoutTests.cs",
+    "contentHash": "e87ef4972f997ea9095ceefc2b61f3b5a4ba8363df211a47e3fb3fefbf5896ac",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/WordFieldUpdaterTests.cs",
+    "contentHash": "a6fc48d4041665a21fc25b4c96ab49e7986d344ea98869dca3a8e47ff113eda1",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/WordFloatClipTests.cs",
+    "contentHash": "086cc8c78c1f69cfced643ad728ecbde4bf37414b8e4ca6fe0fb73e4b74b05a6",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/WordFloatWrapTests.cs",
+    "contentHash": "3ca0476042dcadec85dc1f5d600c1f0de8fda9454963689c950e41f0a1fb7c44",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/WordFootnoteSeparatorTests.cs",
+    "contentHash": "cd95415ca850711a0a62dc4ce0947712c3b69be034f12d05be180820ebe6b8e3",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/WordHtmlContentControlTests.cs",
+    "contentHash": "39ba15fb1902e857eb0ebccedc175763537eb296de4632a26fe962bec9ebbbc9",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/WordJustifyShrinkTests.cs",
+    "contentHash": "3792dd6b28f3238f65838dac36f463d518c9e78cbe7edfe446b8013b96d42f2f",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/WordLayoutTests.cs",
+    "contentHash": "3e5a5dcd9339cf41cbbd6df4b45ed19df1515e53c22fbb44ff74e186f48df6f5",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/WordPageAlignmentTests.cs",
+    "contentHash": "ae9dddfeb56194d8795519c4e435837806b443cc5adbd47c9646961f51129c82",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/WordPageFieldWidthTests.cs",
+    "contentHash": "49ee2f78b5a5cda2b10e13377545eaf854911a46a9a4c17efba547abdb4f4f44",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/WordRightToLeftTests.cs",
+    "contentHash": "71b51c977427b7f911d7e082e365d0c5951043e10810df383c975efd08a3bd5e",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/WordSymbolFontTests.cs",
+    "contentHash": "29902cc541436a381698e920a2091158a2512a5c598a33074513f56aeb5665d4",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/WordTableHeaderKeepTests.cs",
+    "contentHash": "3c6bc8931d290d65bef5af810a724c9e866aa6e3ffa53e52cbd8f69e65cc6980",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/WordToHtmlContentTests.cs",
+    "contentHash": "6f50cf2f0cc9e011288411d2bb639740dc773803806ebd8a980515e2b347c27e",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/WordToHtmlCspTests.cs",
+    "contentHash": "d8f457408d2d04f3c53868bd4b790085f492543e5ace5a741d2377b6541f6eda",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/WordToHtmlTests.cs",
+    "contentHash": "965f26d09bc4b484b0a836bae7d0de66ad00da66efccf232b76dd201f549696e",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Conversion/WordToMarkdownTests.cs",
+    "contentHash": "8099df3e3f113368abaf45d3dfe47cacd0ef504ca374f271eea78a05adef0090",
+    "module": "Tests"
+  }
+]

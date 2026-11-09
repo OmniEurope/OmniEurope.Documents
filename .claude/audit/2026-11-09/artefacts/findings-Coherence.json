@@ -1,0 +1,30 @@
+[
+  {
+    "id": "COH-001",
+    "severity": "Moyen",
+    "dimension": "Cohérence",
+    "module": "Conversion",
+    "file": "src/OmniEurope.Documents/Conversion/ExcelToHtml.cs",
+    "line": 45,
+    "title": "Le résultat Excel vers HTML perd les diagnostics de fidélité du classeur",
+    "consequence": "ConvertWithStyleSheet(byte[]) recharge un classeur dont un dessin illisible a été omis, mais ne restitue aucun Gaps/GapDetails ; le consommateur reçoit un HTML incomplet sans accès au diagnostic, contrairement au contrat README et au parcours Excel vers PDF.",
+    "evidence": "Lecture actuelle ExcelToHtml.cs:45,74-88 ; ExcelHtmlWriter.cs:22-39 ; XlsxChartReader.cs:28-53 ; ExcelToPdf.cs:61-64 ; README.md:71-72. Sonde réelle coherence-probe/results.json, loadedExcelGaps : SourceGapCodes=[ExcelDrawingUnreadable], PdfGaps=[unreadable drawing skipped], HtmlResultProperties=[Html,StyleSheet], HtmlContainsSourceWarning=false. Fichier de preuve coherence-probe/unreadable-drawing.xlsx, construit à partir d'un vrai classeur sauvegardé puis tronquage d'une partie de dessin.",
+    "recommendation": "Ajouter des propriétés non positionnelles Gaps et GapDetails à ExcelHtmlResult et y propager workbook.GapDetails, puis les pertes propres à la conversion. Garder le constructeur à deux paramètres, sa déconstruction et les méthodes existantes pour préserver les consommateurs.",
+    "acceptance": "Sur le fichier de preuve, les surcharges modèle et octets de ConvertWithStyleSheet conservent code/message/description française de ExcelDrawingUnreadable ; HTML/CSS inchangés ; un consommateur de l'ancien constructeur et de sa déconstruction compile toujours.",
+    "proofKind": "real-local-conversion"
+  },
+  {
+    "id": "COH-002",
+    "severity": "Moyen",
+    "dimension": "Cohérence",
+    "module": "Pdf",
+    "file": "src/OmniEurope.Documents/Pdf/Rendering/PdfRenderer.cs",
+    "line": 66,
+    "title": "Le PNG annonce la résolution demandée après un rendu à une résolution pincée",
+    "consequence": "Une page de 72 x 72 points rendue avec Dpi=2400 donne 1200 x 1200 pixels mais 2400 dpi enregistrés ; sa réimportation réelle via ImagesToPdf donne 36 x 36 points. Avec Dpi=0.5 elle devient 144 x 144 points. Le PNG porte donc une taille physique erronée.",
+    "evidence": "Lecture actuelle PdfRenderer.cs:48,66 ; PdfPageComparison.cs:29-32 ; ImagesToPdf.cs:80-88. Sonde réelle coherence-probe/results.json : dpi-2400 Width=1200,DecodedPngDpi=2400,ReimportedPdfWidth=36 ; dpi-0,5 Width=1,DecodedPngDpi=0.5,ReimportedPdfWidth=144 ; témoin dpi-96 Width=96,DecodedPngDpi=96,ReimportedPdfWidth=72. PNG écrits et redécodés ; PDF de réimportation rouvert.",
+    "recommendation": "Calculer une résolution effective unique et l'appliquer au facteur de rendu comme à DpiX/DpiY, puis documenter le pincement existant. Le rejet des valeurs hors plage serait une modification de politique distincte à faire décider.",
+    "acceptance": "Dpi=2400 produit 1200 pixels et 1200 dpi enregistrés puis 72 points après réimportation ; Dpi=0.5 produit 1 pixel et 1 dpi puis 72 points ; le témoin 96 reste inchangé. Vérification sur le PNG redécodé et le vrai PDF réimporté.",
+    "proofKind": "real-pdf-png-pdf-roundtrip"
+  }
+]

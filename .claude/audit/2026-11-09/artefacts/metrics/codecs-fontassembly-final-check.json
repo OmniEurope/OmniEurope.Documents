@@ -1,0 +1,28 @@
+[
+  {
+    "module": "Codecs",
+    "inventory": 105,
+    "state": 105,
+    "index": 105,
+    "evidenceBlocks": 105,
+    "missing": [],
+    "duplicates": [],
+    "hashMismatches": [],
+    "findings": 1,
+    "nonReusable": [
+      "src/OmniEurope.Documents/Imaging/Jpeg2000/Jp2File.cs"
+    ]
+  },
+  {
+    "module": "FontAssembly",
+    "inventory": 39,
+    "state": 39,
+    "index": 39,
+    "evidenceBlocks": 39,
+    "missing": [],
+    "duplicates": [],
+    "hashMismatches": [],
+    "findings": 0,
+    "nonReusable": []
+  }
+]

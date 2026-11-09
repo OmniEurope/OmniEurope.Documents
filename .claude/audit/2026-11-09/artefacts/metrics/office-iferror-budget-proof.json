@@ -1,0 +1,24 @@
+[
+  {
+    "formula": "SUM(A1:A4)",
+    "computed": 1,
+    "unsupported": [],
+    "value": 4.0
+  },
+  {
+    "formula": "IFERROR(SUM(A1:A4),0)",
+    "computed": 0,
+    "unsupported": [
+      "S!B1: needs 8 cells in memory, more than the 4 allowed"
+    ],
+    "value": null
+  },
+  {
+    "formula": "IFNA(SUM(A1:A4),0)",
+    "computed": 0,
+    "unsupported": [
+      "S!B1: needs 8 cells in memory, more than the 4 allowed"
+    ],
+    "value": null
+  }
+]

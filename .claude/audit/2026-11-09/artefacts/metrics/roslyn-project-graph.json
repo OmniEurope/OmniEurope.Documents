@@ -1,0 +1,9 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"Solution\":\"OmniEurope.Documents.slnx\",\"Projects\":[{\"Name\":\"OmniEurope.Documents.Fonts\",\"Path\":\"C:\\\\Dev\\\\OmniEurope\\\\OmniEurope.Documents\\\\src\\\\OmniEurope.Documents.Fonts\\\\OmniEurope.Documents.Fonts.csproj\",\"TargetFramework\":\"netcoreapp1.0\",\"References\":[\"OmniEurope.Documents\"]},{\"Name\":\"OmniEurope.Documents\",\"Path\":\"C:\\\\Dev\\\\OmniEurope\\\\OmniEurope.Documents\\\\src\\\\OmniEurope.Documents\\\\OmniEurope.Documents.csproj\",\"TargetFramework\":\"netcoreapp1.0\",\"References\":[]},{\"Name\":\"OmniEurope.Documents.StressTests\",\"Path\":\"C:\\\\Dev\\\\OmniEurope\\\\OmniEurope.Documents\\\\tests\\\\OmniEurope.Documents.StressTests\\\\OmniEurope.Documents.StressTests.csproj\",\"TargetFramework\":\"netcoreapp1.0\",\"References\":[\"OmniEurope.Documents\"]},{\"Name\":\"OmniEurope.Documents.Tests\",\"Path\":\"C:\\\\Dev\\\\OmniEurope\\\\OmniEurope.Documents\\\\tests\\\\OmniEurope.Documents.Tests\\\\OmniEurope.Documents.Tests.csproj\",\"TargetFramework\":\"netcoreapp1.0\",\"References\":[\"OmniEurope.Documents\",\"OmniEurope.Documents.Fonts\"]}]}"
+    }
+  ],
+  "isError": false
+}

@@ -1,0 +1,6 @@
+  Declared exception: no E2E suite (package: no application to drive). -ta runs the other suites.
+  SDK 10.0.403 (floor 10.0.403, latest published 10.0.403).
+  [guard] 2 NuGet package reference(s) outdated (dotnet list package --outdated).
+  [rules] verify-rules.ps1 failed: Cannot find drive. A drive with the name 'C' does not exist.
+ylaunch: The term 'Get-CimInstance' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.

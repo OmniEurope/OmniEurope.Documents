@@ -1,0 +1,12 @@
+Running tests from /workspace/tests/OmniEurope.Documents.Tests/bin/Release/net10.0/OmniEurope.Documents.Tests.dll (net10.0|x64)
+/workspace/tests/OmniEurope.Documents.Tests/bin/Release/net10.0/OmniEurope.Documents.Tests.dll (net10.0|x64) passed (26s 156ms)
+
+  In process file artifacts produced:
+    - /workspace/artifacts/tests/tests.trx
+
+Test run summary: Passed!
+  total: 2809
+  failed: 0
+  succeeded: 2809
+  skipped: 0
+  duration: 34s 741ms

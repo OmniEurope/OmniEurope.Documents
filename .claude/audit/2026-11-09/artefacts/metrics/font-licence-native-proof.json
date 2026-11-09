@@ -1,0 +1,37 @@
+[
+  {
+    "file": "LICENSE-Gelasio.txt",
+    "noticeHashMatch": true,
+    "embeddedEqual": true
+  },
+  {
+    "file": "LICENSE-Lato.txt",
+    "noticeHashMatch": true,
+    "embeddedEqual": true
+  },
+  {
+    "file": "LICENSE-NotoSans.txt",
+    "noticeHashMatch": true,
+    "embeddedEqual": true
+  },
+  {
+    "file": "LICENSE-NotoSerif.txt",
+    "noticeHashMatch": true,
+    "embeddedEqual": true
+  },
+  {
+    "file": "LICENSE-OpenSans.txt",
+    "noticeHashMatch": true,
+    "embeddedEqual": true
+  },
+  {
+    "file": "LICENSE-Roboto.txt",
+    "noticeHashMatch": true,
+    "embeddedEqual": true
+  },
+  {
+    "file": "LICENSE-Selawik.txt",
+    "noticeHashMatch": true,
+    "embeddedEqual": true
+  }
+]

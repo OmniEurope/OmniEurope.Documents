@@ -1,0 +1,5 @@
+{
+  "targetValid": true,
+  "targetErrors": [],
+  "appendFailure": "System.InvalidOperationException: The parent is missing.\r\n   at System.Xml.Linq.XNode.Remove()\r\n   at OmniEurope.Documents.Word.Editing.WordMerger.CloseLastSection(XElement body) in /_/src/OmniEurope.Documents/Word/Editing/WordMerger.cs:line 352\r\n   at OmniEurope.Documents.Word.Editing.WordMerger.Append(Boolean startOnNewPage) in /_/src/OmniEurope.Documents/Word/Editing/WordMerger.cs:line 41\r\n   at CallSite.Target(Closure, CallSite, Object, Object)"
+}

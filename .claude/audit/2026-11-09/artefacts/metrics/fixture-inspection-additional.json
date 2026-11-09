@@ -1,0 +1,10 @@
+[
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Fixtures/Word/picture.png",
+    "bytes": 253,
+    "sha256": "7f27aaf9ede5cd64e3d2912b7ae8d74bc07a6a6ff3fc3da8a3f753f1942d552d",
+    "success": true,
+    "detail": "Image decodee integralement : 37x23, Rgb, 2553 octets pixels",
+    "milliseconds": 338
+  }
+]

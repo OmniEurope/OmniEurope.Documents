@@ -1,0 +1,300 @@
+{
+  "version": 1,
+  "parameters": "--include-transitive",
+  "projects": [
+    {
+      "path": "C:/Dev/OmniEurope/OmniEurope.Documents/src/OmniEurope.Documents.Fonts/OmniEurope.Documents.Fonts.csproj",
+      "frameworks": [
+        {
+          "framework": "net10.0",
+          "topLevelPackages": [
+            {
+              "id": "Microsoft.NET.ILLink.Tasks",
+              "requestedVersion": "[10.0.14, )",
+              "resolvedVersion": "10.0.14",
+              "autoReferenced": "true"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "C:/Dev/OmniEurope/OmniEurope.Documents/src/OmniEurope.Documents/OmniEurope.Documents.csproj",
+      "frameworks": [
+        {
+          "framework": "net10.0",
+          "topLevelPackages": [
+            {
+              "id": "Microsoft.NET.ILLink.Tasks",
+              "requestedVersion": "[10.0.14, )",
+              "resolvedVersion": "10.0.14",
+              "autoReferenced": "true"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "C:/Dev/OmniEurope/OmniEurope.Documents/tests/OmniEurope.Documents.StressTests/OmniEurope.Documents.StressTests.csproj",
+      "frameworks": [
+        {
+          "framework": "net10.0",
+          "topLevelPackages": [
+            {
+              "id": "coverlet.MTP",
+              "requestedVersion": "10.1.0",
+              "resolvedVersion": "10.1.0"
+            },
+            {
+              "id": "Microsoft.Testing.Extensions.TrxReport",
+              "requestedVersion": "2.5.2",
+              "resolvedVersion": "2.5.2"
+            },
+            {
+              "id": "xunit.v3",
+              "requestedVersion": "4.0.2",
+              "resolvedVersion": "4.0.2"
+            }
+          ],
+          "transitivePackages": [
+            {
+              "id": "Microsoft.ApplicationInsights",
+              "resolvedVersion": "2.23.0"
+            },
+            {
+              "id": "Microsoft.Bcl.AsyncInterfaces",
+              "resolvedVersion": "6.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Configuration",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Extensions.Configuration.Abstractions",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Extensions.Configuration.FileExtensions",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Extensions.Configuration.Json",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Extensions.DependencyInjection",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Extensions.FileProviders.Abstractions",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Extensions.FileProviders.Physical",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Extensions.FileSystemGlobbing",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Extensions.Primitives",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Testing.Extensions.Telemetry",
+              "resolvedVersion": "2.5.1"
+            },
+            {
+              "id": "Microsoft.Testing.Extensions.TrxReport.Abstractions",
+              "resolvedVersion": "2.5.2"
+            },
+            {
+              "id": "Microsoft.Testing.Platform",
+              "resolvedVersion": "2.5.2"
+            },
+            {
+              "id": "Microsoft.Testing.Platform.MSBuild",
+              "resolvedVersion": "2.5.1"
+            },
+            {
+              "id": "Microsoft.Win32.Registry",
+              "resolvedVersion": "5.0.0"
+            },
+            {
+              "id": "System.Security.AccessControl",
+              "resolvedVersion": "6.0.1"
+            },
+            {
+              "id": "xunit.analyzers",
+              "resolvedVersion": "2.2.0"
+            },
+            {
+              "id": "xunit.v3.assert",
+              "resolvedVersion": "4.0.2"
+            },
+            {
+              "id": "xunit.v3.common",
+              "resolvedVersion": "4.0.2"
+            },
+            {
+              "id": "xunit.v3.core.mtp-v2",
+              "resolvedVersion": "4.0.2"
+            },
+            {
+              "id": "xunit.v3.extensibility.core",
+              "resolvedVersion": "4.0.2"
+            },
+            {
+              "id": "xunit.v3.mtp-v2",
+              "resolvedVersion": "4.0.2"
+            },
+            {
+              "id": "xunit.v3.runner.common",
+              "resolvedVersion": "4.0.2"
+            },
+            {
+              "id": "xunit.v3.runner.inproc.console",
+              "resolvedVersion": "4.0.2"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": "C:/Dev/OmniEurope/OmniEurope.Documents/tests/OmniEurope.Documents.Tests/OmniEurope.Documents.Tests.csproj",
+      "frameworks": [
+        {
+          "framework": "net10.0",
+          "topLevelPackages": [
+            {
+              "id": "coverlet.MTP",
+              "requestedVersion": "10.1.0",
+              "resolvedVersion": "10.1.0"
+            },
+            {
+              "id": "Microsoft.Testing.Extensions.TrxReport",
+              "requestedVersion": "2.5.2",
+              "resolvedVersion": "2.5.2"
+            },
+            {
+              "id": "xunit.v3",
+              "requestedVersion": "4.0.2",
+              "resolvedVersion": "4.0.2"
+            }
+          ],
+          "transitivePackages": [
+            {
+              "id": "Microsoft.ApplicationInsights",
+              "resolvedVersion": "2.23.0"
+            },
+            {
+              "id": "Microsoft.Bcl.AsyncInterfaces",
+              "resolvedVersion": "6.0.0"
+            },
+            {
+              "id": "Microsoft.Extensions.Configuration",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Extensions.Configuration.Abstractions",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Extensions.Configuration.FileExtensions",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Extensions.Configuration.Json",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Extensions.DependencyInjection",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Extensions.FileProviders.Abstractions",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Extensions.FileProviders.Physical",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Extensions.FileSystemGlobbing",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Extensions.Primitives",
+              "resolvedVersion": "10.0.12"
+            },
+            {
+              "id": "Microsoft.Testing.Extensions.Telemetry",
+              "resolvedVersion": "2.5.1"
+            },
+            {
+              "id": "Microsoft.Testing.Extensions.TrxReport.Abstractions",
+              "resolvedVersion": "2.5.2"
+            },
+            {
+              "id": "Microsoft.Testing.Platform",
+              "resolvedVersion": "2.5.2"
+            },
+            {
+              "id": "Microsoft.Testing.Platform.MSBuild",
+              "resolvedVersion": "2.5.1"
+            },
+            {
+              "id": "Microsoft.Win32.Registry",
+              "resolvedVersion": "5.0.0"
+            },
+            {
+              "id": "System.Security.AccessControl",
+              "resolvedVersion": "6.0.1"
+            },
+            {
+              "id": "xunit.analyzers",
+              "resolvedVersion": "2.2.0"
+            },
+            {
+              "id": "xunit.v3.assert",
+              "resolvedVersion": "4.0.2"
+            },
+            {
+              "id": "xunit.v3.common",
+              "resolvedVersion": "4.0.2"
+            },
+            {
+              "id": "xunit.v3.core.mtp-v2",
+              "resolvedVersion": "4.0.2"
+            },
+            {
+              "id": "xunit.v3.extensibility.core",
+              "resolvedVersion": "4.0.2"
+            },
+            {
+              "id": "xunit.v3.mtp-v2",
+              "resolvedVersion": "4.0.2"
+            },
+            {
+              "id": "xunit.v3.runner.common",
+              "resolvedVersion": "4.0.2"
+            },
+            {
+              "id": "xunit.v3.runner.inproc.console",
+              "resolvedVersion": "4.0.2"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

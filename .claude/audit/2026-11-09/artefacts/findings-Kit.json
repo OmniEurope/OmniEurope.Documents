@@ -1,0 +1,30 @@
+[
+  {
+    "id": "KIT-001",
+    "severity": "medium",
+    "dimension": "Conformité kit",
+    "module": "Kit",
+    "file": "src/OmniEurope.Documents/OmniEurope.Documents.csproj",
+    "line": 1,
+    "title": "STD-PARTIAL : la couche GEN008 requise ne protège pas la compilation",
+    "consequence": "La règle applicable aux types de production est contrôlée par le scan manuel du kit, mais sa couche analyzer déclarée dans le registre ne peut pas échouer pendant le build ou la CI. Il s’agit d’un défaut de câblage de la règle, sans violation partial constatée dans la passe mécanisée actuelle.",
+    "evidence": "Lecture entière des deux csproj de production, de Directory.Build.props et .editorconfig ; évaluation réelle dotnet msbuild -getItem:Analyzer -property:Configuration=Release sortie 0 pour chacun : uniquement les deux NetAnalyzers du SDK, aucun GEN008. Catalogue et détection STD-PARTIAL lus ; aucune dérogation locale .claude/code-rules.md. ci.yml:29-30 construit sans scan verify-rules.",
+    "recommendation": "Faire décider un câblage de GEN008 limité à la compilation, sans dépendance dans le paquet livré ni copie de source interdite. Si la règle doit rester audit-only, cette modification de politique exige une décision explicite du propriétaire et son overlay ; ne pas l’inférer pendant la correction.",
+    "acceptance": "Après décision sur le câblage, une violation partial de contrôle dans une fixture isolée échoue au build avec GEN008, les exceptions légitimes restent admises, et le NuGet reste sans dépendance.",
+    "proofKind": "real-command"
+  },
+  {
+    "id": "KIT-002",
+    "severity": "medium",
+    "dimension": "Conformité kit",
+    "module": "Kit",
+    "file": "tests/OmniEurope.Documents.Tests/OmniEurope.Documents.Tests.csproj",
+    "line": 1,
+    "title": "STD-FILESIZE : aucun garde de la suite ne contrôle les 600 lignes effectives",
+    "consequence": "Le registre demande FileSizeAuditTests pour une solution avec tests. Les deux suites et la CI ne contrôlent actuellement pas ce seuil ; le contrôle existe seulement dans le prévol local et dans le scan manuel de cet audit. Aucun dépassement actuel n’a été détecté par verify-rules.",
+    "evidence": "Lecture des deux csproj de tests, de ci.yml et du catalogue STD-FILESIZE ; inventaire courant des sources de tests sans FileSizeAuditTests ou autre scanner de sources équivalent, PackageTests lu intégralement et consacré aux comportements OPC. ci.yml exécute les deux suites puis CRAP sans verify-rules. verify-rules réel sortie 0 contrôle bien STD-FILESIZE lors de cet audit.",
+    "recommendation": "Câbler dans les tests le garde de taille applicable, ou faire décider une équivalence réellement bloquante dans la CI. Conserver les exclusions de la règle et le seuil de 600 sans assouplissement.",
+    "acceptance": "Un fichier de production isolé de 601 lignes effectives fait échouer le contrôle réellement exécuté en CI ; commentaires et blancs restent exclus ; la suppression de la fixture laisse le contrôle réel réussi.",
+    "proofKind": "source-read"
+  }
+]

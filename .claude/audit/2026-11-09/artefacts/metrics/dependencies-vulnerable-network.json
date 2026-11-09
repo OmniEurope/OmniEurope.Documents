@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "parameters": "--vulnerable --include-transitive",
+  "sources": [
+    "https://api.nuget.org/v3/index.json"
+  ],
+  "projects": [
+    {
+      "path": "C:/Dev/OmniEurope/OmniEurope.Documents/src/OmniEurope.Documents.Fonts/OmniEurope.Documents.Fonts.csproj"
+    },
+    {
+      "path": "C:/Dev/OmniEurope/OmniEurope.Documents/src/OmniEurope.Documents/OmniEurope.Documents.csproj"
+    },
+    {
+      "path": "C:/Dev/OmniEurope/OmniEurope.Documents/tests/OmniEurope.Documents.StressTests/OmniEurope.Documents.StressTests.csproj"
+    },
+    {
+      "path": "C:/Dev/OmniEurope/OmniEurope.Documents/tests/OmniEurope.Documents.Tests/OmniEurope.Documents.Tests.csproj"
+    }
+  ]
+}

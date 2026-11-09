@@ -1,0 +1,606 @@
+[
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/dml-chart.xsd",
+    "bytes": 76483,
+    "targetNamespace": "http://schemas.openxmlformats.org/drawingml/2006/chart",
+    "items": 218,
+    "imports": [
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships=shared-relationshipReference.xsd",
+      "http://schemas.openxmlformats.org/drawingml/2006/main=dml-main.xsd",
+      "http://schemas.openxmlformats.org/drawingml/2006/chartDrawing=dml-chartDrawing.xsd",
+      "http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes=shared-commonSimpleTypes.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/dml-chartDrawing.xsd",
+    "bytes": 6956,
+    "targetNamespace": "http://schemas.openxmlformats.org/drawingml/2006/chartDrawing",
+    "items": 17,
+    "imports": [
+      "http://schemas.openxmlformats.org/drawingml/2006/main=dml-main.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/dml-diagram.xsd",
+    "bytes": 52387,
+    "targetNamespace": "http://schemas.openxmlformats.org/drawingml/2006/diagram",
+    "items": 138,
+    "imports": [
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships=shared-relationshipReference.xsd",
+      "http://schemas.openxmlformats.org/drawingml/2006/main=dml-main.xsd",
+      "http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes=shared-commonSimpleTypes.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/dml-lockedCanvas.xsd",
+    "bytes": 624,
+    "targetNamespace": "http://schemas.openxmlformats.org/drawingml/2006/lockedCanvas",
+    "items": 1,
+    "imports": [
+      "http://schemas.openxmlformats.org/drawingml/2006/main=dml-main.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/dml-main.xsd",
+    "bytes": 155120,
+    "targetNamespace": "http://schemas.openxmlformats.org/drawingml/2006/main",
+    "items": 361,
+    "imports": [
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships=shared-relationshipReference.xsd",
+      "http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes=shared-commonSimpleTypes.xsd",
+      "http://schemas.openxmlformats.org/drawingml/2006/diagram=dml-diagram.xsd",
+      "http://schemas.openxmlformats.org/drawingml/2006/chart=dml-chart.xsd",
+      "http://schemas.openxmlformats.org/drawingml/2006/picture=dml-picture.xsd",
+      "http://schemas.openxmlformats.org/drawingml/2006/lockedCanvas=dml-lockedCanvas.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/dml-picture.xsd",
+    "bytes": 1231,
+    "targetNamespace": "http://schemas.openxmlformats.org/drawingml/2006/picture",
+    "items": 3,
+    "imports": [
+      "http://schemas.openxmlformats.org/drawingml/2006/main=dml-main.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/dml-wordprocessingDrawing.xsd",
+    "bytes": 15082,
+    "targetNamespace": "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing",
+    "items": 33,
+    "imports": [
+      "http://schemas.openxmlformats.org/drawingml/2006/main=dml-main.xsd",
+      "http://schemas.openxmlformats.org/wordprocessingml/2006/main=wml.xsd",
+      "http://schemas.openxmlformats.org/drawingml/2006/picture=dml-picture.xsd",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships=shared-relationshipReference.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/shared-bibliography.xsd",
+    "bytes": 7328,
+    "targetNamespace": "http://schemas.openxmlformats.org/officeDocument/2006/bibliography",
+    "items": 9,
+    "imports": [
+      "http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes=shared-commonSimpleTypes.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/shared-commonSimpleTypes.xsd",
+    "bytes": 6501,
+    "targetNamespace": "http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes",
+    "items": 28,
+    "imports": [],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/shared-customXmlDataProperties.xsd",
+    "bytes": 1248,
+    "targetNamespace": "http://schemas.openxmlformats.org/officeDocument/2006/customXml",
+    "items": 4,
+    "imports": [
+      "http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes=shared-commonSimpleTypes.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/shared-customXmlSchemaProperties.xsd",
+    "bytes": 880,
+    "targetNamespace": "http://schemas.openxmlformats.org/schemaLibrary/2006/main",
+    "items": 3,
+    "imports": [],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/shared-documentPropertiesCustom.xsd",
+    "bytes": 2608,
+    "targetNamespace": "http://schemas.openxmlformats.org/officeDocument/2006/custom-properties",
+    "items": 3,
+    "imports": [
+      "http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes=shared-documentPropertiesVariantTypes.xsd",
+      "http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes=shared-commonSimpleTypes.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/shared-documentPropertiesExtended.xsd",
+    "bytes": 3507,
+    "targetNamespace": "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties",
+    "items": 5,
+    "imports": [
+      "http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes=shared-documentPropertiesVariantTypes.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/shared-documentPropertiesVariantTypes.xsd",
+    "bytes": 7507,
+    "targetNamespace": "http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes",
+    "items": 44,
+    "imports": [
+      "http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes=shared-commonSimpleTypes.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/shared-math.xsd",
+    "bytes": 23870,
+    "targetNamespace": "http://schemas.openxmlformats.org/officeDocument/2006/math",
+    "items": 92,
+    "imports": [
+      "http://schemas.openxmlformats.org/wordprocessingml/2006/main=wml.xsd",
+      "http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes=shared-commonSimpleTypes.xsd",
+      "http://www.w3.org/XML/1998/namespace="
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/shared-relationshipReference.xsd",
+    "bytes": 1367,
+    "targetNamespace": "http://schemas.openxmlformats.org/officeDocument/2006/relationships",
+    "items": 15,
+    "imports": [],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/vml-main.xsd",
+    "bytes": 26718,
+    "targetNamespace": "urn:schemas-microsoft-com:vml",
+    "items": 73,
+    "imports": [
+      "urn:schemas-microsoft-com:office:office=vml-officeDrawing.xsd",
+      "http://schemas.openxmlformats.org/wordprocessingml/2006/main=wml.xsd",
+      "urn:schemas-microsoft-com:office:word=vml-wordprocessingDrawing.xsd",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships=shared-relationshipReference.xsd",
+      "urn:schemas-microsoft-com:office:excel=vml-spreadsheetDrawing.xsd",
+      "urn:schemas-microsoft-com:office:powerpoint=vml-presentationDrawing.xsd",
+      "http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes=shared-commonSimpleTypes.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/vml-officeDrawing.xsd",
+    "bytes": 25279,
+    "targetNamespace": "urn:schemas-microsoft-com:office:office",
+    "items": 120,
+    "imports": [
+      "urn:schemas-microsoft-com:vml=vml-main.xsd",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships=shared-relationshipReference.xsd",
+      "http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes=shared-commonSimpleTypes.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/vml-presentationDrawing.xsd",
+    "bytes": 535,
+    "targetNamespace": "urn:schemas-microsoft-com:office:powerpoint",
+    "items": 4,
+    "imports": [],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/vml-spreadsheetDrawing.xsd",
+    "bytes": 5712,
+    "targetNamespace": "urn:schemas-microsoft-com:office:excel",
+    "items": 4,
+    "imports": [
+      "http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes=shared-commonSimpleTypes.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/vml-wordprocessingDrawing.xsd",
+    "bytes": 4010,
+    "targetNamespace": "urn:schemas-microsoft-com:office:word",
+    "items": 15,
+    "imports": [],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Transitional/wml.xsd",
+    "bytes": 174758,
+    "targetNamespace": "http://schemas.openxmlformats.org/wordprocessingml/2006/main",
+    "items": 436,
+    "imports": [
+      "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing=dml-wordprocessingDrawing.xsd",
+      "http://schemas.openxmlformats.org/officeDocument/2006/math=shared-math.xsd",
+      "http://schemas.openxmlformats.org/officeDocument/2006/relationships=shared-relationshipReference.xsd",
+      "http://schemas.openxmlformats.org/officeDocument/2006/sharedTypes=shared-commonSimpleTypes.xsd",
+      "http://schemas.openxmlformats.org/schemaLibrary/2006/main=shared-customXmlSchemaProperties.xsd",
+      "http://www.w3.org/XML/1998/namespace="
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Strict/dml-chart.xsd",
+    "bytes": 74388,
+    "targetNamespace": "http://purl.oclc.org/ooxml/drawingml/chart",
+    "items": 210,
+    "imports": [
+      "http://purl.oclc.org/ooxml/officeDocument/relationships=shared-relationshipReference.xsd",
+      "http://purl.oclc.org/ooxml/drawingml/main=dml-main.xsd",
+      "http://purl.oclc.org/ooxml/drawingml/chartDrawing=dml-chartDrawing.xsd",
+      "http://purl.oclc.org/ooxml/officeDocument/sharedTypes=shared-commonSimpleTypes.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Strict/dml-chartDrawing.xsd",
+    "bytes": 6902,
+    "targetNamespace": "http://purl.oclc.org/ooxml/drawingml/chartDrawing",
+    "items": 17,
+    "imports": [
+      "http://purl.oclc.org/ooxml/drawingml/main=dml-main.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Strict/dml-diagram.xsd",
+    "bytes": 52278,
+    "targetNamespace": "http://purl.oclc.org/ooxml/drawingml/diagram",
+    "items": 138,
+    "imports": [
+      "http://purl.oclc.org/ooxml/officeDocument/relationships=shared-relationshipReference.xsd",
+      "http://purl.oclc.org/ooxml/drawingml/main=dml-main.xsd",
+      "http://purl.oclc.org/ooxml/officeDocument/sharedTypes=shared-commonSimpleTypes.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Strict/dml-lockedCanvas.xsd",
+    "bytes": 558,
+    "targetNamespace": "http://purl.oclc.org/ooxml/drawingml/lockedCanvas",
+    "items": 1,
+    "imports": [
+      "http://purl.oclc.org/ooxml/drawingml/main=dml-main.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Strict/dml-main.xsd",
+    "bytes": 153356,
+    "targetNamespace": "http://purl.oclc.org/ooxml/drawingml/main",
+    "items": 354,
+    "imports": [
+      "http://purl.oclc.org/ooxml/officeDocument/relationships=shared-relationshipReference.xsd",
+      "http://purl.oclc.org/ooxml/officeDocument/sharedTypes=shared-commonSimpleTypes.xsd",
+      "http://purl.oclc.org/ooxml/drawingml/diagram=dml-diagram.xsd",
+      "http://purl.oclc.org/ooxml/drawingml/chart=dml-chart.xsd",
+      "http://purl.oclc.org/ooxml/drawingml/picture=dml-picture.xsd",
+      "http://purl.oclc.org/ooxml/drawingml/lockedCanvas=dml-lockedCanvas.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Strict/dml-picture.xsd",
+    "bytes": 1179,
+    "targetNamespace": "http://purl.oclc.org/ooxml/drawingml/picture",
+    "items": 3,
+    "imports": [
+      "http://purl.oclc.org/ooxml/drawingml/main=dml-main.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Strict/dml-wordprocessingDrawing.xsd",
+    "bytes": 14942,
+    "targetNamespace": "http://purl.oclc.org/ooxml/drawingml/wordprocessingDrawing",
+    "items": 33,
+    "imports": [
+      "http://purl.oclc.org/ooxml/drawingml/main=dml-main.xsd",
+      "http://purl.oclc.org/ooxml/wordprocessingml/main=wml.xsd",
+      "http://purl.oclc.org/ooxml/drawingml/picture=dml-picture.xsd",
+      "http://purl.oclc.org/ooxml/officeDocument/relationships=shared-relationshipReference.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Strict/shared-bibliography.xsd",
+    "bytes": 7280,
+    "targetNamespace": "http://purl.oclc.org/ooxml/officeDocument/bibliography",
+    "items": 9,
+    "imports": [
+      "http://purl.oclc.org/ooxml/officeDocument/sharedTypes=shared-commonSimpleTypes.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Strict/shared-commonSimpleTypes.xsd",
+    "bytes": 4831,
+    "targetNamespace": "http://purl.oclc.org/ooxml/officeDocument/sharedTypes",
+    "items": 21,
+    "imports": [],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Strict/shared-customXmlDataProperties.xsd",
+    "bytes": 1225,
+    "targetNamespace": "http://purl.oclc.org/ooxml/officeDocument/customXml",
+    "items": 4,
+    "imports": [
+      "http://purl.oclc.org/ooxml/officeDocument/sharedTypes=shared-commonSimpleTypes.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Strict/shared-customXmlSchemaProperties.xsd",
+    "bytes": 856,
+    "targetNamespace": "http://purl.oclc.org/ooxml/schemaLibrary/main",
+    "items": 3,
+    "imports": [],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Strict/shared-documentPropertiesCustom.xsd",
+    "bytes": 2534,
+    "targetNamespace": "http://purl.oclc.org/ooxml/officeDocument/customProperties",
+    "items": 3,
+    "imports": [
+      "http://purl.oclc.org/ooxml/officeDocument/docPropsVTypes=shared-documentPropertiesVariantTypes.xsd",
+      "http://purl.oclc.org/ooxml/officeDocument/sharedTypes=shared-commonSimpleTypes.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Strict/shared-documentPropertiesExtended.xsd",
+    "bytes": 3457,
+    "targetNamespace": "http://purl.oclc.org/ooxml/officeDocument/extendedProperties",
+    "items": 5,
+    "imports": [
+      "http://purl.oclc.org/ooxml/officeDocument/docPropsVTypes=shared-documentPropertiesVariantTypes.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Strict/shared-documentPropertiesVariantTypes.xsd",
+    "bytes": 7459,
+    "targetNamespace": "http://purl.oclc.org/ooxml/officeDocument/docPropsVTypes",
+    "items": 44,
+    "imports": [
+      "http://purl.oclc.org/ooxml/officeDocument/sharedTypes=shared-commonSimpleTypes.xsd"
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Strict/shared-math.xsd",
+    "bytes": 23786,
+    "targetNamespace": "http://purl.oclc.org/ooxml/officeDocument/math",
+    "items": 92,
+    "imports": [
+      "http://purl.oclc.org/ooxml/wordprocessingml/main=wml.xsd",
+      "http://purl.oclc.org/ooxml/officeDocument/sharedTypes=shared-commonSimpleTypes.xsd",
+      "http://www.w3.org/XML/1998/namespace="
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Strict/shared-relationshipReference.xsd",
+    "bytes": 1327,
+    "targetNamespace": "http://purl.oclc.org/ooxml/officeDocument/relationships",
+    "items": 15,
+    "imports": [],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Strict/wml.xsd",
+    "bytes": 163400,
+    "targetNamespace": "http://purl.oclc.org/ooxml/wordprocessingml/main",
+    "items": 425,
+    "imports": [
+      "http://purl.oclc.org/ooxml/drawingml/wordprocessingDrawing=dml-wordprocessingDrawing.xsd",
+      "http://purl.oclc.org/ooxml/officeDocument/math=shared-math.xsd",
+      "http://purl.oclc.org/ooxml/officeDocument/relationships=shared-relationshipReference.xsd",
+      "http://purl.oclc.org/ooxml/officeDocument/sharedTypes=shared-commonSimpleTypes.xsd",
+      "http://purl.oclc.org/ooxml/schemaLibrary/main=shared-customXmlSchemaProperties.xsd",
+      "http://www.w3.org/XML/1998/namespace="
+    ],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Opc/opc-contentTypes.xsd",
+    "bytes": 2005,
+    "targetNamespace": "http://schemas.openxmlformats.org/package/2006/content-types",
+    "items": 8,
+    "imports": [],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  },
+  {
+    "path": "src/OmniEurope.Documents/Word/Schemas/Opc/opc-relationships.xsd",
+    "bytes": 1377,
+    "targetNamespace": "http://schemas.openxmlformats.org/package/2006/relationships",
+    "items": 5,
+    "imports": [],
+    "officialBytesIdentical": true,
+    "embeddedBytesIdentical": true,
+    "nativeRead": "XmlSchema.Read full",
+    "compiledEmbeddedSet": true,
+    "strictDefaultsCorrected": 3
+  }
+]

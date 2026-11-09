@@ -1,0 +1,58 @@
+[
+  {
+    "id": "PDF-001",
+    "severity": "Moyen",
+    "dimension": "Fiabilité",
+    "module": "Pdf",
+    "file": "src/OmniEurope.Documents/Pdf/PdfPage.cs",
+    "line": 84,
+    "title": "Le rendu peut devenir entièrement blanc sans gap quand un flux de contenu est illisible",
+    "consequence": "Un flux de page indécodable est omis avant le renderer ; Render réussit avec image blanche et Gaps/GapDetails vides, empêchant le consommateur de signaler que le contenu a disparu.",
+    "evidence": "Lecture intégrale PdfPage.cs, ContentBytes capture InvalidDataException/NotSupportedException et continue silencieusement. Sonde réelle coherence-probe/results.json : validPdfContent WasRepaired=false,Text=kept,NonWhite=393 ; unreadablePdfContent WasRepaired=false,Text vide,NonWhite=0,Gaps=[],GapDetails=[]. PDF de preuve petits avec xref valide, seul /Filter /FlateDecode ajouté sur un flux texte non compressé.",
+    "recommendation": "Propager la perte de décodage à RenderContext et au résultat PdfPageRendering, ou refuser explicitement le rendu avant de renvoyer une image ; garder les autres flux lisibles de la page.",
+    "acceptance": "unreadable-content.pdf ne renvoie plus un résultat sans diagnostic ; gap stable/localisable indiquant flux omis, ou échec explicite documenté. valid-content.pdf conserve kept et son image ; une page avec deux flux conserve le flux lisible.",
+    "proofKind": "real-pdf-read-render"
+  },
+  {
+    "id": "PDF-002",
+    "severity": "Moyen",
+    "dimension": "Fiabilité",
+    "module": "Pdf",
+    "file": "src/OmniEurope.Documents/Pdf/Editing/PdfEditor.cs",
+    "line": 121,
+    "title": "Les opérations PDF perdent les dates des métadonnées pourtant annoncées conservées",
+    "consequence": "Rotation et compression suppriment CreationDate ; Information ne réécrit aucune des deux dates du PdfInformation source, contrairement au contrat de conservation des métadonnées.",
+    "evidence": "Lecture intégrale PdfEditor.cs, Information écrit seulement Title/Author/Subject/Keywords/Creator/Producer ; PdfCompressor.Info réutilise cette méthode. Sonde réelle coherence-probe/results.json pdfMetadataDates : Source=2020-01-02T03:04:05+00:00, Rotated=null, Compressed=null, après réouverture des vrais PDF produits.",
+    "recommendation": "Conserver CreationDate et préciser/conserver la politique ModificationDate lors de la reconstruction du dictionnaire Info, sans altérer les autres champs.",
+    "acceptance": "Un PDF créé avec CreationDate explicite conserve le même instant après rotation, extraction, merge, encryption et compression ; ModificationDate suit le contrat retenu et les champs texte existants restent présents.",
+    "proofKind": "real-pdf-edit-reopen"
+  },
+  {
+    "id": "PDF-003",
+    "severity": "Moyen",
+    "dimension": "Fiabilité",
+    "module": "Pdf",
+    "file": "src/OmniEurope.Documents/Pdf/Forms/FormTree.cs",
+    "line": 30,
+    "title": "MaxLen hérité est perdu entre lecture du formulaire et validation du remplissage",
+    "consequence": "Le même champ texte accepte ABC au-delà de sa limite2 si MaxLen est placé sur le parent ; Read annonce MaxLength=null et Fill réussit, alors que MaxLen directement sur le champ provoque ArgumentException.",
+    "evidence": "Lecture intégrale FormTree.cs : Inherited transporte FT/Ff/V/DA/Q mais pas MaxLen ; PdfForm.ToField et FormFiller.SetText lisent seulement le dictionnaire terminal. Sonde réelle coherence-probe/results.json directMaxLen versus inheritedMaxLen, deux PDF xref valides WasRepaired=false : limite2/refus contre null/succès. direct-maxlen.pdf et inherited-maxlen.pdf conservés.",
+    "recommendation": "Résoudre MaxLen depuis le terminal puis ses ancêtres, transporter la valeur effective vers Read, Fill et les apparences comb, sans recopier arbitrairement tous les attributs.",
+    "acceptance": "Les deux PDF de preuve exposent MaxLength2 et refusent ABC ; AB est accepté, une valeur MaxLen terminale remplace correctement celle du parent et le peigne utilise la même limite.",
+    "proofKind": "real-pdf-form-fill"
+  },
+  {
+    "id": "PDF-005",
+    "severity": "Moyen",
+    "dimension": "Fiabilité",
+    "module": "Pdf",
+    "file": "src/OmniEurope.Documents/Pdf/Writing/PdfTable.cs",
+    "line": 97,
+    "title": "La première entête du tableau est dessinée hors marge avant le saut de page",
+    "consequence": "AddTable en bas de la page peint immédiatement les entêtes sans réserver leur hauteur. Un HEAD partiel dépasse la page1, puis HEAD/BODY apparaît sur page2 ; le contenu dépasse donc la géométrie annoncée par PdfFlowLayout.",
+    "evidence": "Lecture intégrale PdfTable.cs : Paint calcule headerHeight puis appelle PaintHeaders avant contrôle espace ; seul le corps déclenche NewPage. Sonde réelle tableNearBottom, page100x100, marges10, Y89 : page1 HEAD avec baseline PDF Y=-0.1475, page2 HEAD/BODY correctement placé. table-near-bottom.pdf conservé.",
+    "recommendation": "Réserver avant la première entête la hauteur entête plus première ligne quand possible, avec politique bornée pour ligne plus haute que page, puis peindre chaque entête uniquement sur sa page utile.",
+    "acceptance": "Scénario table-near-bottom.pdf : aucun texte du tableau en dehors des marges sur page1, HEAD et BODY commencent ensemble page2 ; tableau vide et ligne trop haute terminent sans boucle.",
+    "proofKind": "real-pdf-flow-reopen"
+  }
+]

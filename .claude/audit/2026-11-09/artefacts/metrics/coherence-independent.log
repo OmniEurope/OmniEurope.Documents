@@ -1,0 +1,181 @@
+{
+  "excelHtmlGaps": {
+    "SourceGaps": [
+      "Caller supplied fidelity warning"
+    ],
+    "ResultProperties": [
+      "Html",
+      "StyleSheet"
+    ],
+    "HtmlContainsWarning": false,
+    "PdfGaps": [
+      "Caller supplied fidelity warning"
+    ]
+  },
+  "loadedExcelGaps": {
+    "SourceGaps": [
+      "unreadable drawing skipped"
+    ],
+    "SourceGapCodes": [
+      "ExcelDrawingUnreadable"
+    ],
+    "HtmlResultProperties": [
+      "Html",
+      "StyleSheet"
+    ],
+    "PdfGaps": [
+      "unreadable drawing skipped"
+    ],
+    "HtmlContainsSourceWarning": false
+  },
+  "dpi-96": {
+    "RequestedDpi": 96,
+    "Width": 96,
+    "Height": 96,
+    "RasterDpi": 96,
+    "DecodedPngDpi": 96,
+    "PhysicalWidthPoints": 72,
+    "ReimportedPdfWidth": 72,
+    "Compare": {
+      "Result": "success",
+      "Exception": "",
+      "ParamName": ""
+    }
+  },
+  "dpi-2400": {
+    "RequestedDpi": 2400,
+    "Width": 1200,
+    "Height": 1200,
+    "RasterDpi": 2400,
+    "DecodedPngDpi": 2400,
+    "PhysicalWidthPoints": 36,
+    "ReimportedPdfWidth": 36,
+    "Compare": {
+      "Result": "failure",
+      "Exception": "ArgumentException",
+      "ParamName": "Dpi"
+    }
+  },
+  "dpi-0,5": {
+    "RequestedDpi": 0.5,
+    "Width": 1,
+    "Height": 1,
+    "RasterDpi": 0.5,
+    "DecodedPngDpi": 0.5,
+    "PhysicalWidthPoints": 144,
+    "ReimportedPdfWidth": 144,
+    "Compare": {
+      "Result": "failure",
+      "Exception": "ArgumentException",
+      "ParamName": "Dpi"
+    }
+  },
+  "imageMime": {
+    "HtmlName": "image1.png",
+    "HtmlMediaType": "image/png",
+    "MarkdownPath": "images/image1.png",
+    "MarkdownContentType": "image/png",
+    "HtmlHasContentType": false,
+    "MarkdownHasMediaType": false
+  },
+  "sheetMissing": {
+    "Model": {
+      "Result": "failure",
+      "Exception": "KeyNotFoundException",
+      "ParamName": ""
+    },
+    "Editor": {
+      "Result": "failure",
+      "Exception": "ArgumentException",
+      "ParamName": "name"
+    }
+  },
+  "headingLevel0": {
+    "WordStyle": "Heading1",
+    "Markdown": {
+      "Result": "failure",
+      "Exception": "ArgumentOutOfRangeException",
+      "ParamName": "level"
+    }
+  },
+  "stream-word": {
+    "CanRead": true,
+    "Position": 3209,
+    "Length": 3681
+  },
+  "stream-excel": {
+    "CanRead": true,
+    "Position": 1870,
+    "Length": 3062
+  },
+  "stream-pdf": {
+    "CanRead": true,
+    "Position": 594,
+    "Length": 594
+  },
+  "stream-wordEditor": {
+    "CanRead": true,
+    "Position": 3209,
+    "Length": 3681
+  },
+  "stream-excelEditor": {
+    "CanRead": true,
+    "Position": 2465,
+    "Length": 3062
+  },
+  "stream-csv-default": {
+    "CanRead": false
+  },
+  "stream-csv-leaveOpen": {
+    "CanRead": true
+  },
+  "invalidFormat": {
+    "Word": {
+      "Result": "failure",
+      "Exception": "DocumentFormatException",
+      "ParamName": ""
+    },
+    "Excel": {
+      "Result": "failure",
+      "Exception": "DocumentFormatException",
+      "ParamName": ""
+    },
+    "Pdf": {
+      "Result": "failure",
+      "Exception": "InvalidDataException",
+      "ParamName": ""
+    }
+  },
+  "asyncCsv": {
+    "Read": true,
+    "Fields": [
+      "1",
+      "2"
+    ]
+  },
+  "save-stream-word": {
+    "CanWrite": true,
+    "Length": 3681
+  },
+  "save-stream-excel": {
+    "CanWrite": true,
+    "Length": 3062
+  },
+  "save-stream-pdf": {
+    "CanWrite": true,
+    "Length": 594
+  },
+  "publicApi": {
+    "TypeCount": 304,
+    "assemblies": [
+      {
+        "FullName": "OmniEurope.Documents, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null",
+        "Location": "C:\\Dev\\OmniEurope\\OmniEurope.Documents\\.claude\\audit\\2026-11-09\\artefacts\\coherence-probe\\bin\\Release\\net10.0\\OmniEurope.Documents.dll"
+      },
+      {
+        "FullName": "OmniEurope.Documents.Fonts, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null",
+        "Location": "C:\\Dev\\OmniEurope\\OmniEurope.Documents\\.claude\\audit\\2026-11-09\\artefacts\\coherence-probe\\bin\\Release\\net10.0\\OmniEurope.Documents.Fonts.dll"
+      }
+    ]
+  }
+}

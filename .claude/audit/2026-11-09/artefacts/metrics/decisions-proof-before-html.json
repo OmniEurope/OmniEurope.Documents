@@ -1,0 +1,23 @@
+{
+  "reason": "Ajout autorise de la decision de livraison HTML statique avec affichage non verifie",
+  "savedAt": "2026-11-09T10:16:24.9964027+00:00",
+  "previousRecord": {
+    "schema": "audit-360-cache-v2",
+    "path": ".claude/decisions.md",
+    "module": "Governance",
+    "contentHash": "ed4f1e4db6fdc358afc540b16eb6c7ea3346ebff15856260190f66d71f7ecb57",
+    "contractHash": "6fb150ab0b79ecd2d4e3a35b24717d3c1ad9c85c3a56da9ee13fc7ad9601c579",
+    "contextHash": "50f135d43fba7d93908bc0107caae0c50e604076b059aaaeb0a2763cf4319b55",
+    "evidenceHash": "c0694c263298fc530c96377074673d0635942db5ad2f5197f8f3d6d929755832",
+    "sourceRevision": "2594b1d7cd6edceedd330e2e72377fe3b7c989af",
+    "sourceAudit": ".claude/audit/2026-11-09",
+    "sourceFindings": ".claude/audit/2026-11-09/artefacts/AUDIT_FINDINGS_Governance.md",
+    "auditedAt": "2026-11-09T10:28:09.1326084+01:00",
+    "mode": "Full",
+    "maxSeverity": "none",
+    "reusable": true,
+    "semanticEvidence": "Roslyn current repository verified; Full baseline, no incremental reuse",
+    "proof": "Lecture intégrale des quatre lignes courantes ; auditneufsanscorrection ni publication et autorisation explicite de commitfinal toutarbre, sans push. Entrée ajoutée à inventaire par coordinateur comme deliveryMetadata, aucun ancienfichier rouvert."
+  },
+  "previousBlock": "\n## .claude/decisions.md\n\nPreuve : Lecture intégrale des quatre lignes courantes ; auditneufsanscorrection ni publication et autorisation explicite de commitfinal toutarbre, sans push. Entrée ajoutée à inventaire par coordinateur comme deliveryMetadata, aucun ancienfichier rouvert.\n\nRAS\n\r\n"
+}

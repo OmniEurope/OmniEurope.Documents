@@ -1,0 +1,12 @@
+Running tests from /workspace/tests/OmniEurope.Documents.StressTests/bin/Release/net10.0/OmniEurope.Documents.StressTests.dll (net10.0|x64)
+/workspace/tests/OmniEurope.Documents.StressTests/bin/Release/net10.0/OmniEurope.Documents.StressTests.dll (net10.0|x64) passed (20s 979ms)
+
+  In process file artifacts produced:
+    - /workspace/artifacts/integration/integration.trx
+
+Test run summary: Passed!
+  total: 50
+  failed: 0
+  succeeded: 50
+  skipped: 0
+  duration: 21s 339ms

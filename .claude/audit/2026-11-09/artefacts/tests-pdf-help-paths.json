@@ -1,0 +1,157 @@
+[
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/CharStringAssembler.cs",
+    "contentHash": "d1806816fe8c0b743927f353468d56e3108c9586c0c60200c4c0ad5c6b8c6226",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/CharStringTests.cs",
+    "contentHash": "2f4b45c95a15579c5766f71f3275445f49e56ab5f4ccb3dd5bf20908bad32fb6",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/EncryptedPdf.cs",
+    "contentHash": "fc445b3b77e9592f3b507512d1b90b8c235626179feaac2f86bc2c969d3421e8",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/FontPrograms.cs",
+    "contentHash": "868a33bb0ba64f70e02b4d0bac861964457a4b1465eb7b463c291da5579b8f99",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfAChecker.cs",
+    "contentHash": "b9dffbec458811303cbae16bee4aad6ade1e4e515c5e45f84628592a5eb5b933",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfArchiveTests.cs",
+    "contentHash": "7bea3f26e883c478ef8e843b3790484eb94de6c1439f810b633732ed472891af",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfCanvasTests.cs",
+    "contentHash": "9f074cab43bb74069def3d127885c9dabd762d6095e75e7e9ba35baeb5e9b9c4",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfCMapTests.cs",
+    "contentHash": "709dd781adb52735143f34d5b6d44b71c8a14214dc95d41e3bc9cdb393c75f0e",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfEditingTests.cs",
+    "contentHash": "d9f3742646df099acf27e9dcaa68723e678c0aa60a4560bf6b52ecc9f544ae66",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfEncryptionTests.cs",
+    "contentHash": "c04fcfd5e19f6ed4cf6f2c9d0aa8813dace1ed80d3859ac70c812b090cdecef4",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfFilterTests.cs",
+    "contentHash": "07403dd0b183f67798998d9667e6009e697c53e3bedf50dd33548e38be5f2b1f",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfFormTests.cs",
+    "contentHash": "8759cd2f16820db85ba9bc8c9fa94cbaa0b4a838f32252e91efeebc8267ff2d2",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfImageColorTests.cs",
+    "contentHash": "de96dfe23164a9cfbca18281a5ad3eacfef1942336bed760374d4573fab18df4",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfLayoutDirectionTests.cs",
+    "contentHash": "dc53c747850a50c5d488120eb4ebb7ccec4117a7ba3376ec49e994d167be8d27",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfLayoutTests.cs",
+    "contentHash": "54c9fd98d6aa009a64dd6cbc3c2897c6bd238bd263d0aab9d17085ce32a1416d",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfLayoutWordTests.cs",
+    "contentHash": "e5eb07ba72aa9527c6b00650fd65a85c891f860d3b9735f753964c00161acbff",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfNamedPropertyRedactionTests.cs",
+    "contentHash": "ecbee0780cbcc5da73f4cbe506d7579c153daa814f6d183a183a7b49d709c9d2",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfPatternTests.cs",
+    "contentHash": "766c33cb3688fa2376b03224d4f1a31c6e500c5e5facb60450c1ad43de7c9048",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfRedactionTests.cs",
+    "contentHash": "c4a77ced2dec03bf826ce625b572751ea7bdacaa4cfe1e80f9eeff443d41f870",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfRendererFontTests.cs",
+    "contentHash": "e61bddf68fc66ff830421d83f9cf8d9dce7bddd3e06315e14ce0b1a2ae8d073c",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfRendererTests.cs",
+    "contentHash": "f9b3cede504542b5e3cef5f84f4e1952c993c48d3672a03d4b2742da5d4faea4",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfRenderingDetailTests.cs",
+    "contentHash": "ba4961a2016e13ec9c6f611138d848d49bad60acce3f147f53779ee2dec8423f",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfResolutionBudgetTests.cs",
+    "contentHash": "60ecd0142e28794ed41f0647d32b6d5b5149bb46f759779f3b8abfffd75f3500",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfSecurityTests.cs",
+    "contentHash": "916e7667af42adf589410ce2841bdae6e2351a367b634022cc24880e2efd2970",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfSignatureTests.cs",
+    "contentHash": "84f4920803d5aa9fcc3aae690dc91cfbecd94a8b994b76ee3dd45c3bb7678b49",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfStructureTests.cs",
+    "contentHash": "4030a4008a0623127397d2c07fbd2e9f2a3f455d44d657a061b4789ee9f75ed2",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfSyntaxTests.cs",
+    "contentHash": "595ab1f63ee99d5a6937f215a09c03f4fb81d18f92a233a0c518f91d0015d26f",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfTextExtractionTests.cs",
+    "contentHash": "2a80b3c43de7cff78240261d1feaa4368c96854fe0afbac53c93e279e3b3b9be",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfTransparencyTests.cs",
+    "contentHash": "8ae5255e6bf4f2d0fad17148aa3083dd3b20909b886f8e703a65186c3ab71a13",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/PdfWriterTests.cs",
+    "contentHash": "e48d6ea231388b4a5c9e923e78d7b834580f45b7633f50b32bed35fb0229db61",
+    "module": "Tests"
+  },
+  {
+    "path": "tests/OmniEurope.Documents.Tests/Pdf/RawPdf.cs",
+    "contentHash": "2771ce51ed6e7e470dcae95ce2b759531f6e409b8096a48d3167c8d2913e289e",
+    "module": "Tests"
+  }
+]

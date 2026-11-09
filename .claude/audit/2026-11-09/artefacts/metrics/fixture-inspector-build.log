@@ -1,0 +1,9 @@
+  Determining projects to restore...
+  Restored C:\Dev\OmniEurope\OmniEurope.Documents\.claude\audit\2026-11-09\artefacts\fixture-inspector\Inspector.csproj (in 53 ms).
+  Inspector -> C:\Dev\OmniEurope\OmniEurope.Documents\.claude\audit\2026-11-09\artefacts\fixture-inspector\bin\Release\net10.0\OmniEurope.Documents.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:02.43

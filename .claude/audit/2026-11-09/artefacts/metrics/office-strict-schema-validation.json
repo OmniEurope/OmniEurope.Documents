@@ -1,0 +1,30 @@
+{
+  "setCompiled": true,
+  "strictDefaultsCorrected": 3,
+  "parts": [
+    {
+      "part": "xl/workbook.xml",
+      "errors": [],
+      "schema": "official strict archive",
+      "isValid": true
+    },
+    {
+      "part": "xl/worksheets/sheet1.xml",
+      "errors": [],
+      "schema": "official strict archive",
+      "isValid": true
+    },
+    {
+      "part": "xl/styles.xml",
+      "errors": [],
+      "schema": "official strict archive",
+      "isValid": true
+    },
+    {
+      "part": "xl/sharedStrings.xml",
+      "errors": [],
+      "schema": "official strict archive",
+      "isValid": true
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "inventory": 142,
+  "state": 142,
+  "index": 142,
+  "evidenceBlocks": 142,
+  "missing": [],
+  "duplicates": [],
+  "hashMismatches": [],
+  "findings": 8,
+  "medium": 7,
+  "low": 1,
+  "nonReusable": [
+    "src/OmniEurope.Documents/Excel/Formulas/TextFunctions.cs"
+  ]
+}

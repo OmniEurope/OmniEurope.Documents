@@ -1,0 +1,10 @@
+  OmniEurope.Documents -> C:\Dev\OmniEurope\OmniEurope.Documents\src\OmniEurope.Documents\bin\Release\net10.0\OmniEurope.Documents.dll
+  OmniEurope.Documents.Fonts -> C:\Dev\OmniEurope\OmniEurope.Documents\src\OmniEurope.Documents.Fonts\bin\Release\net10.0\OmniEurope.Documents.Fonts.dll
+  OmniEurope.Documents.StressTests -> C:\Dev\OmniEurope\OmniEurope.Documents\tests\OmniEurope.Documents.StressTests\bin\Release\net10.0\OmniEurope.Documents.StressTests.dll
+  OmniEurope.Documents.Tests -> C:\Dev\OmniEurope\OmniEurope.Documents\tests\OmniEurope.Documents.Tests\bin\Release\net10.0\OmniEurope.Documents.Tests.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:17.25

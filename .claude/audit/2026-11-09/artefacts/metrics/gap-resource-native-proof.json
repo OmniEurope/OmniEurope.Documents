@@ -1,0 +1,14 @@
+[
+  {
+    "path": "src/OmniEurope.Documents/Resources/GapMessages.resx",
+    "entries": 113,
+    "duplicates": 0,
+    "templatesValid": true
+  },
+  {
+    "path": "src/OmniEurope.Documents/Resources/GapMessages.fr.resx",
+    "entries": 113,
+    "duplicates": 0,
+    "templatesValid": true
+  }
+]

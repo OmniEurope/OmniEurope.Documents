@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>OmniEurope.Documents.Tests</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="OmniEurope.Documents"><HintPath>../../../../../src/OmniEurope.Documents/bin/Release/net10.0/OmniEurope.Documents.dll</HintPath></Reference>
+    <Reference Include="xunit.v3.assert"><HintPath>../../../../../tests/OmniEurope.Documents.Tests/bin/Release/net10.0/xunit.v3.assert.dll</HintPath></Reference>
+    <Using Include="Xunit" />
+    <Compile Include="Program.cs" />
+    <Compile Include="../../../../../tests/Shared/Jbig2Conformance.cs" Link="Jbig2Conformance.cs" />
+    <Compile Include="../../../../../tests/Shared/Jpeg2000Conformance.cs" Link="Jpeg2000Conformance.cs" />
+    <Compile Include="../../../../../tests/OmniEurope.Documents.Tests/Imaging/ImageFixtures.cs" Link="ImageFixtures.cs" />
+    <None Include="../../../../../tests/OmniEurope.Documents.Tests/Fixtures/**/*" Exclude="../../../../../tests/OmniEurope.Documents.Tests/Fixtures/**/*.ps1" Link="Fixtures/%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

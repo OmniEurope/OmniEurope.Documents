@@ -1,0 +1,16 @@
+[
+  {
+    "formula": "CEILING(1E100,1)",
+    "computed": null,
+    "failure": "System.OverflowException: Value was either too large or too small for a Decimal.",
+    "value": null,
+    "unrelatedA2": null
+  },
+  {
+    "formula": "FLOOR(1E100,1)",
+    "computed": null,
+    "failure": "System.OverflowException: Value was either too large or too small for a Decimal.",
+    "value": null,
+    "unrelatedA2": null
+  }
+]

@@ -1,0 +1,47 @@
+{
+  "result": "PASS",
+  "sourceRevision": "2594b1d7cd6edceedd330e2e72377fe3b7c989af",
+  "configuration": "Release",
+  "platform": "Linux, conteneur SDK10.0.403",
+  "containerCpus": 4,
+  "containerMemoryGiB": 4,
+  "suiteRuns": 1,
+  "results": [
+    {
+      "suite": "unit",
+      "total": 2809,
+      "passed": 2809,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0
+    },
+    {
+      "suite": "stress",
+      "total": 50,
+      "passed": 50,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0
+    }
+  ],
+  "linePercent": 97.4424366074031,
+  "branchPercent": 87.55449497498968,
+  "coveredLines": 26746,
+  "validLines": 27448,
+  "coveredBranches": 19079,
+  "validBranches": 21791,
+  "packages": [
+    "OmniEurope.Documents",
+    "OmniEurope.Documents.Fonts"
+  ],
+  "crapMethods": 4035,
+  "crapGateExit": 0,
+  "exceptions": 0,
+  "excludedFiles": 0,
+  "packageVersion": "1.1.0",
+  "consumerAssertions": 26,
+  "packageHash": "2F9F79D55D179D8B9584970DF92C9CFFE5EF3846794651811D6660187BC16438",
+  "coreAssemblyHash": "C638D14BD545DF798A8A9D7190D1048D6A2B0821AF4004C4C15C974F8BF056B6",
+  "fontsAssemblyHash": "6DFEDB2B83AA4B6F49EB368B6B887A40B80F94734BC1F7E46A9DE5689D0ACE54",
+  "visualVerified": false
+}

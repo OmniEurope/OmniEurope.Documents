@@ -1,0 +1,21 @@
+[
+  {
+    "separator": " ",
+    "isValid": true,
+    "errors": []
+  },
+  {
+    "separator": "&#x9;",
+    "isValid": false,
+    "errors": [
+      "mc:Ignorable names prefix 'audit1\taudit2', which is not declared"
+    ]
+  },
+  {
+    "separator": "&#xA;",
+    "isValid": false,
+    "errors": [
+      "mc:Ignorable names prefix 'audit1\naudit2', which is not declared"
+    ]
+  }
+]

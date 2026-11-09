@@ -1,0 +1,21 @@
+[
+  {
+    "comparison": "Ordinal",
+    "count": 0,
+    "text": "a­b",
+    "codePoints": [
+      97,
+      173,
+      98
+    ]
+  },
+  {
+    "comparison": "CurrentCulture",
+    "count": 1,
+    "text": "Xb",
+    "codePoints": [
+      88,
+      98
+    ]
+  }
+]

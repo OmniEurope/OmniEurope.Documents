@@ -1,0 +1,16 @@
+[
+  {
+    "id": "CDC001",
+    "severity": "medium",
+    "dimension": "Fiabilité",
+    "module": "Codecs",
+    "file": "src/OmniEurope.Documents/Imaging/TiffDecoder.cs",
+    "line": 146,
+    "title": "L’alpha associé TIFF est exposé comme un alpha droit",
+    "consequence": "Les TIFF avec ExtraSamples=1 ressortent trop sombres lors du rendu ou de leur réencodage PNG : les couleurs déjà multipliées par alpha sont multipliées une seconde fois par le consommateur de RasterImage.Rgba.",
+    "evidence": "Lecture TiffDecoder.cs:146 et TiffSupport.cs:15,56-60 : seule la présence du tag 338 est transmise, sa valeur 1 (associé) ou 2 (droit) est perdue. Sonde Release sur deux TIFF valides de 146 octets, un seul pixel RGBA [128,0,0,128] : les deux produisent [128,0,0,128]. Pour ExtraSamples=1, le contrat alpha droit de RasterImage.cs:19 impose [255,0,0,128]. Commande et sorties : metrics/codecs-constant-probes.ps1 et metrics/tiff-alpha-proof.json.",
+    "recommendation": "Conserver la valeur ExtraSamples, distinguer associé/droit et démultipler les canaux couleur pour l’alpha associé (cas alpha=0 inclus), ou refuser ce mode explicitement.",
+    "acceptance": "Le TIFF ExtraSamples=1 du scénario produit RGBA droit [255,0,0,128], le même pixel ExtraSamples=2 reste [128,0,0,128] ; couvrir aussi le gris associé et alpha=0.",
+    "proofKind": "public-api-release-dll"
+  }
+]

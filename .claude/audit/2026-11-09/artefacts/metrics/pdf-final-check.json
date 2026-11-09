@@ -1,0 +1,595 @@
+{
+  "files": 96,
+  "expected": 96,
+  "missing": 0,
+  "duplicates": 0,
+  "sourceFailures": 0,
+  "evidenceFailures": 0,
+  "indexFailures": 0,
+  "findingIds": [
+    "PDF-001",
+    "PDF-002",
+    "PDF-003",
+    "PDF-005"
+  ],
+  "maxPerFile": 1.0,
+  "productChanges": 0,
+  "details": [
+    {
+      "path": "src/OmniEurope.Documents/Pdf/PdfDocument.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/PdfRenderer.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Writing/PdfFont.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/PdfPage.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Editing/PdfEditor.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Editing/PdfCompressor.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Editing/PdfIncrementalWriter.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Editing/PdfObjectCopier.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/PdfColor.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/PdfEncryption.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Objects/PdfObjects.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Objects/PdfCompactWriter.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Objects/PdfObjectTable.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Objects/PdfSerializer.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Reading/PdfLexer.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Reading/PdfParser.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Reading/PdfXref.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Reading/PdfObjectStore.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Reading/PdfFilters.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Reading/PdfSecurity.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Reading/PdfPasswordHash.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Reading/SaslPrep.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Signing/CmsReader.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Signing/CmsSignature.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Signing/PdfSignatureTypes.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Signing/PdfSigner.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Signing/SignatureField.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Signing/SignatureVerifier.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Forms/FormTree.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Forms/PdfForm.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Forms/FormFiller.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Forms/PdfFormField.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Forms/IncrementalUpdate.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Forms/AnnotationAppearance.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Forms/FormFlattener.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Forms/FieldAppearance.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Writing/PdfDocumentBuilder.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Writing/PdfEncryptor.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Writing/ContentStreamBuilder.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Objects/PdfTextEncoding.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Writing/TextWrapper.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Text/GlyphNames.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Text/StandardEncodings.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Writing/PdfArchive.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Writing/PdfConformance.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Writing/SrgbProfile.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Writing/XmpPacket.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Writing/PdfFlowLayout.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Writing/EmbeddedFont.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Writing/PdfCanvas.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Writing/PdfTable.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Writing/EmbeddedImage.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/RenderGapCodes.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/GraphicsState.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/GlyphShape.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/Blending.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/PathBuilder.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/Rasterizer.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/Stroker.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/PageRenderer.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/TextPainter.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/ImagePainter.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/Surface.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/GroupCanvas.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/TransparencyPainter.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/Patterns.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/Shading.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/AnnotationPainter.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/PdfPageComparison.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Text/ContentStreamReader.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Text/PdfCMap.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Text/PdfFontDecoder.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Text/TextExtractor.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Text/SimpleTextOrder.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Text/PageImages.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Text/PdfColorSpace.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Text/PdfImageDecoder.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Layout/PdfLayoutModel.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Layout/TextDirection.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Layout/LineGrouping.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Layout/PdfLayoutAnalyzer.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/FontPrograms.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/RenderFont.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/Fonts/CffStandardStrings.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/Fonts/CffFont.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/Fonts/Type1Font.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/Fonts/Type1CharString.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Rendering/Fonts/Type2CharString.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Editing/PdfRedactionException.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Editing/RedactGapCodes.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Editing/RedactionState.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Editing/PdfRedactor.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Editing/PdfStamper.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Editing/RedactionImages.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Editing/RedactionPatterns.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    },
+    {
+      "path": "src/OmniEurope.Documents/Pdf/Editing/RedactionRewriter.cs",
+      "sourceMatches": true,
+      "evidenceMatches": true,
+      "indexMatches": true
+    }
+  ]
+}

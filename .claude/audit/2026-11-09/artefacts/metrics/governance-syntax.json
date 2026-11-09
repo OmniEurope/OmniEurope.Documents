@@ -1,0 +1,22 @@
+[
+  {
+    "path": ".github/scripts/new-package-provenance.ps1",
+    "parseErrors": 0
+  },
+  {
+    "path": ".github/scripts/test-package-provenance.ps1",
+    "parseErrors": 0
+  },
+  {
+    "path": ".github/scripts/verify-package.ps1",
+    "parseErrors": 0
+  },
+  {
+    "path": ".github/scripts/verify-trx.ps1",
+    "parseErrors": 0
+  },
+  {
+    "path": "scripts/crap-gate.ps1",
+    "parseErrors": 0
+  }
+]

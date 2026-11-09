@@ -1,0 +1,42 @@
+{
+  "Items": {
+    "Analyzer": [
+      {
+        "Identity": "C:\\Program Files\\dotnet\\sdk\\10.0.403\\Sdks\\Microsoft.NET.Sdk\\targets\\..\\analyzers\\Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll",
+        "IsImplicitlyDefined": "true",
+        "FullPath": "C:\\Program Files\\dotnet\\sdk\\10.0.403\\Sdks\\Microsoft.NET.Sdk\\analyzers\\Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll",
+        "RootDir": "C:\\",
+        "Filename": "Microsoft.CodeAnalysis.CSharp.NetAnalyzers",
+        "Extension": ".dll",
+        "RelativeDir": "C:\\Program Files\\dotnet\\sdk\\10.0.403\\Sdks\\Microsoft.NET.Sdk\\targets\\..\\analyzers\\",
+        "Directory": "Program Files\\dotnet\\sdk\\10.0.403\\Sdks\\Microsoft.NET.Sdk\\analyzers\\",
+        "RecursiveDir": "",
+        "ModifiedTime": "2026-10-23 16:32:50.0000000",
+        "CreatedTime": "2026-10-23 16:32:50.0000000",
+        "AccessedTime": "2026-11-09 10:01:22.9496957",
+        "DefiningProjectFullPath": "C:\\Program Files\\dotnet\\sdk\\10.0.403\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.Analyzers.targets",
+        "DefiningProjectDirectory": "C:\\Program Files\\dotnet\\sdk\\10.0.403\\Sdks\\Microsoft.NET.Sdk\\targets\\",
+        "DefiningProjectName": "Microsoft.NET.Sdk.Analyzers",
+        "DefiningProjectExtension": ".targets"
+      },
+      {
+        "Identity": "C:\\Program Files\\dotnet\\sdk\\10.0.403\\Sdks\\Microsoft.NET.Sdk\\targets\\..\\analyzers\\Microsoft.CodeAnalysis.NetAnalyzers.dll",
+        "IsImplicitlyDefined": "true",
+        "FullPath": "C:\\Program Files\\dotnet\\sdk\\10.0.403\\Sdks\\Microsoft.NET.Sdk\\analyzers\\Microsoft.CodeAnalysis.NetAnalyzers.dll",
+        "RootDir": "C:\\",
+        "Filename": "Microsoft.CodeAnalysis.NetAnalyzers",
+        "Extension": ".dll",
+        "RelativeDir": "C:\\Program Files\\dotnet\\sdk\\10.0.403\\Sdks\\Microsoft.NET.Sdk\\targets\\..\\analyzers\\",
+        "Directory": "Program Files\\dotnet\\sdk\\10.0.403\\Sdks\\Microsoft.NET.Sdk\\analyzers\\",
+        "RecursiveDir": "",
+        "ModifiedTime": "2026-10-23 16:33:14.0000000",
+        "CreatedTime": "2026-10-23 16:33:14.0000000",
+        "AccessedTime": "2026-11-09 10:01:22.9788526",
+        "DefiningProjectFullPath": "C:\\Program Files\\dotnet\\sdk\\10.0.403\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.Analyzers.targets",
+        "DefiningProjectDirectory": "C:\\Program Files\\dotnet\\sdk\\10.0.403\\Sdks\\Microsoft.NET.Sdk\\targets\\",
+        "DefiningProjectName": "Microsoft.NET.Sdk.Analyzers",
+        "DefiningProjectExtension": ".targets"
+      }
+    ]
+  }
+}

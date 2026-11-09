@@ -1,0 +1,36 @@
+[
+  {
+    "extraSamples": 1,
+    "input": [
+      128,
+      0,
+      0,
+      128
+    ],
+    "output": [
+      128,
+      0,
+      0,
+      128
+    ],
+    "colorType": "Rgba",
+    "bytes": 146
+  },
+  {
+    "extraSamples": 2,
+    "input": [
+      128,
+      0,
+      0,
+      128
+    ],
+    "output": [
+      128,
+      0,
+      0,
+      128
+    ],
+    "colorType": "Rgba",
+    "bytes": 146
+  }
+]

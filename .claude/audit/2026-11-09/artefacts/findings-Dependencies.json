@@ -1,0 +1,16 @@
+[
+  {
+    "id": "DEP-001",
+    "severity": "low",
+    "dimension": "Dependencies",
+    "module": "Dependencies",
+    "file": "Directory.Packages.props",
+    "line": 9,
+    "title": "xunit.v3 reste en 4.0.2 alors que 4.0.3 stable est disponible",
+    "consequence": "Les deux suites de tests restent sur une version antérieure à la dernière stable, contrairement à la règle explicite de maintenance des dépendances du projet.",
+    "evidence": "Lecture Directory.Packages.props:9 et des deux csproj ; dotnet list OmniEurope.Documents.slnx package --outdated --format json --no-restore, sortie 0 : requested/resolvedVersion 4.0.2, latestVersion 4.0.3 pour chacun des deux projets.",
+    "recommendation": "Dans une correction explicitement autorisée après cet audit, mettre à jour la version centralisée de xunit.v3 puis vérifier les deux suites réelles.",
+    "acceptance": "Le manifeste et les deux graphes restaurés résolvent xunit.v3 4.0.3 ou une stable plus récente ; les deux suites réelles passent, sans modification de leurs assertions.",
+    "proofKind": "real-command"
+  }
+]

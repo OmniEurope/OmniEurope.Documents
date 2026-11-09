@@ -1,0 +1,32 @@
+PACKAGE_ASSEMBLY=C:\Dev\OmniEurope\OmniEurope.Documents\.claude\audit\2026-11-09\artefacts\package-consumer\bin\Release\net10.0\OmniEurope.Documents.dll
+PACKAGE_VERSION=1.1.0.0
+ASSERT 1: PASS Flux CSV laisse ouvert
+ASSERT 2: PASS Import CSV conserve le texte par defaut
+ASSERT 3: PASS Flux sauvegarde Excel laisse ouvert
+ASSERT 4: PASS Relecture Excel reelle et flux laisse ouvert
+ASSERT 5: PASS Excel vers PDF relu et texte present
+ASSERT 6: PASS Flux sauvegarde Word laisse ouvert
+ASSERT 7: PASS Relecture Word conserve le texte et flux laisse ouvert
+ASSERT 8: PASS Word produit valide avec schemas embarques
+ASSERT 9: PASS Markdown vers Word vers PDF relu
+ASSERT 10: PASS Word vers HTML contient texte et adresse
+ASSERT 11: PASS HTML relu vers modele Word
+ASSERT 12: PASS Sauvegardes Word repetees deterministes
+ASSERT 13: PASS Sauvegardes Excel repetees deterministes
+ASSERT 14: PASS Ecriture CSV exacte et flux laisse ouvert
+ASSERTIONS=14
+EXTRA_FONTS_LOADED_BEFORE_USE=True
+FONT_ASSERT: PASS Famille complémentaire Selawik
+FONT_ASSERT: PASS Famille complémentaire Gelasio
+FONT_ASSERT: PASS Famille complémentaire Noto Sans
+FONT_ASSERT: PASS Famille complémentaire Noto Serif
+FONT_ASSERT: PASS Famille complémentaire Roboto
+FONT_ASSERT: PASS Famille complémentaire Open Sans
+FONT_ASSERT: PASS Famille complémentaire Lato
+FONT_ASSERT: PASS Licence Selawik accessible
+FONT_ASSERT: PASS Notice des fontes accessible
+FONT_ASSERT: PASS Substitution Segoe UI charge une vraie fonte et son glyphe
+FONT_ASSERT: PASS Substitution explicitement décrite
+FONT_ASSERT: PASS PDF relu, texte préservé et substitution signalée
+PUBLIC_TYPES=304
+RESULT: PASS

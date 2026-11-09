@@ -1,0 +1,5 @@
+  Determining projects to restore...
+  Restored /workspace/src/OmniEurope.Documents.Fonts/OmniEurope.Documents.Fonts.csproj (in 1.41 sec).
+  Restored /workspace/src/OmniEurope.Documents/OmniEurope.Documents.csproj (in 1.41 sec).
+  Restored /workspace/tests/OmniEurope.Documents.Tests/OmniEurope.Documents.Tests.csproj (in 1.43 sec).
+  Restored /workspace/tests/OmniEurope.Documents.StressTests/OmniEurope.Documents.StressTests.csproj (in 1.43 sec).

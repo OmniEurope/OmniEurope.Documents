@@ -1,0 +1,488 @@
+{
+  "excelHtmlGaps": {
+    "SourceGaps": [
+      "Caller supplied fidelity warning"
+    ],
+    "ResultProperties": [
+      "Html",
+      "StyleSheet"
+    ],
+    "HtmlContainsWarning": false,
+    "PdfGaps": [
+      "Caller supplied fidelity warning"
+    ]
+  },
+  "loadedExcelGaps": {
+    "SourceGaps": [
+      "unreadable drawing skipped"
+    ],
+    "SourceGapCodes": [
+      "ExcelDrawingUnreadable"
+    ],
+    "HtmlResultProperties": [
+      "Html",
+      "StyleSheet"
+    ],
+    "PdfGaps": [
+      "unreadable drawing skipped"
+    ],
+    "HtmlContainsSourceWarning": false
+  },
+  "finiteChart": {
+    "Charts": 1,
+    "Values": [
+      -1E+308,
+      1E+308
+    ],
+    "Conversion": {
+      "Result": "success",
+      "Exception": "",
+      "ParamName": ""
+    },
+    "PdfText": "Sheet1\nCell\n1 2\nNaN",
+    "Gaps": []
+  },
+  "validPdfContent": {
+    "WasRepaired": false,
+    "Text": "kept",
+    "Gaps": [],
+    "GapDetails": [],
+    "NonWhite": 393
+  },
+  "unreadablePdfContent": {
+    "WasRepaired": false,
+    "Text": "",
+    "Gaps": [],
+    "GapDetails": [],
+    "NonWhite": 0
+  },
+  "nestedPdfContent": {
+    "WasRepaired": false,
+    "Render": {
+      "Result": "failure",
+      "Exception": "InvalidDataException",
+      "ParamName": ""
+    },
+    "Text": {
+      "Result": "failure",
+      "Exception": "InvalidDataException",
+      "ParamName": ""
+    }
+  },
+  "pdfMetadataDates": {
+    "Source": "2020-01-02T03:04:05+00:00",
+    "Rotated": null,
+    "Compressed": null
+  },
+  "directMaxLen": {
+    "WasRepaired": false,
+    "Fields": [
+      {
+        "Name": "Parent.Child",
+        "MaxLength": 2
+      }
+    ],
+    "Fill": {
+      "Result": "failure",
+      "Exception": "ArgumentException",
+      "ParamName": "value"
+    }
+  },
+  "inheritedMaxLen": {
+    "WasRepaired": false,
+    "Fields": [
+      {
+        "Name": "Parent.Child",
+        "MaxLength": null
+      }
+    ],
+    "Fill": {
+      "Result": "success",
+      "Exception": "",
+      "ParamName": ""
+    }
+  },
+  "dpi-96": {
+    "RequestedDpi": 96,
+    "Width": 96,
+    "Height": 96,
+    "RasterDpi": 96,
+    "DecodedPngDpi": 96,
+    "PhysicalWidthPoints": 72,
+    "ReimportedPdfWidth": 72,
+    "Compare": {
+      "Result": "success",
+      "Exception": "",
+      "ParamName": ""
+    }
+  },
+  "dpi-2400": {
+    "RequestedDpi": 2400,
+    "Width": 1200,
+    "Height": 1200,
+    "RasterDpi": 2400,
+    "DecodedPngDpi": 2400,
+    "PhysicalWidthPoints": 36,
+    "ReimportedPdfWidth": 36,
+    "Compare": {
+      "Result": "failure",
+      "Exception": "ArgumentException",
+      "ParamName": "Dpi"
+    }
+  },
+  "dpi-0,5": {
+    "RequestedDpi": 0.5,
+    "Width": 1,
+    "Height": 1,
+    "RasterDpi": 0.5,
+    "DecodedPngDpi": 0.5,
+    "PhysicalWidthPoints": 144,
+    "ReimportedPdfWidth": 144,
+    "Compare": {
+      "Result": "failure",
+      "Exception": "ArgumentException",
+      "ParamName": "Dpi"
+    }
+  },
+  "markdownImageFolder": {
+    "Markdown": "![][image1]\n\n[image1]: my images/image1.png\n",
+    "ImagePath": "my images/image1.png",
+    "Html": "\u003Cp\u003E![][image1]\u003C/p\u003E\n\u003Cp\u003E[image1]: my images/image1.png\u003C/p\u003E\n"
+  },
+  "imageMime": {
+    "HtmlName": "image1.png",
+    "HtmlMediaType": "image/png",
+    "MarkdownPath": "images/image1.png",
+    "MarkdownContentType": "image/png",
+    "HtmlHasContentType": false,
+    "MarkdownHasMediaType": false
+  },
+  "sheetMissing": {
+    "Model": {
+      "Result": "failure",
+      "Exception": "KeyNotFoundException",
+      "ParamName": ""
+    },
+    "Editor": {
+      "Result": "failure",
+      "Exception": "ArgumentException",
+      "ParamName": "name"
+    }
+  },
+  "headingLevel0": {
+    "WordStyle": "Heading1",
+    "Markdown": {
+      "Result": "failure",
+      "Exception": "ArgumentOutOfRangeException",
+      "ParamName": "level"
+    }
+  },
+  "stream-word": {
+    "CanRead": true,
+    "Position": 3209,
+    "Length": 3681
+  },
+  "stream-excel": {
+    "CanRead": true,
+    "Position": 1870,
+    "Length": 3062
+  },
+  "stream-pdf": {
+    "CanRead": true,
+    "Position": 594,
+    "Length": 594
+  },
+  "stream-wordEditor": {
+    "CanRead": true,
+    "Position": 3209,
+    "Length": 3681
+  },
+  "stream-excelEditor": {
+    "CanRead": true,
+    "Position": 2465,
+    "Length": 3062
+  },
+  "stream-csv-default": {
+    "CanRead": false
+  },
+  "stream-csv-leaveOpen": {
+    "CanRead": true
+  },
+  "invalidFormat": {
+    "Word": {
+      "Result": "failure",
+      "Exception": "DocumentFormatException",
+      "ParamName": ""
+    },
+    "Excel": {
+      "Result": "failure",
+      "Exception": "DocumentFormatException",
+      "ParamName": ""
+    },
+    "Pdf": {
+      "Result": "failure",
+      "Exception": "InvalidDataException",
+      "ParamName": ""
+    }
+  },
+  "selectorDescendant": {
+    "Plain": 1,
+    "Attribute": {
+      "Result": "failure",
+      "Exception": "FormatException",
+      "ParamName": ""
+    },
+    "Nth": {
+      "Result": "failure",
+      "Exception": "FormatException",
+      "ParamName": ""
+    },
+    "Not": {
+      "Result": "failure",
+      "Exception": "FormatException",
+      "ParamName": ""
+    },
+    "ExplicitChild": 1
+  },
+  "htmlFormatting": {
+    "LowercaseBold": {
+      "StyleId": null,
+      "Font": null,
+      "FontEastAsia": null,
+      "FontComplex": null,
+      "FontTheme": null,
+      "Bold": true,
+      "Italic": true,
+      "Underline": null,
+      "Strike": null,
+      "DoubleStrike": null,
+      "Caps": null,
+      "SmallCaps": null,
+      "Hidden": null,
+      "VerticalPosition": null,
+      "FontSize": null,
+      "FontSizeComplex": null,
+      "Color": null,
+      "Highlight": null,
+      "Shading": null,
+      "CharacterSpacing": null,
+      "Position": null,
+      "Language": null,
+      "LanguageEastAsia": null,
+      "LanguageComplex": null,
+      "RightToLeft": null
+    },
+    "UppercaseBold": {
+      "StyleId": null,
+      "Font": null,
+      "FontEastAsia": null,
+      "FontComplex": null,
+      "FontTheme": null,
+      "Bold": false,
+      "Italic": false,
+      "Underline": null,
+      "Strike": null,
+      "DoubleStrike": null,
+      "Caps": null,
+      "SmallCaps": null,
+      "Hidden": null,
+      "VerticalPosition": null,
+      "FontSize": null,
+      "FontSizeComplex": null,
+      "Color": null,
+      "Highlight": null,
+      "Shading": null,
+      "CharacterSpacing": null,
+      "Position": null,
+      "Language": null,
+      "LanguageEastAsia": null,
+      "LanguageComplex": null,
+      "RightToLeft": null
+    },
+    "TableCell": {
+      "StyleId": null,
+      "Font": null,
+      "FontEastAsia": null,
+      "FontComplex": null,
+      "FontTheme": null,
+      "Bold": null,
+      "Italic": null,
+      "Underline": null,
+      "Strike": null,
+      "DoubleStrike": null,
+      "Caps": null,
+      "SmallCaps": null,
+      "Hidden": null,
+      "VerticalPosition": null,
+      "FontSize": null,
+      "FontSizeComplex": null,
+      "Color": null,
+      "Highlight": null,
+      "Shading": null,
+      "CharacterSpacing": null,
+      "Position": null,
+      "Language": null,
+      "LanguageEastAsia": null,
+      "LanguageComplex": null,
+      "RightToLeft": null
+    },
+    "Span": {
+      "StyleId": null,
+      "Font": null,
+      "FontEastAsia": null,
+      "FontComplex": null,
+      "FontTheme": null,
+      "Bold": true,
+      "Italic": null,
+      "Underline": null,
+      "Strike": null,
+      "DoubleStrike": null,
+      "Caps": null,
+      "SmallCaps": null,
+      "Hidden": null,
+      "VerticalPosition": null,
+      "FontSize": 20,
+      "FontSizeComplex": 20,
+      "Color": "FF0000",
+      "Highlight": null,
+      "Shading": null,
+      "CharacterSpacing": null,
+      "Position": null,
+      "Language": null,
+      "LanguageEastAsia": null,
+      "LanguageComplex": null,
+      "RightToLeft": null
+    },
+    "Pre": "ab\nc"
+  },
+  "invalidWordPicture": {
+    "Pdf": {
+      "Result": "success",
+      "Exception": "",
+      "ParamName": ""
+    },
+    "HtmlGaps": [
+      "line and page breaks are computed by the browser",
+      "line heights are approximated (single spacing taken as 1.15 times the font size)",
+      "picture format image/png left out"
+    ]
+  },
+  "tableNearBottom": [
+    {
+      "Number": 1,
+      "Text": "HEAD",
+      "Letters": [
+        {
+          "Value": "H",
+          "Y": -0.1475
+        },
+        {
+          "Value": "E",
+          "Y": -0.1475
+        },
+        {
+          "Value": "A",
+          "Y": -0.1475
+        },
+        {
+          "Value": "D",
+          "Y": -0.1475
+        }
+      ]
+    },
+    {
+      "Number": 2,
+      "Text": "HEAD\nBODY",
+      "Letters": [
+        {
+          "Value": "H",
+          "Y": 78.8525
+        },
+        {
+          "Value": "E",
+          "Y": 78.8525
+        },
+        {
+          "Value": "A",
+          "Y": 78.8525
+        },
+        {
+          "Value": "D",
+          "Y": 78.8525
+        },
+        {
+          "Value": "B",
+          "Y": 62.7979
+        },
+        {
+          "Value": "O",
+          "Y": 62.7979
+        },
+        {
+          "Value": "D",
+          "Y": 62.7979
+        },
+        {
+          "Value": "Y",
+          "Y": 62.7979
+        }
+      ]
+    }
+  ],
+  "surrogateWrap": {
+    "CodePoint": 65856,
+    "Source": "\uD800\uDD40",
+    "HasGlyph": true,
+    "Wide": {
+      "ContentWidth": 40,
+      "Text": "\uD800\uDD40",
+      "Gaps": []
+    },
+    "Narrow": {
+      "ContentWidth": 3.06,
+      "Text": "\uFFFD\n\uFFFD",
+      "Gaps": []
+    }
+  },
+  "nextColumnSection": {
+    "PageCount": 1,
+    "FirstX": 10,
+    "FirstY": 179.5264,
+    "SecondX": 10,
+    "SecondY": 157.0244,
+    "ExpectedSecondColumnLeft": 105,
+    "Gaps": []
+  },
+  "asyncCsv": {
+    "Read": true,
+    "Fields": [
+      "1",
+      "2"
+    ]
+  },
+  "save-stream-word": {
+    "CanWrite": true,
+    "Length": 3681
+  },
+  "save-stream-excel": {
+    "CanWrite": true,
+    "Length": 3062
+  },
+  "save-stream-pdf": {
+    "CanWrite": true,
+    "Length": 594
+  },
+  "publicApi": {
+    "TypeCount": 304,
+    "assemblies": [
+      {
+        "FullName": "OmniEurope.Documents, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null",
+        "Location": "C:\\Dev\\OmniEurope\\OmniEurope.Documents\\.claude\\audit\\2026-11-09\\artefacts\\coherence-probe\\bin\\Release\\net10.0\\OmniEurope.Documents.dll"
+      },
+      {
+        "FullName": "OmniEurope.Documents.Fonts, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null",
+        "Location": "C:\\Dev\\OmniEurope\\OmniEurope.Documents\\.claude\\audit\\2026-11-09\\artefacts\\coherence-probe\\bin\\Release\\net10.0\\OmniEurope.Documents.Fonts.dll"
+      }
+    ]
+  }
+}

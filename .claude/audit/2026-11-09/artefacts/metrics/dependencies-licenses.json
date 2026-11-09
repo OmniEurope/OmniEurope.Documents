@@ -1,0 +1,212 @@
+[
+  {
+    "id": "coverlet.MTP",
+    "version": "10.1.0",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\coverlet.mtp\\10.1.0\\coverlet.mtp.nuspec"
+  },
+  {
+    "id": "Microsoft.ApplicationInsights",
+    "version": "2.23.0",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.applicationinsights\\2.23.0\\microsoft.applicationinsights.nuspec"
+  },
+  {
+    "id": "Microsoft.Bcl.AsyncInterfaces",
+    "version": "6.0.0",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\6.0.0\\microsoft.bcl.asyncinterfaces.nuspec"
+  },
+  {
+    "id": "Microsoft.Extensions.Configuration",
+    "version": "10.0.12",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.extensions.configuration\\10.0.12\\microsoft.extensions.configuration.nuspec"
+  },
+  {
+    "id": "Microsoft.Extensions.Configuration.Abstractions",
+    "version": "10.0.12",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\10.0.12\\microsoft.extensions.configuration.abstractions.nuspec"
+  },
+  {
+    "id": "Microsoft.Extensions.Configuration.FileExtensions",
+    "version": "10.0.12",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.extensions.configuration.fileextensions\\10.0.12\\microsoft.extensions.configuration.fileextensions.nuspec"
+  },
+  {
+    "id": "Microsoft.Extensions.Configuration.Json",
+    "version": "10.0.12",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.extensions.configuration.json\\10.0.12\\microsoft.extensions.configuration.json.nuspec"
+  },
+  {
+    "id": "Microsoft.Extensions.DependencyInjection",
+    "version": "10.0.12",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\10.0.12\\microsoft.extensions.dependencyinjection.nuspec"
+  },
+  {
+    "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+    "version": "10.0.12",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.12\\microsoft.extensions.dependencyinjection.abstractions.nuspec"
+  },
+  {
+    "id": "Microsoft.Extensions.FileProviders.Abstractions",
+    "version": "10.0.12",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.extensions.fileproviders.abstractions\\10.0.12\\microsoft.extensions.fileproviders.abstractions.nuspec"
+  },
+  {
+    "id": "Microsoft.Extensions.FileProviders.Physical",
+    "version": "10.0.12",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.extensions.fileproviders.physical\\10.0.12\\microsoft.extensions.fileproviders.physical.nuspec"
+  },
+  {
+    "id": "Microsoft.Extensions.FileSystemGlobbing",
+    "version": "10.0.12",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.extensions.filesystemglobbing\\10.0.12\\microsoft.extensions.filesystemglobbing.nuspec"
+  },
+  {
+    "id": "Microsoft.Extensions.Primitives",
+    "version": "10.0.12",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.extensions.primitives\\10.0.12\\microsoft.extensions.primitives.nuspec"
+  },
+  {
+    "id": "Microsoft.NET.ILLink.Tasks",
+    "version": "10.0.14",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.net.illink.tasks\\10.0.14\\microsoft.net.illink.tasks.nuspec"
+  },
+  {
+    "id": "Microsoft.Testing.Extensions.Telemetry",
+    "version": "2.5.1",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.testing.extensions.telemetry\\2.5.1\\microsoft.testing.extensions.telemetry.nuspec"
+  },
+  {
+    "id": "Microsoft.Testing.Extensions.TrxReport",
+    "version": "2.5.2",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.testing.extensions.trxreport\\2.5.2\\microsoft.testing.extensions.trxreport.nuspec"
+  },
+  {
+    "id": "Microsoft.Testing.Extensions.TrxReport.Abstractions",
+    "version": "2.5.2",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.testing.extensions.trxreport.abstractions\\2.5.2\\microsoft.testing.extensions.trxreport.abstractions.nuspec"
+  },
+  {
+    "id": "Microsoft.Testing.Platform",
+    "version": "2.5.2",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.testing.platform\\2.5.2\\microsoft.testing.platform.nuspec"
+  },
+  {
+    "id": "Microsoft.Testing.Platform.MSBuild",
+    "version": "2.5.1",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.testing.platform.msbuild\\2.5.1\\microsoft.testing.platform.msbuild.nuspec"
+  },
+  {
+    "id": "Microsoft.Win32.Registry",
+    "version": "5.0.0",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\microsoft.win32.registry\\5.0.0\\microsoft.win32.registry.nuspec"
+  },
+  {
+    "id": "System.Security.AccessControl",
+    "version": "6.0.1",
+    "licenseType": "expression",
+    "license": "MIT",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\system.security.accesscontrol\\6.0.1\\system.security.accesscontrol.nuspec"
+  },
+  {
+    "id": "xunit.analyzers",
+    "version": "2.2.0",
+    "licenseType": "expression",
+    "license": "Apache-2.0",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\xunit.analyzers\\2.2.0\\xunit.analyzers.nuspec"
+  },
+  {
+    "id": "xunit.v3",
+    "version": "4.0.2",
+    "licenseType": "expression",
+    "license": "Apache-2.0",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\xunit.v3\\4.0.2\\xunit.v3.nuspec"
+  },
+  {
+    "id": "xunit.v3.assert",
+    "version": "4.0.2",
+    "licenseType": "expression",
+    "license": "Apache-2.0",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\xunit.v3.assert\\4.0.2\\xunit.v3.assert.nuspec"
+  },
+  {
+    "id": "xunit.v3.common",
+    "version": "4.0.2",
+    "licenseType": "expression",
+    "license": "Apache-2.0",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\xunit.v3.common\\4.0.2\\xunit.v3.common.nuspec"
+  },
+  {
+    "id": "xunit.v3.core.mtp-v2",
+    "version": "4.0.2",
+    "licenseType": "expression",
+    "license": "Apache-2.0",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\xunit.v3.core.mtp-v2\\4.0.2\\xunit.v3.core.mtp-v2.nuspec"
+  },
+  {
+    "id": "xunit.v3.extensibility.core",
+    "version": "4.0.2",
+    "licenseType": "expression",
+    "license": "Apache-2.0",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\xunit.v3.extensibility.core\\4.0.2\\xunit.v3.extensibility.core.nuspec"
+  },
+  {
+    "id": "xunit.v3.mtp-v2",
+    "version": "4.0.2",
+    "licenseType": "expression",
+    "license": "Apache-2.0",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\xunit.v3.mtp-v2\\4.0.2\\xunit.v3.mtp-v2.nuspec"
+  },
+  {
+    "id": "xunit.v3.runner.common",
+    "version": "4.0.2",
+    "licenseType": "expression",
+    "license": "Apache-2.0",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\xunit.v3.runner.common\\4.0.2\\xunit.v3.runner.common.nuspec"
+  },
+  {
+    "id": "xunit.v3.runner.inproc.console",
+    "version": "4.0.2",
+    "licenseType": "expression",
+    "license": "Apache-2.0",
+    "manifest": "C:\\Users\\Woluwe\\.nuget\\packages\\xunit.v3.runner.inproc.console\\4.0.2\\xunit.v3.runner.inproc.console.nuspec"
+  }
+]

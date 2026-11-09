@@ -1,0 +1,15 @@
+{
+  "initialGitInventory": 949,
+  "deliveryMetadata": 1,
+  "inventory": 950,
+  "priorRecords": 839,
+  "sameContentPrior": 740,
+  "changedContentPrior": 99,
+  "newPaths": 111,
+  "deletedPriorPaths": 0,
+  "contextInvalidatedCandidates": 740,
+  "selectedFull": 950,
+  "selectedDiff": 0,
+  "selectedCache": 0,
+  "reason": "Nouvelle lecture complète demandée ; contexte de gouvernance et manifests changé depuis audit précédent. Aucun ancien résultat porté comme preuve actuelle."
+}

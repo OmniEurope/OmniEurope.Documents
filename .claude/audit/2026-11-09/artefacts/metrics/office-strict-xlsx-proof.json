@@ -1,0 +1,6 @@
+{
+  "baselineSheets": 1,
+  "baselineValue": "preuve",
+  "strictResult": "System.Management.Automation.MethodInvocationException: Exception calling \"Load\" with \"1\" argument(s): \"The workbook has no worksheet.\"\r\n ---> OmniEurope.Documents.DocumentFormatException: The workbook has no worksheet.\r\n   at OmniEurope.Documents.Excel.XlsxPackageReader.ReadPackage(SafeZip zip) in /_/src/OmniEurope.Documents/Excel/XlsxPackageReader.cs:line 61\r\n   at OmniEurope.Documents.Excel.XlsxPackageReader.Read(Stream stream, PackageLimits limits) in /_/src/OmniEurope.Documents/Excel/XlsxPackageReader.cs:line 20\r\n   at CallSite.Target(Closure, CallSite, Type, Object)\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)",
+  "bytes": 2990
+}

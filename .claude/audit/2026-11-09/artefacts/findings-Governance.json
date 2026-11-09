@@ -1,0 +1,16 @@
+[
+  {
+    "id": "GOV-001",
+    "severity": "low",
+    "dimension": "Documentation",
+    "module": "Governance",
+    "file": "README.md",
+    "line": 7,
+    "title": "Le statut du README annonce encore 1.0.0",
+    "consequence": "Le point d’entrée du paquet annonce 1.0.0, alors que le changelog daté du 7 novembre et la version commune de compilation présentent 1.1.0, ce qui donne deux états contradictoires au consommateur.",
+    "evidence": "README.md:7 : Status: 1.0.0 ; Directory.Build.props:12 : Version 1.1.0 ; CHANGELOG.md:7 : [1.1.0] - 2026-11-07. Les trois emplacements ont été lus dans cette passe.",
+    "recommendation": "Aligner la seule mention de statut du README sur la version effectivement décrite par le dépôt, sans modifier la version du produit.",
+    "acceptance": "Le statut du README concorde avec Directory.Build.props et la dernière version décrite dans CHANGELOG.md.",
+    "proofKind": "source-read"
+  }
+]

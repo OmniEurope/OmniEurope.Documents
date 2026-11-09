@@ -1,0 +1,94 @@
+{
+  "result": "PASS",
+  "inventory": 950,
+  "reviewed": 950,
+  "remaining": 0,
+  "sourceBranch": "develop",
+  "sourceRevision": "2594b1d7cd6edceedd330e2e72377fe3b7c989af",
+  "sourceTreeClean": true,
+  "full": 950,
+  "diff": 0,
+  "cache": 0,
+  "contextInvalidated": 740,
+  "selfStateExcluded": 177,
+  "findings": 27,
+  "modules": [
+    {
+      "module": "Codecs",
+      "inventory": 105,
+      "reviewed": 105,
+      "remaining": 0,
+      "full": 105,
+      "diff": 0,
+      "cache": 0
+    },
+    {
+      "module": "Conversion",
+      "inventory": 105,
+      "reviewed": 105,
+      "remaining": 0,
+      "full": 105,
+      "diff": 0,
+      "cache": 0
+    },
+    {
+      "module": "FontAssembly",
+      "inventory": 39,
+      "reviewed": 39,
+      "remaining": 0,
+      "full": 39,
+      "diff": 0,
+      "cache": 0
+    },
+    {
+      "module": "Governance",
+      "inventory": 30,
+      "reviewed": 30,
+      "remaining": 0,
+      "full": 30,
+      "diff": 0,
+      "cache": 0
+    },
+    {
+      "module": "Office",
+      "inventory": 142,
+      "reviewed": 142,
+      "remaining": 0,
+      "full": 142,
+      "diff": 0,
+      "cache": 0
+    },
+    {
+      "module": "Pdf",
+      "inventory": 96,
+      "reviewed": 96,
+      "remaining": 0,
+      "full": 96,
+      "diff": 0,
+      "cache": 0
+    },
+    {
+      "module": "Stress",
+      "inventory": 10,
+      "reviewed": 10,
+      "remaining": 0,
+      "full": 10,
+      "diff": 0,
+      "cache": 0
+    },
+    {
+      "module": "Tests",
+      "inventory": 423,
+      "reviewed": 423,
+      "remaining": 0,
+      "full": 423,
+      "diff": 0,
+      "cache": 0
+    }
+  ],
+  "errors": [],
+  "note": "Contrôle structurel des preuves, empreintes et registres. Ne remplace ni la lecture sémantique ni les preuves runtime observées par le coordinateur.",
+  "gitTreeClean": false,
+  "auditMetadataChanges": 178,
+  "sourceChanges": []
+}

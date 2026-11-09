@@ -1,0 +1,3 @@
+Exclusion .config/verify-rules.json : 1 constat(s) STD-SDKPIN exclu(s) sous .github/dependabot.yml ; raison : No Dependabot on this repository by decision: the SDK floor in global.json is the single source of truth, CI reads it through global-json-file, and SDK, runtime and package updates are raised by hand with a security note in the CHANGELOG. Remove this entry if Dependabot is enabled.
+Regles mecanisees : aucun motif detecte (STD-BUSY, STD-CRAP, STD-FILESIZE, STD-FOCUS, STD-GRID, STD-GRIDTITLE, STD-I18N, STD-KITCOPY, STD-LABEL, STD-NAV, STD-OE, STD-PARTIAL, STD-PWAICONS, STD-SDKPIN, STD-SHELL, STD-STYLE, STD-TABS, STD-TESTSCOPE, STD-WASMOPT).
+RESULT: PASS
