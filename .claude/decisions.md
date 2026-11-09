@@ -4,3 +4,7 @@
 - 2026-11-09 : livraison : committer automatiquement le travail terminé, tout l'arbre de travail inclus, sans demander confirmation ; aucun push ni publication implicite.
 - 2026-11-09 : rapport HTML de l'audit : livraison avec contrôle statique acceptée, affichage explicitement non vérifié après refus du protocole file: par le navigateur ; aucun contournement.
 - 2026-11-09 : corrections de l'audit 360 : constats utiles implémentés ; Paginator.cs sous 600 lignes accepté tel quel ; KIT-001 (analyseur GEN008) non câblé, en attente d'une décision de politique ; noms d'API publics non harmonisés (aucun défaut, alias additifs seulement si besoin futur).
+- 2026-11-09 : classes partial : interdites sauf utilité réelle (Entity Framework, générateurs de source comme GeneratedRegex) ; vérifié conforme, aucun garde supplémentaire.
+- 2026-11-09 : test JPEG 2000 à limite de temps : mesurer le temps processeur du thread au lieu du temps écoulé, test réactivé.
+- 2026-11-09 : OOXML Strict (Excel) : refusé pour l'instant avec une erreur explicite ; à implémenter le jour où un besoin réel apparaît.
+- 2026-11-09 : noms d'API publics (ContentType/MediaType, Worksheet/Sheet) : pas d'harmonisation.
