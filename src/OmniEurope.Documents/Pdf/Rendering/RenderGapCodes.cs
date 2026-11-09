@@ -13,4 +13,5 @@ internal static class RenderGapCodes
     public static readonly GapCode RenderEmbeddedFontUnreadable = new(nameof(RenderEmbeddedFontUnreadable));
     public static readonly GapCode RenderSoftMaskUnreadable = new(nameof(RenderSoftMaskUnreadable));
     public static readonly GapCode RenderSoftMaskTransferIgnored = new(nameof(RenderSoftMaskTransferIgnored));
+    public static readonly GapCode RenderContentStreamUnreadable = new(nameof(RenderContentStreamUnreadable));
 }

@@ -198,6 +198,9 @@
   <data name="RenderSoftMaskTransferIgnored" xml:space="preserve">
     <value>soft mask transfer functions that cannot be read are ignored</value>
   </data>
+  <data name="RenderContentStreamUnreadable" xml:space="preserve">
+    <value>page content streams that cannot be decoded are not drawn</value>
+  </data>
   <data name="RedactVectorsPaintedOver" xml:space="preserve">
     <value>vector graphics and shadings under an area are painted over, not removed</value>
   </data>
