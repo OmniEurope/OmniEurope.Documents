@@ -90,6 +90,11 @@ internal static class XlsxPackageReader
                 continue;
             }
 
+            if (xml.LocalName == "workbook" && xml.NamespaceURI == XlsxStrictProfile.MainNamespace)
+            {
+                throw XlsxStrictProfile.Unsupported();
+            }
+
             if (xml.LocalName == "workbookPr")
             {
                 workbook.Date1904 = IsTrue(xml.GetAttribute("date1904"));
