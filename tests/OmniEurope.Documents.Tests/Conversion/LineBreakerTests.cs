@@ -32,6 +32,20 @@ public sealed class LineBreakerTests
     }
 
     [Fact]
+    public void Never_cuts_a_surrogate_pair_in_two()
+    {
+        var text = "\U00010140\U00010140";
+        var word = new TextToken(text, Style) { Width = Context.Measure(text, Style) };
+
+        var lines = Break(Geometry(width: 1), word);
+
+        var texts = Texts(lines);
+        Assert.Equal(text, string.Concat(texts));
+        Assert.All(texts, t => Assert.All(t.EnumerateRunes(), r => Assert.NotEqual(0xFFFD, r.Value)));
+        Assert.All(texts, t => Assert.True(t.Length % 2 == 0, "a pair was split"));
+    }
+
+    [Fact]
     public void Right_centre_and_decimal_tabs_align_on_their_stops()
     {
         var tabs = new WordTabStop[] { new(30, WordTabAlignment.Center), new(60, WordTabAlignment.Decimal), new(90, WordTabAlignment.Right) };

@@ -66,6 +66,29 @@ public sealed class TiffDecoderTests
         Assert.Equal((ImageColorType.GrayAlpha, ((byte)100, (byte)100, (byte)100, (byte)50)), (translucent.ColorType, translucent.GetRgba(0, 0)));
     }
 
+    [Theory]
+    [InlineData(1, 255)]
+    [InlineData(2, 128)]
+    public void Associated_alpha_is_divided_out_of_the_colour_channels(ushort extraSamples, byte expectedRed)
+    {
+        // One RGBA pixel [128, 0, 0, 128]; ExtraSamples 1 means the colour is already multiplied by alpha.
+        var file = Write(true, new Page(1, 1, [(258, Short, [8, 8, 8, 8]), (262, Short, [2]), (277, Short, [4]), (338, Short, [extraSamples])], [128, 0, 0, 128]));
+
+        var image = TiffDecoder.Decode(file);
+
+        Assert.Equal((ImageColorType.Rgba, (expectedRed, (byte)0, (byte)0, (byte)128)), (image.ColorType, image.GetRgba(0, 0)));
+    }
+
+    [Fact]
+    public void Associated_alpha_applies_to_grey_and_a_zero_alpha_gives_black()
+    {
+        var grey = TiffDecoder.Decode(Write(true, new Page(1, 1, [(258, Short, [8, 8]), BlackIsZero, (277, Short, [2]), (338, Short, [1])], [64, 128])));
+        var clear = TiffDecoder.Decode(Write(true, new Page(1, 1, [(258, Short, [8, 8, 8, 8]), (262, Short, [2]), (277, Short, [4]), (338, Short, [1])], [0, 0, 0, 0])));
+
+        Assert.Equal(((byte)128, (byte)128, (byte)128, (byte)128), grey.GetRgba(0, 0));
+        Assert.Equal(((byte)0, (byte)0, (byte)0, (byte)0), clear.GetRgba(0, 0));
+    }
+
     [Fact]
     public void Lzw_stops_at_the_end_of_information_code()
     {

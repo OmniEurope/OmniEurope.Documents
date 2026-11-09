@@ -30,15 +30,21 @@ internal sealed class ValueScale
     /// <summary>The ticks from <see cref="Min"/> to <see cref="Max"/>.</summary>
     public IEnumerable<double> Ticks()
     {
-        var count = (int)Math.Round((Max - Min) / Step);
+        var span = Max - Min;
+        var count = (int)Math.Round(double.IsFinite(span) ? span / Step : (Max / Step) - (Min / Step));
         for (var i = 0; i <= count; i++)
         {
-            yield return Min + (i * Step);
+            var tick = Min + (i * Step);
+            yield return double.IsFinite(tick) ? tick : ((Min / Step) + i) * Step;
         }
     }
 
     /// <summary>Where a value falls between the ends of the axis, 0 at <see cref="Min"/> and 1 at <see cref="Max"/>.</summary>
-    public double Fraction(double value) => (value - Min) / (Max - Min);
+    public double Fraction(double value)
+    {
+        var (offset, span) = (value - Min, Max - Min);
+        return double.IsFinite(offset) && double.IsFinite(span) ? offset / span : ((value / Step) - (Min / Step)) / ((Max / Step) - (Min / Step));
+    }
 
     public static ValueScale For(Chart chart, ChartStack stack)
     {
@@ -50,7 +56,9 @@ internal sealed class ValueScale
             high = low + 1;
         }
 
-        var step = Nice((high - low) / Intervals);
+        // The span of values near the double limits overflows; divide before subtracting then.
+        var raw = double.IsFinite(high - low) ? (high - low) / Intervals : (high / Intervals) - (low / Intervals);
+        var step = Nice(raw);
         var min = Math.Floor((low / step) + 1e-9) * step;
         var max = Math.Ceiling((high / step) - 1e-9) * step;
         var format = chart.Grouping == ChartGrouping.PercentStacked ? "0%" : chart.Series[0].FormatCode;

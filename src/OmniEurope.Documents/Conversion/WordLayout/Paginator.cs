@@ -68,8 +68,15 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
     private void StartSection(int index)
     {
         var page = _section.Page;
-        var continuous = index > 0 && page.Start is WordSectionStart.Continuous or WordSectionStart.NextColumn
-            && _page.Setup.Width.Equals(page.Width) && _page.Setup.Height.Equals(page.Height);
+        var samePage = index > 0 && _page.Setup.Width.Equals(page.Width) && _page.Setup.Height.Equals(page.Height);
+        if (samePage && page.Start is WordSectionStart.NextColumn && _column < _region.Columns.Count - 1)
+        {
+            // The section goes on at the top of the next column of the region; from the last column it opens a page.
+            NextColumn(0, natural: false);
+            return;
+        }
+
+        var continuous = samePage && page.Start is WordSectionStart.Continuous;
         if (continuous)
         {
             Balance(_region);
