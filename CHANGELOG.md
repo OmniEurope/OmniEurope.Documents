@@ -4,6 +4,8 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-11
+
 ### Added
 
 - `ExcelHtmlResult` gains `Gaps` and `GapDetails`: Excel to HTML now reports what the workbook could not carry (an
@@ -23,6 +25,7 @@ Notable changes to this project are documented here, following the Keep a Change
 - An OOXML Strict workbook is refused by `XlsxWorkbook.Load` and `XlsxEditor.Open` with a `DocumentFormatException`
   naming the profile, instead of being read as a workbook without worksheet.
 - xunit.v3 4.0.3 for the test projects.
+- The .NET SDK required is 11.0.100 or later (`global.json`); the package still targets `net10.0`.
 
 ### Fixed
 

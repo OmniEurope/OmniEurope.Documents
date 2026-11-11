@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace OmniEurope.Documents.StressTests;
+namespace OmniEurope.Documents.Tests;
 
 /// <summary>
 /// The processor time spent by the calling thread, so that a time limit measures the work of the code under test and
