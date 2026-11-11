@@ -27,11 +27,20 @@ jobs:
       - name: Build
         # Directory.Build.props sets TreatWarningsAsErrors: any warning fails this step.
         run: dotnet build OmniEurope.Documents.slnx --configuration Release --no-restore
-      - name: Unit tests
+      - name: Unit tests (net11.0)
+        # The package targets net10.0 and net11.0: each framework runs the suite under its own result file.
+        run: >-
+          dotnet test --project tests/OmniEurope.Documents.Tests/OmniEurope.Documents.Tests.csproj
+          --framework net11.0 --configuration Release --no-build --no-progress
+          --report-trx --report-trx-filename tests-net11.trx --results-directory artifacts/tests-net11
+      - name: Verify test results (net11.0)
+        shell: pwsh
+        run: ./.github/scripts/verify-trx.ps1 -Directory artifacts/tests-net11 -Name tests-net11.trx
+      - name: Unit tests (net10.0, with coverage)
         # global.json runs dotnet test on Microsoft.Testing.Platform: xunit.v3 is the runner.
         run: >-
           dotnet test --project tests/OmniEurope.Documents.Tests/OmniEurope.Documents.Tests.csproj
-          --configuration Release --no-build --no-progress
+          --framework net10.0 --configuration Release --no-build --no-progress
           --report-trx --report-trx-filename tests.trx --results-directory artifacts/tests
           --coverlet --coverlet-output-format cobertura
           --coverlet-include '[OmniEurope.Documents]*' '[OmniEurope.Documents.Fonts]*'
@@ -75,11 +84,19 @@ jobs:
         run: dotnet restore OmniEurope.Documents.slnx
       - name: Build
         run: dotnet build OmniEurope.Documents.slnx --configuration Release --no-restore
-      - name: Integration tests
+      - name: Integration tests (net10.0)
         run: >-
           dotnet test --project tests/OmniEurope.Documents.StressTests/OmniEurope.Documents.StressTests.csproj
-          --configuration Release --no-build --no-progress
+          --framework net10.0 --configuration Release --no-build --no-progress
           --report-trx --report-trx-filename integration.trx --results-directory artifacts/integration
-      - name: Verify test results
+      - name: Verify test results (net10.0)
         shell: pwsh
         run: ./.github/scripts/verify-trx.ps1 -Directory artifacts/integration -Name integration.trx
+      - name: Integration tests (net11.0)
+        run: >-
+          dotnet test --project tests/OmniEurope.Documents.StressTests/OmniEurope.Documents.StressTests.csproj
+          --framework net11.0 --configuration Release --no-build --no-progress
+          --report-trx --report-trx-filename integration-net11.trx --results-directory artifacts/integration-net11
+      - name: Verify test results (net11.0)
+        shell: pwsh
+        run: ./.github/scripts/verify-trx.ps1 -Directory artifacts/integration-net11 -Name integration-net11.trx

@@ -78,7 +78,9 @@ public sealed class WordLayoutTests
 
         var letter = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1).Letters.First(l => l.Value == "B");
 
-        Assert.Equal(Math.Round(Page.MarginLeft + (Page.ContentWidth * secondStart) + 5.4, 1), Math.Round(letter.X, 1));
+        // Within a tenth of a point: the position read back can sit on a rounding midpoint (303.05), which
+        // Math.Round(x, 1) resolves differently from one runtime to the next.
+        Assert.Equal(Page.MarginLeft + (Page.ContentWidth * secondStart) + 5.4, letter.X, 0.1);
     }
 
     [Fact]

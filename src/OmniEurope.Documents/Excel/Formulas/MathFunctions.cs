@@ -242,7 +242,7 @@ internal static class MathFunctions
         if (whole is not null)
         {
             // ROUNDUP and ROUNDDOWN move away from or towards zero whatever the next digit.
-            var scaled = (double)Math.Round((decimal)(Math.Abs(x.Number) * scale), 9);
+            var scaled = (double)Math.Round(ExcelDecimal.From(Math.Abs(x.Number) * scale), 9);
             if (scaled == 0 && x.Number != 0) scaled = Math.Max(Math.Abs(x.Number) * scale, double.Epsilon);
             var rounded = (mode == MidpointRounding.AwayFromZero ? Math.Ceiling(scaled) : Math.Floor(scaled)) / scale;
             return FormulaValue.Of(Math.CopySign(rounded, x.Number));
@@ -250,7 +250,7 @@ internal static class MathFunctions
 
         if (places >= 0)
         {
-            return FormulaValue.Of((double)Math.Round((decimal)x.Number, places, mode));
+            return FormulaValue.Of((double)Math.Round(ExcelDecimal.From(x.Number), places, mode));
         }
 
         // Extreme factors and values do not fit decimal. The scaled number is already bounded above by
@@ -260,8 +260,8 @@ internal static class MathFunctions
             return FormulaValue.Of(Math.Round(x.Number * scale, 0, mode) / scale);
         }
 
-        var factor = (decimal)Math.Pow(10, -places);
-        var integral = Math.Round((decimal)x.Number / factor, 0, mode);
+        var factor = ExcelDecimal.From(Math.Pow(10, -places));
+        var integral = Math.Round(ExcelDecimal.From(x.Number) / factor, 0, mode);
         return FormulaValue.Of(Math.Abs(integral) > decimal.MaxValue / factor
             ? Math.Round(x.Number * scale, 0, mode) / scale
             : (double)(integral * factor));
@@ -289,8 +289,8 @@ internal static class MathFunctions
 
         var ratio = x.Number / significance.Number;
 
-        // Beyond the range of decimal every double is a whole number: nothing to round, and the cast would throw.
-        var quotient = Math.Abs(ratio) < MaxRoundable ? (double)Math.Round((decimal)ratio, 9) : ratio;
+        // Beyond the range of decimal every double is a whole number: nothing to round, and the conversion would throw.
+        var quotient = Math.Abs(ratio) < MaxRoundable ? (double)Math.Round(ExcelDecimal.From(ratio), 9) : ratio;
         return FormulaValue.Of(direction(quotient) * significance.Number);
     }
 }

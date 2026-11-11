@@ -40,51 +40,60 @@ internal sealed class TiffSamples(TiffLayout layout, int photometric, uint[] col
         _ => extraAlpha && layout.Samples >= 2 ? ImageColorType.GrayAlpha : ImageColorType.Gray,
     };
 
-    private int WritePixel(ReadOnlySpan<byte> row, int x, byte[] output, int o)
+    private int WritePixel(ReadOnlySpan<byte> row, int x, byte[] output, int o) => photometric switch
     {
-        switch (photometric)
+        3 => WritePalette(row, x, output, o),
+        2 or 5 => WriteColor(row, x, output, o),
+        _ => WriteGray(row, x, output, o),
+    };
+
+    private int WritePalette(ReadOnlySpan<byte> row, int x, byte[] output, int o)
+    {
+        var index = (int)Sample(row, x, 0);
+        var entries = colorMap.Length / 3;
+        for (var c = 0; c < 3; c++)
         {
-            case 3:
-                var index = (int)Sample(row, x, 0);
-                var entries = colorMap.Length / 3;
-                for (var c = 0; c < 3; c++)
-                {
-                    output[o + c] = index < entries ? (byte)(colorMap[(c * entries) + index] >> 8) : (byte)0;
-                }
-
-                return o + 3;
-            case 2 or 5:
-                var channels = photometric == 5 || (extraAlpha && layout.Samples >= 4) ? 4 : 3;
-                for (var c = 0; c < channels; c++)
-                {
-                    output[o + c] = Scale(Sample(row, x, c));
-                }
-
-                if (associatedAlpha && photometric == 2 && channels == 4)
-                {
-                    for (var c = 0; c < 3; c++)
-                    {
-                        output[o + c] = Unassociate(output[o + c], output[o + 3]);
-                    }
-                }
-
-                return o + channels;
-            default:
-                var gray = Scale(Sample(row, x, 0));
-                output[o] = photometric == 0 ? (byte)(255 - gray) : gray;
-                if (extraAlpha && layout.Samples >= 2)
-                {
-                    output[o + 1] = Scale(Sample(row, x, 1));
-                    if (associatedAlpha)
-                    {
-                        output[o] = Unassociate(output[o], output[o + 1]);
-                    }
-
-                    return o + 2;
-                }
-
-                return o + 1;
+            output[o + c] = index < entries ? (byte)(colorMap[(c * entries) + index] >> 8) : (byte)0;
         }
+
+        return o + 3;
+    }
+
+    private int WriteColor(ReadOnlySpan<byte> row, int x, byte[] output, int o)
+    {
+        var channels = photometric == 5 || (extraAlpha && layout.Samples >= 4) ? 4 : 3;
+        for (var c = 0; c < channels; c++)
+        {
+            output[o + c] = Scale(Sample(row, x, c));
+        }
+
+        if (associatedAlpha && photometric == 2 && channels == 4)
+        {
+            for (var c = 0; c < 3; c++)
+            {
+                output[o + c] = Unassociate(output[o + c], output[o + 3]);
+            }
+        }
+
+        return o + channels;
+    }
+
+    private int WriteGray(ReadOnlySpan<byte> row, int x, byte[] output, int o)
+    {
+        var gray = Scale(Sample(row, x, 0));
+        output[o] = photometric == 0 ? (byte)(255 - gray) : gray;
+        if (!extraAlpha || layout.Samples < 2)
+        {
+            return o + 1;
+        }
+
+        output[o + 1] = Scale(Sample(row, x, 1));
+        if (associatedAlpha)
+        {
+            output[o] = Unassociate(output[o], output[o + 1]);
+        }
+
+        return o + 2;
     }
 
     // The straight colour of a channel multiplied by alpha; fully transparent pixels have no colour left.
