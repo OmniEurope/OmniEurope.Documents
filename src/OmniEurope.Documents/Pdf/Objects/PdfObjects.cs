@@ -250,7 +250,8 @@ internal static class PdfFormat
             return "0";
         }
 
-        var text = Math.Round(value, 4).ToString("0.####", CultureInfo.InvariantCulture);
+        // The format rounds by itself, identically on every framework (Math.Round(double, n) does not).
+        var text = value.ToString("0.####", CultureInfo.InvariantCulture);
         return text == "-0" ? "0" : text;
     }
 }

@@ -124,7 +124,8 @@ internal static class NumberSection
         {
             exponent = (int)Math.Floor(Math.Log10(value));
             value /= Math.Pow(10, exponent);
-            if (Math.Round(value, decimals) >= 10)
+            // Same rounding as Split, so a mantissa that rounds up to 10 moves to the next exponent on every framework.
+            if (Math.Round(ExcelDecimal.From(value), Math.Min(decimals, 28), MidpointRounding.AwayFromZero) >= 10)
             {
                 value /= 10;
                 exponent++;

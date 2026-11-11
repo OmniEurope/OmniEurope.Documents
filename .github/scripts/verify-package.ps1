@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: EUPL-1.2
 # Fails unless the package declares no dependency, holds both assemblies (OmniEurope.Documents.dll and the extra
-# fonts assembly OmniEurope.Documents.Fonts.dll) with their XML docs, embeds every font of each folder in its
+# fonts assembly OmniEurope.Documents.Fonts.dll) for every target framework with their XML docs, embeds every font of each folder in its
 # assembly and ships the licence file of every font family next to it (fonts/ and fonts/extra/), each one the SIL
 # Open Font License 1.1. It also checks
 # that the symbol package holds the portable PDB of each assembly, that the package version equals the release tag
@@ -10,7 +10,9 @@ param(
     [string]$ExpectedVersion,
     [Parameter(Mandatory)] [string]$Directory,
     [Parameter(Mandatory)] [string]$Fonts,
-    [Parameter(Mandatory)] [string]$ExtraFonts
+    [Parameter(Mandatory)] [string]$ExtraFonts,
+    # Every framework the package targets (Directory.Build.props): a pack that drops one must fail.
+    [string[]]$Frameworks = @('net10.0', 'net11.0')
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -40,6 +42,12 @@ try {
         if ($actual -cne $expected) { throw "NuGet version mismatch: expected $expected, found $actual." }
     }
     if ($entries | Where-Object { $_ -match '(?i)\.pdb$' }) { throw "$($package.Name) contains an embedded PDB; symbols belong in the .snupkg." }
+
+    foreach ($framework in $Frameworks) {
+        foreach ($file in 'OmniEurope.Documents.dll', 'OmniEurope.Documents.Fonts.dll') {
+            if ($entries -notcontains "lib/$framework/$file") { throw "$($package.Name) has no lib/$framework/$file." }
+        }
+    }
 
     $core = @($entries | Where-Object { $_ -like 'lib/*/OmniEurope.Documents.dll' })
     if ($core.Count -eq 0) { throw "$($package.Name) holds no lib/*/OmniEurope.Documents.dll." }

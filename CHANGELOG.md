@@ -4,6 +4,18 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ## [Unreleased]
 
+### Fixed
+
+- Numbers written into PDF content and HTML styles are the same on .NET 10 and .NET 11 at a rounding midpoint
+  (`Math.Round(double, digits)` changed there in .NET 11); on .NET 10 a midpoint such as 1.005 pt now writes `1.01pt`.
+- Excel scientific formats: a mantissa that rounds up to 10 moves to the next exponent on every framework (`9995`
+  under `0.00E+00` is `1.00E+04`, not `10.00E+03`).
+
+### Known limits
+
+- Excel on .NET 10: since 1.2.0 the 15 significant digits are correctly rounded, so the last digit can differ from
+  1.1.0 for about 2 % of values (the former runtime conversion rounded ties and very small values less exactly).
+
 ## [1.2.0] - 2026-11-11
 
 ### Added

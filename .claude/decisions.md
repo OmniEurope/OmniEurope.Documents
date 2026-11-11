@@ -12,3 +12,4 @@
 - 2026-11-11 : version : 1.2.0 (mineure incrémentée, patch à 0) pour la prochaine publication.
 - 2026-11-11 : cibles : le paquet cible net10.0 et net11.0 (remplace « cible net10.0 inchangée »).
 - 2026-11-11 : plans : PLAN-007, PLAN-009 et PLAN-010 terminés, archivés.
+- 2026-11-11 : publication : 1.2.0 publiée (main df96d32, tag v1.2.0, release GitHub, push NuGet accepté).

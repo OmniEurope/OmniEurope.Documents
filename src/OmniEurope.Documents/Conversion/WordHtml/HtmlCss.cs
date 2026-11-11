@@ -24,9 +24,9 @@ internal static class HtmlCss
         return text.Length == 0 ? null : text;
     }
 
-    public static string Points(double value) => Math.Round(value, 2).ToString("0.##", CultureInfo.InvariantCulture) + "pt";
+    public static string Points(double value) => value.ToString("0.##", CultureInfo.InvariantCulture) + "pt";
 
-    public static string Number(double value) => Math.Round(value, 3).ToString("0.###", CultureInfo.InvariantCulture);
+    public static string Number(double value) => value.ToString("0.###", CultureInfo.InvariantCulture);
 
     /// <summary><c>#RRGGBB</c> for a colour written as six hexadecimal digits; null otherwise (<c>auto</c>...).</summary>
     public static string? Color(string? hex) => TextStyle.ParseColor(hex) is { } color ? Color(color) : null;

@@ -116,6 +116,10 @@ One package, one namespace per format, conversions on their own:
   HTML and Markdown to Word or PDF, images to PDF; `WordFieldUpdater`: tables of contents and fields updated from
   the layout)
 
+## Requirements
+
+The package targets `net10.0` and `net11.0`. Building it from source needs the .NET SDK 11.0.100 or later (`global.json`).
+
 ## Dependencies
 
 **None.** The package uses only the .NET base class library (`System.IO.Compression`, `System.Xml`,
