@@ -61,7 +61,7 @@
       <_ExtraFontsTarget>Build</_ExtraFontsTarget>
       <_ExtraFontsTarget Condition="'$(NoBuild)' == 'true'">GetTargetPath</_ExtraFontsTarget>
     </PropertyGroup>
-    <MSBuild Projects="$(ExtraFontsProject)" Targets="$(_ExtraFontsTarget)" Properties="Configuration=$(Configuration);PackingExtraFonts=true">
+    <MSBuild Projects="$(ExtraFontsProject)" Targets="$(_ExtraFontsTarget)" Properties="Configuration=$(Configuration);TargetFramework=$(TargetFramework);PackingExtraFonts=true">
       <Output TaskParameter="TargetOutputs" ItemName="_ExtraFontsAssembly" />
     </MSBuild>
     <Error Condition="!Exists('@(_ExtraFontsAssembly)')" Text="@(_ExtraFontsAssembly) is missing: build OmniEurope.Documents.Fonts before packing with --no-build." />
