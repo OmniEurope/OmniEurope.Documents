@@ -12,16 +12,15 @@ un plan décrit un travail, pas l'état du produit.
 
 ## Plans actifs
 
-| Plan | Travail | ADR |
-|---|---|---|
-| [PLAN-010](PLAN-010-html-compatible-csp.md) | HTML de Word et d'Excel compatible avec une CSP stricte : classes générées, feuille séparée ou avec nonce, images séparées | Aucun |
-| [PLAN-009](PLAN-009-controles-de-contenu-word.md) | Contrôles de contenu Word, encre, édition minimale, marqueurs HTML, fidélité | Aucun |
-| [PLAN-007](PLAN-007-corrections-audit-coherence.md) | Treize corrections vérifiées localement, double contrôle ; CI distante non exécutée | Aucun |
+Aucun.
 
 ## Plans archivés
 
 | Plan | Travail | ADR |
 |---|---|---|
+| [PLAN-010](archive/PLAN-010-html-compatible-csp.md) | HTML de Word et d'Excel compatible avec une CSP stricte : classes générées, feuille séparée ou avec nonce, images séparées | Aucun |
+| [PLAN-009](archive/PLAN-009-controles-de-contenu-word.md) | Contrôles de contenu Word, encre, édition minimale, marqueurs HTML, fidélité | Aucun |
+| [PLAN-007](archive/PLAN-007-corrections-audit-coherence.md) | Treize corrections vérifiées localement, double contrôle ; CI distante non exécutée | Aucun |
 | [PLAN-006](archive/PLAN-006-ocr.md) | OCR : abandonné par décision du propriétaire (2026-10-20), aucun code ; le paquet reste sans OCR | Aucun |
 | [PLAN-005](archive/PLAN-005-robustesse-et-fidelite.md) | Robustesse et fidélité : fichiers forgés refusés (16 tests), rendus et écritures conformes (9), contrats tenus (6) | Aucun |
 | [PLAN-004](archive/PLAN-004-fonctionnalites-suivantes.md) | Fonctionnalités suivantes : édition Excel sans perte, formules, formulaires PDF, PDF/A-2, signature PAdES B-B, conversions, fidélité du rendu, graphiques ; le lot OCR est devenu PLAN-006 | Aucun |

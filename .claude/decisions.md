@@ -10,3 +10,5 @@
 - 2026-11-09 : noms d'API publics : WordHtmlImage reçoit l'alias ContentType, MediaType marqué obsolète (retrait à une version majeure) ; Worksheet (modèle) et Sheet (éditeur) restent distincts, rôles différents.
 - 2026-11-11 : SDK : global.json sur le SDK 11.0.100 (dernier installé), cible net10.0 inchangée.
 - 2026-11-11 : version : 1.2.0 (mineure incrémentée, patch à 0) pour la prochaine publication.
+- 2026-11-11 : cibles : le paquet cible net10.0 et net11.0 (remplace « cible net10.0 inchangée »).
+- 2026-11-11 : plans : PLAN-007, PLAN-009 et PLAN-010 terminés, archivés.
