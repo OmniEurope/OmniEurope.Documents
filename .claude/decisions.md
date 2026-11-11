@@ -8,3 +8,5 @@
 - 2026-11-09 : test JPEG 2000 à limite de temps : mesurer le temps processeur du thread au lieu du temps écoulé, test réactivé.
 - 2026-11-09 : OOXML Strict (Excel) : refusé pour l'instant avec une erreur explicite ; à implémenter le jour où un besoin réel apparaît.
 - 2026-11-09 : noms d'API publics : WordHtmlImage reçoit l'alias ContentType, MediaType marqué obsolète (retrait à une version majeure) ; Worksheet (modèle) et Sheet (éditeur) restent distincts, rôles différents.
+- 2026-11-11 : SDK : global.json sur le SDK 11.0.100 (dernier installé), cible net10.0 inchangée.
+- 2026-11-11 : version : 1.2.0 (mineure incrémentée, patch à 0) pour la prochaine publication.

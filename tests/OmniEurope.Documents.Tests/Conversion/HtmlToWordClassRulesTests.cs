@@ -134,13 +134,12 @@ public sealed partial class HtmlToWordClassRulesTests
             html.Append("<p class=\"a u").Append(i).Append("\">t</p>");
         }
 
-        var watch = System.Diagnostics.Stopwatch.StartNew();
-        var document = HtmlToWord.Convert(html.ToString());
-        watch.Stop();
+        // Processor time of this thread, so the limit measures the conversion and not the parallel suite around it.
+        var (document, time) = ThreadCpuTime.Measure(() => HtmlToWord.Convert(html.ToString()));
 
         Assert.Equal(Count, document.Body.OfType<WordParagraph>().Count());
         Assert.True(document.Body.OfType<WordParagraph>().First().Inlines.OfType<WordText>().First().Properties.Bold == true);
-        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(20), $"took {watch.Elapsed}");
+        Assert.True(time < TimeSpan.FromSeconds(20), $"took {time}");
     }
 
     private static string Inlined(string html, string css)
