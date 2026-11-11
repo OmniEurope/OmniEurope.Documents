@@ -25,7 +25,7 @@ Notable changes to this project are documented here, following the Keep a Change
 - An OOXML Strict workbook is refused by `XlsxWorkbook.Load` and `XlsxEditor.Open` with a `DocumentFormatException`
   naming the profile, instead of being read as a workbook without worksheet.
 - xunit.v3 4.0.3 for the test projects.
-- The .NET SDK required is 11.0.100 or later (`global.json`); the package still targets `net10.0`.
+- The package targets `net10.0` and `net11.0`; building it requires the .NET SDK 11.0.100 or later (`global.json`).
 
 ### Fixed
 
@@ -54,6 +54,8 @@ Notable changes to this project are documented here, following the Keep a Change
 - Word to PDF: breaking a word never cuts a surrogate pair in two; a `NextColumn` section starts at the top of the
   following column (from the last column, on a new page).
 - TIFF: associated alpha (`ExtraSamples` 1) is divided out of the colour channels, so the image is no longer too dark.
+- Excel on .NET 11: `ROUND`, `ROUNDUP`, `ROUNDDOWN`, `CEILING`, `FLOOR` and number formats work at 15 significant
+  digits on every framework (`ROUND(2.675,2)` is 2.68), now that .NET 11 converts a double to decimal exactly.
 
 ### Known limits
 

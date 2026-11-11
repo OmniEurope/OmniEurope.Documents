@@ -183,7 +183,7 @@ internal static class NumberSection
         string text;
         if (value < 7.9e27)
         {
-            var rounded = Math.Round((decimal)value, Math.Min(decimals, 28), MidpointRounding.AwayFromZero);
+            var rounded = Math.Round(ExcelDecimal.From(value), Math.Min(decimals, 28), MidpointRounding.AwayFromZero);
             text = rounded.ToString("F" + Math.Min(decimals, 28).ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
         }
         else
