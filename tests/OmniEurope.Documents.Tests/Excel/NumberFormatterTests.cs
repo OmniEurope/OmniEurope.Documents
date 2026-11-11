@@ -19,6 +19,8 @@ public sealed class NumberFormatterTests
     [InlineData(0.0, "0.00;(0.00);\"zero\"", "zero")]
     [InlineData(1234567.0, "#,##0,", "1,235")]
     [InlineData(12345.678, "0.00E+00", "1.23E+04")]
+    [InlineData(9995.0, "0.00E+00", "1.00E+04")]
+    [InlineData(0.0002675, "0.00E+00", "2.68E-04")]
     [InlineData(0.000123, "0.0E+00", "1.2E-04")]
     [InlineData(0.5, "#.##", ".5")]
     [InlineData(5.0, "000", "005")]

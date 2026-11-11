@@ -75,7 +75,3 @@ public sealed class DocumentGap : IEquatable<DocumentGap>
     internal static string? Template(string key, CultureInfo culture) =>
         Messages.GetResourceSet(culture, createIfNotExists: true, tryParents: false)?.GetString(key);
 }
-
-/// <summary>The code of a gap: a key of <c>Resources/GapMessages.resx</c>. The codes are the static fields of the
-/// <c>*GapCodes</c> classes, one per area.</summary>
-internal readonly record struct GapCode(string Value);
