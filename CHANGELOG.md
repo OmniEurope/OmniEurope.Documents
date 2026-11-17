@@ -4,8 +4,15 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ## [Unreleased]
 
+### Added
+
+- `PdfDocument.Open(Stream, string?, long maxLength)`: a stream longer than the limit is refused
+  (`InvalidDataException`) before more than the limit is held; a seekable stream is read straight into an array of
+  its size.
+
 ### Changed
 
+- `PdfDocument.Open(Stream, string?)` reads at most `PdfDocument.DefaultMaxLength` (1 GiB).
 - `XlsxCsvConverter.WriteCsv` and `ToCsv` called without options now neutralise text a spreadsheet would run as a
   formula (prefixed with an apostrophe, CSV injection); numbers are never prefixed, whatever the culture. Pass
   `CsvWriterOptions` to choose (`NeutralizeFormulas` stays off by default in `CsvWriter`).

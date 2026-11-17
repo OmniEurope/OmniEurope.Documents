@@ -87,16 +87,59 @@ public sealed class PdfDocument
         return new PdfDocument(data, password);
     }
 
-    /// <summary>Opens a PDF from a stream (read to its end).</summary>
-    /// <exception cref="InvalidDataException">The data is not a readable PDF.</exception>
+    /// <summary>The longest stream <see cref="Open(Stream, string?)"/> reads: 1 GiB.</summary>
+    public const long DefaultMaxLength = 1L << 30;
+
+    /// <summary>Opens a PDF from a stream (read to its end), of at most <see cref="DefaultMaxLength"/> bytes.</summary>
+    /// <exception cref="InvalidDataException">The data is not a readable PDF, or is longer than the limit.</exception>
     /// <exception cref="PdfPasswordException">The password does not open the encrypted file.</exception>
-    public static PdfDocument Open(Stream stream, string? password = null)
+    public static PdfDocument Open(Stream stream, string? password = null) => Open(stream, password, DefaultMaxLength);
+
+    /// <summary>Opens a PDF from a stream (read to its end) of at most <paramref name="maxLength"/> bytes.</summary>
+    /// <exception cref="InvalidDataException">The data is not a readable PDF, or is longer than <paramref name="maxLength"/>.</exception>
+    /// <exception cref="PdfPasswordException">The password does not open the encrypted file.</exception>
+    public static PdfDocument Open(Stream stream, string? password, long maxLength)
     {
         ArgumentNullException.ThrowIfNull(stream);
-        using var copy = new MemoryStream();
-        stream.CopyTo(copy);
-        return new PdfDocument(copy.ToArray(), password);
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxLength, 1);
+        return new PdfDocument(ReadAll(stream, Math.Min(maxLength, Array.MaxLength)), password);
     }
+
+    // The rest of the stream: read straight into an array of its size when the length is known, else copied as it
+    // comes; either way refused past the limit before more than the limit is held.
+    private static byte[] ReadAll(Stream stream, long maxLength)
+    {
+        if (stream.CanSeek)
+        {
+            var remaining = Math.Max(0, stream.Length - stream.Position);
+            if (remaining > maxLength)
+            {
+                throw TooLong(maxLength);
+            }
+
+            var data = new byte[remaining];
+            stream.ReadExactly(data);
+            return data;
+        }
+
+        using var copy = new MemoryStream();
+        var buffer = new byte[81920];
+        int read;
+        while ((read = stream.Read(buffer)) > 0)
+        {
+            if (copy.Length + read > maxLength)
+            {
+                throw TooLong(maxLength);
+            }
+
+            copy.Write(buffer, 0, read);
+        }
+
+        return copy.ToArray();
+    }
+
+    private static InvalidDataException TooLong(long maxLength) =>
+        new(string.Create(CultureInfo.InvariantCulture, $"The PDF stream is longer than the {maxLength:N0} bytes allowed."));
 
     /// <summary>The page with a 1-based number.</summary>
     public PdfPage GetPage(int number)

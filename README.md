@@ -125,6 +125,16 @@ Shared building blocks the formats rely on, public for direct use:
   codecs and rasters)
 - `OmniEurope.Documents.Text` (`TextEncodingDetector`, `Windows1252Encoding`: text encoding detection)
 
+## Untrusted input on a server
+
+Every reader is bounded by default, sized for real office documents rather than for a shared server:
+
+- DOCX and XLSX (`PackageLimits.Default`): 2,000 entries, 256 MiB for one part, 1 GiB in total, a compression ratio
+  of at most 200 for parts over 1 MiB. A service accepting uploads should pass lower limits, for example
+  `XlsxWorkbook.Load(stream, new PackageLimits { MaxPartSize = 32L << 20, MaxTotalSize = 128L << 20 })`.
+- PDF: `PdfDocument.Open(stream)` reads at most 1 GiB; `PdfDocument.Open(stream, password, maxLength)` sets the limit.
+- Excel to CSV: `maxCells` bounds the used range written.
+
 ## Requirements
 
 The package targets `net10.0` and `net11.0`. Building it from source needs the .NET SDK 11.0.100 or later (`global.json`).

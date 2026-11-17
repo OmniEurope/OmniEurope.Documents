@@ -258,5 +258,28 @@ public sealed class PdfReaderTests
         return builder.ToArray();
     }
 
+    [Fact]
+    public void A_stream_longer_than_the_limit_is_refused_seekable_or_not()
+    {
+        var pdf = RawPdf.Page("BT /F1 12 Tf 10 100 Td (Limit) Tj ET");
+
+        Assert.Equal(1, PdfDocument.Open(new MemoryStream(pdf), null, pdf.Length).PageCount);
+        Assert.Equal(1, PdfDocument.Open(new ForwardOnly(pdf), null, pdf.Length).PageCount);
+        Assert.Equal(1, PdfDocument.Open(new MemoryStream(pdf)).PageCount);
+        Assert.Throws<InvalidDataException>(() => PdfDocument.Open(new MemoryStream(pdf), null, pdf.Length - 1));
+        Assert.Throws<InvalidDataException>(() => PdfDocument.Open(new ForwardOnly(pdf), null, pdf.Length - 1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => PdfDocument.Open(new MemoryStream(pdf), null, 0));
+    }
+
+    // A stream that can only be read forward, its length unknown.
+    private sealed class ForwardOnly(byte[] data) : MemoryStream(data)
+    {
+        public override bool CanSeek => false;
+
+        public override long Length => throw new NotSupportedException();
+
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+    }
+
     private static PdfRectangle Round(PdfRectangle r) => new(Math.Round(r.Left, 2), Math.Round(r.Bottom, 2), Math.Round(r.Right, 2), Math.Round(r.Top, 2));
 }
