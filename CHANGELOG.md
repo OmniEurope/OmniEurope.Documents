@@ -13,6 +13,17 @@ Notable changes to this project are documented here, following the Keep a Change
 - `PdfDocument.Open(Stream, string?, long maxLength)`: a stream longer than the limit is refused
   (`InvalidDataException`) before more than the limit is held; a seekable stream is read straight into an array of
   its size.
+- PDF flow layout: `PdfFlowOptions.HeaderHeight` and `FooterHeight` reserve a header and a footer zone inside the
+  margins. The flow starts below the header and stops above the footer on every page, so a multi-line header no longer
+  overlaps the content (`PdfFlowLayout.Top` gives the first position). Both default to 0, which keeps the previous
+  behaviour.
+- PDF tables: `PdfTable.Borders` (`PdfBorderSides` flags) chooses which edges of each cell are drawn, for example
+  `PdfBorderSides.Bottom` for row separators only; `PdfTable.HeaderBorders` and `PdfTableCell.Borders` override it for
+  the header rows and for one cell. The default is the full grid, as before.
+- PDF flow layout: `PdfFlowLayout.AddBlock` flows paragraphs, tables and other elements in a column of a given width
+  aligned left, centred or right (a totals block), and `PdfFlowLayout.AddBox` draws padded text with an optional fill
+  and a four-sided border (`PdfBoxStyle`), such as a status badge. Both advance the flow and move to a new page when
+  they do not fit.
 
 ### Changed
 

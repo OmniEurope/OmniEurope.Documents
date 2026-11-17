@@ -13,11 +13,22 @@ public sealed class PdfFlowOptions
     /// <summary>Margins in points (left, top, right, bottom). Default 2 cm on every side.</summary>
     public (double Left, double Top, double Right, double Bottom) Margins { get; init; } = (56.7, 56.7, 56.7, 56.7);
 
-    /// <summary>Drawn on each page when it is created (letterhead, header); receives the page and its number.</summary>
+    /// <summary>Height in points of the header zone, at the top of the content area (below the top margin). The flow
+    /// starts below it on every page; <see cref="Header"/> draws inside it. Default 0: no zone is reserved and the
+    /// flow starts at the top margin.</summary>
+    public double HeaderHeight { get; init; }
+
+    /// <summary>Height in points of the footer zone, at the bottom of the content area (above the bottom margin). The
+    /// flow stops above it on every page; <see cref="Footer"/> draws inside it. Default 0: no zone is reserved.</summary>
+    public double FooterHeight { get; init; }
+
+    /// <summary>Drawn on each page when it is created (letterhead, header); receives the page and its number. With a
+    /// <see cref="HeaderHeight"/> it should stay within the zone that starts at the top margin.</summary>
     public Action<PdfCanvas, int>? Header { get; init; }
 
     /// <summary>Drawn on every page once the flow is finished; receives the page, its number and the page
-    /// count, so "page 3 / 7" footers are possible.</summary>
+    /// count, so "page 3 / 7" footers are possible. With a <see cref="FooterHeight"/> it should stay within the zone
+    /// that ends at the bottom margin.</summary>
     public Action<PdfCanvas, int, int>? Footer { get; init; }
 }
 
@@ -31,6 +42,8 @@ public sealed class PdfFlowLayout
     private readonly PdfDocumentBuilder _document;
     private readonly PdfFlowOptions _options;
     private readonly List<PdfCanvas> _pages = [];
+    private double _left;
+    private double _width;
     private bool _finished;
 
     /// <summary>Starts a flow on a new page of <paramref name="document"/>.</summary>
@@ -39,6 +52,13 @@ public sealed class PdfFlowLayout
         ArgumentNullException.ThrowIfNull(document);
         _document = document;
         _options = options ?? new PdfFlowOptions();
+        if (!(_options.HeaderHeight >= 0) || !(_options.FooterHeight >= 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(options), "The header and footer heights cannot be negative.");
+        }
+
+        _left = _options.Margins.Left;
+        _width = _options.PageWidth - _options.Margins.Left - _options.Margins.Right;
         Page = null!;
         NewPage();
     }
@@ -52,14 +72,17 @@ public sealed class PdfFlowLayout
     /// <summary>The vertical position of the next element.</summary>
     public double Y { get; set; }
 
-    /// <summary>Left edge of the content area.</summary>
-    public double Left => _options.Margins.Left;
+    /// <summary>Left edge of the content area (of the current block inside <see cref="AddBlock"/>).</summary>
+    public double Left => _left;
 
-    /// <summary>Width of the content area.</summary>
-    public double ContentWidth => _options.PageWidth - _options.Margins.Left - _options.Margins.Right;
+    /// <summary>Width of the content area (of the current block inside <see cref="AddBlock"/>).</summary>
+    public double ContentWidth => _width;
 
-    /// <summary>Lowest position content may reach.</summary>
-    public double Bottom => _options.PageHeight - _options.Margins.Bottom;
+    /// <summary>Highest position content may reach: below the top margin and the header zone.</summary>
+    public double Top => _options.Margins.Top + _options.HeaderHeight;
+
+    /// <summary>Lowest position content may reach: above the bottom margin and the footer zone.</summary>
+    public double Bottom => _options.PageHeight - _options.Margins.Bottom - _options.FooterHeight;
 
     /// <summary>Space left on the current page.</summary>
     public double Remaining => Bottom - Y;
@@ -70,7 +93,7 @@ public sealed class PdfFlowLayout
         ThrowIfFinished();
         Page = _document.AddPage(_options.PageWidth, _options.PageHeight);
         _pages.Add(Page);
-        Y = _options.Margins.Top;
+        Y = Top;
         _options.Header?.Invoke(Page, _pages.Count);
         return Page;
     }
@@ -79,7 +102,7 @@ public sealed class PdfFlowLayout
     public void EnsureSpace(double height)
     {
         ThrowIfFinished();
-        if (Y + height > Bottom && Y > _options.Margins.Top)
+        if (Y + height > Bottom && Y > Top)
         {
             NewPage();
         }
@@ -134,13 +157,88 @@ public sealed class PdfFlowLayout
         }
 
         EnsureSpace(height);
-        var x = alignment switch
+        Page.DrawImage(image, Left + Offset(alignment, ContentWidth - width), Y, width, height);
+        Y += height;
+    }
+
+    /// <summary>
+    /// Runs <paramref name="content"/> in a column of <paramref name="width"/> points placed left, centred or right
+    /// (<see cref="PdfTextAlignment.Justify"/> places it left) in the current content width. Inside it
+    /// <see cref="Left"/> and <see cref="ContentWidth"/> describe the column, so paragraphs, rules, images, tables, boxes
+    /// and nested blocks flow in it, and the flow goes down and onto new pages as usual; afterwards the full width is
+    /// back and <see cref="Y"/> is below the block. A width over the content width is reduced to it.
+    /// </summary>
+    /// <param name="width">Width of the block in points, above zero.</param>
+    /// <param name="alignment">Where the block sits in the content width.</param>
+    /// <param name="content">Adds the content of the block to the layout it receives (this layout).</param>
+    public void AddBlock(double width, PdfTextAlignment alignment, Action<PdfFlowLayout> content)
+    {
+        if (!(width > 0))
         {
-            PdfTextAlignment.Center => Left + ((ContentWidth - width) / 2),
-            PdfTextAlignment.Right => Left + ContentWidth - width,
-            _ => Left,
-        };
-        Page.DrawImage(image, x, Y, width, height);
+            throw new ArgumentOutOfRangeException(nameof(width), "A block needs a width above zero.");
+        }
+
+        ArgumentNullException.ThrowIfNull(content);
+        ThrowIfFinished();
+        var (outerLeft, outerWidth) = (_left, _width);
+        width = Math.Min(width, outerWidth);
+        _left = outerLeft + Offset(alignment, outerWidth - width);
+        _width = width;
+        try
+        {
+            content(this);
+        }
+        finally
+        {
+            (_left, _width) = (outerLeft, outerWidth);
+        }
+    }
+
+    /// <summary>
+    /// Adds a box around wrapped text: padding, an optional fill and an optional border on all four sides (see
+    /// <see cref="PdfBoxStyle"/>). The box advances <see cref="Y"/> by the height of its text plus twice the padding
+    /// and moves to a new page when it does not fit; it is never split, so a box taller than a page runs past the
+    /// bottom of its page.
+    /// </summary>
+    /// <param name="text">The text; line feeds are hard breaks.</param>
+    /// <param name="font">Font of the text.</param>
+    /// <param name="size">Size of the text in points.</param>
+    /// <param name="style">Padding, colours, width and alignment; the defaults of <see cref="PdfBoxStyle"/> when null.</param>
+    public void AddBox(string text, PdfFont font, double size, PdfBoxStyle? style = null)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        style ??= new PdfBoxStyle();
+        if (style.Width is <= 0 or double.NaN)
+        {
+            throw new ArgumentException("A box needs a width above zero.", nameof(style));
+        }
+
+        ThrowIfFinished();
+        var metrics = _document.Metrics(font, size);
+        var padding = Math.Max(style.Padding, 0);
+        var limit = Math.Min(style.Width ?? ContentWidth, ContentWidth);
+        var lines = TextWrapper.Wrap(_document, text, font, size, limit - (2 * padding));
+        var width = style.Width is null ? Math.Min(lines.Select(l => l.Width).DefaultIfEmpty(0).Max() + (2 * padding), limit) : limit;
+        var height = (lines.Count * metrics.LineHeight) + (2 * padding);
+        EnsureSpace(height);
+        var x = Left + Offset(style.BoxAlignment, ContentWidth - width);
+        if (style.Fill is { } fill)
+        {
+            Page.FillRectangle(x, Y, width, height, fill);
+        }
+
+        var baseline = Y + padding + metrics.Ascent;
+        foreach (var line in lines)
+        {
+            PdfParagraphPainter.DrawLine(Page, line, x + padding, baseline, width - (2 * padding), font, size, style.TextColor, style.TextAlignment);
+            baseline += metrics.LineHeight;
+        }
+
+        if (style.Border is { } border)
+        {
+            Page.StrokeRectangle(x, Y, width, height, border, style.BorderWidth);
+        }
+
         Y += height;
     }
 
@@ -167,6 +265,13 @@ public sealed class PdfFlowLayout
             _options.Footer?.Invoke(_pages[i], i + 1, _pages.Count);
         }
     }
+
+    private static double Offset(PdfTextAlignment alignment, double free) => alignment switch
+    {
+        PdfTextAlignment.Center => free / 2,
+        PdfTextAlignment.Right => free,
+        _ => 0,
+    };
 
     private void ThrowIfFinished()
     {

@@ -1,9 +1,42 @@
 // SPDX-License-Identifier: EUPL-1.2
 namespace OmniEurope.Documents.Pdf.Writing;
 
+/// <summary>The sides of a table cell that get a border line (see <see cref="PdfTable.Borders"/>). Combine with <c>|</c>.</summary>
+[Flags]
+public enum PdfBorderSides
+{
+    /// <summary>No border.</summary>
+    None = 0,
+
+    /// <summary>The top edge.</summary>
+    Top = 1,
+
+    /// <summary>The right edge.</summary>
+    Right = 2,
+
+    /// <summary>The bottom edge: a rule under the row when set on every cell of it.</summary>
+    Bottom = 4,
+
+    /// <summary>The left edge.</summary>
+    Left = 8,
+
+    /// <summary>The top and bottom edges.</summary>
+    Horizontal = Top | Bottom,
+
+    /// <summary>The left and right edges.</summary>
+    Vertical = Left | Right,
+
+    /// <summary>The four edges: the full grid.</summary>
+    All = Top | Right | Bottom | Left,
+}
+
 /// <summary>A cell of a <see cref="PdfTable"/>.</summary>
 public sealed record PdfTableCell(string Text)
 {
+    /// <summary>Border sides of this cell; the table's (<see cref="PdfTable.HeaderBorders"/> in a header row, then
+    /// <see cref="PdfTable.Borders"/>) when null. Needs a <see cref="PdfTable.BorderColor"/>.</summary>
+    public PdfBorderSides? Borders { get; init; }
+
     /// <summary>Font; the table's font when null.</summary>
     public PdfFont? Font { get; init; }
 
@@ -67,6 +100,15 @@ public sealed class PdfTable
 
     /// <summary>Grid line width.</summary>
     public double BorderWidth { get; init; } = 0.5;
+
+    /// <summary>Which edges of each cell get a line in <see cref="BorderColor"/>. Default <see cref="PdfBorderSides.All"/>
+    /// (the full grid). <see cref="PdfBorderSides.Bottom"/> alone gives a rule under each row and nothing else;
+    /// <see cref="PdfBorderSides.Horizontal"/> adds the rule above the first row.</summary>
+    public PdfBorderSides Borders { get; init; } = PdfBorderSides.All;
+
+    /// <summary>Edges of the cells of the header rows; <see cref="Borders"/> when null. For example
+    /// <see cref="PdfBorderSides.None"/> in a table of row separators keeps the line under the header out.</summary>
+    public PdfBorderSides? HeaderBorders { get; init; }
 
     /// <summary>Inner cell padding.</summary>
     public double Padding { get; init; } = 3;
@@ -158,13 +200,43 @@ internal sealed class PdfTablePainter(PdfFlowLayout flow, PdfTable table)
 
             if (table.BorderColor is { } border)
             {
-                page.StrokeRectangle(x, flow.Y, width, height, border, table.BorderWidth);
+                StrokeSides(page, cell.Borders ?? (header ? table.HeaderBorders : null) ?? table.Borders, x, width, height, border);
             }
 
             x += width;
         }
 
         flow.Y += height;
+    }
+
+    private void StrokeSides(PdfCanvas page, PdfBorderSides sides, double x, double width, double height, PdfColor color)
+    {
+        var (top, bottom) = (flow.Y, flow.Y + height);
+        if (sides == PdfBorderSides.All)
+        {
+            page.StrokeRectangle(x, top, width, height, color, table.BorderWidth);
+            return;
+        }
+
+        if (sides.HasFlag(PdfBorderSides.Top))
+        {
+            page.DrawLine(x, top, x + width, top, color, table.BorderWidth);
+        }
+
+        if (sides.HasFlag(PdfBorderSides.Bottom))
+        {
+            page.DrawLine(x, bottom, x + width, bottom, color, table.BorderWidth);
+        }
+
+        if (sides.HasFlag(PdfBorderSides.Left))
+        {
+            page.DrawLine(x, top, x, bottom, color, table.BorderWidth);
+        }
+
+        if (sides.HasFlag(PdfBorderSides.Right))
+        {
+            page.DrawLine(x + width, top, x + width, bottom, color, table.BorderWidth);
+        }
     }
 
     private (PdfFont Font, double Size) Style(PdfTableCell cell, bool header) =>
