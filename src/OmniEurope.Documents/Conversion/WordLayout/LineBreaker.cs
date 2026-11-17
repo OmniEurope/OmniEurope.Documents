@@ -383,6 +383,13 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
         var ascent = content.Count == 0 ? context.LineMetrics(geometry.MarkStyle).Ascent : content.Max(i => i.Token.Ascent(context));
         var descent = content.Count == 0 ? context.Metrics(geometry.MarkStyle).Descent : content.Max(i => i.Token.Descent(context));
         var natural = ascent + descent;
+        if (geometry.Rule == WordLineSpacingRule.Exact && geometry.LineSpacing is { } fixedHeight && content.Exists(i => i.Token is BoxToken box && box.Height > fixedHeight))
+        {
+            // An inline picture taller than the exact height cannot be cut to it without covering the lines above:
+            // that line grows to hold the picture on its baseline (lines without such a picture keep the exact height).
+            return (natural, ascent);
+        }
+
         var height = geometry.Rule switch
         {
             WordLineSpacingRule.Exact when geometry.LineSpacing is { } exact => exact,
