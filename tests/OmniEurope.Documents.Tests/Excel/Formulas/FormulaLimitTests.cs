@@ -240,4 +240,18 @@ public sealed class FormulaLimitTests
         Assert.StartsWith("S!B1: ", reported, StringComparison.Ordinal);
         Assert.Contains(reasonPart, reported, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void A_wildcard_pattern_that_would_backtrack_badly_matches_in_bounded_time()
+    {
+        // With a backtracking engine "*a*a*a*a*a*a*a*a*a*b" against a long run of "a" explores a huge number of splits.
+        var text = Documents.Excel.Formulas.FormulaValue.Of(new string('a', 20_000));
+        var criterion = Documents.Excel.Formulas.FormulaFunctions.Criterion(Documents.Excel.Formulas.FormulaValue.Of("*a*a*a*a*a*a*a*a*a*b"));
+        var prefix = Documents.Excel.Formulas.FormulaFunctions.Criterion(Documents.Excel.Formulas.FormulaValue.Of("a*a?a"));
+
+        var (results, time) = ThreadCpuTime.Measure(() => (criterion(text), prefix(text)));
+
+        Assert.Equal((false, true), results);
+        Assert.True(time < TimeSpan.FromSeconds(1), $"matching took {time.TotalMilliseconds:N0} ms of processor time");
+    }
 }

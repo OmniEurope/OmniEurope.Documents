@@ -131,7 +131,7 @@ internal static class FormulaFunctions
         criterion = criterion.Scalar();
         if (criterion.Kind != ValueKind.Text)
         {
-            return value => Equal(value, criterion);
+            return value => Equal(value, criterion, null);
         }
 
         var text = criterion.Text;
@@ -141,17 +141,19 @@ internal static class FormulaFunctions
             : operand.Equals("TRUE", StringComparison.OrdinalIgnoreCase) ? FormulaValue.True
             : operand.Equals("FALSE", StringComparison.OrdinalIgnoreCase) ? FormulaValue.False
             : FormulaValue.Of(operand);
+        // The wildcard pattern is built once for the criterion, not once per value compared.
+        var pattern = target.Kind == ValueKind.Text ? Wildcard(target.Text) : null;
         return op switch
         {
             "" or "=" when operand.Length == 0 => value => value.Kind == ValueKind.Blank || (value.Kind == ValueKind.Text && value.Text.Length == 0),
             "<>" when operand.Length == 0 => value => !(value.Kind == ValueKind.Blank || (value.Kind == ValueKind.Text && value.Text.Length == 0)),
-            "" or "=" => value => Equal(value, target),
-            "<>" => value => !Equal(value, target),
+            "" or "=" => value => Equal(value, target, pattern),
+            "<>" => value => !Equal(value, target, pattern),
             _ => value => Ordered(op, value, target),
         };
     }
 
-    private static bool Equal(FormulaValue value, FormulaValue target)
+    private static bool Equal(FormulaValue value, FormulaValue target, Regex? pattern)
     {
         if (target.Kind == ValueKind.Number)
         {
@@ -161,7 +163,7 @@ internal static class FormulaFunctions
 
         if (target.Kind == ValueKind.Text)
         {
-            return value.Kind == ValueKind.Text && Wildcard(target.Text).IsMatch(value.Text);
+            return value.Kind == ValueKind.Text && (pattern ?? Wildcard(target.Text)).IsMatch(value.Text);
         }
 
         return value.Kind == target.Kind && value.Number == target.Number && (target.Kind != ValueKind.Error || value.Text == target.Text);
@@ -186,7 +188,8 @@ internal static class FormulaFunctions
     }
 
     /// <summary>A case-insensitive pattern, of the whole text or found anywhere in it, where <c>*</c> is any run,
-    /// <c>?</c> any character and <c>~</c> escapes.</summary>
+    /// <c>?</c> any character and <c>~</c> escapes; matched without backtracking, in time linear in the text, so no
+    /// pattern or text can stall it.</summary>
     public static Regex Wildcard(string pattern, bool whole = true)
     {
         var builder = new System.Text.StringBuilder(whole ? "^" : string.Empty);
@@ -203,6 +206,6 @@ internal static class FormulaFunctions
             }
         }
 
-        return new Regex((whole ? builder.Append('$') : builder).ToString(), RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Singleline, TimeSpan.FromSeconds(1));
+        return new Regex((whole ? builder.Append('$') : builder).ToString(), RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Singleline | RegexOptions.NonBacktracking);
     }
 }

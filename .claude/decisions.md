@@ -13,3 +13,4 @@
 - 2026-11-11 : cibles : le paquet cible net10.0 et net11.0 (remplace « cible net10.0 inchangée »).
 - 2026-11-11 : plans : PLAN-007, PLAN-009 et PLAN-010 terminés, archivés.
 - 2026-11-11 : publication : 1.2.0 publiée (main df96d32, tag v1.2.0, release GitHub, push NuGet accepté).
+- 2026-11-17 : tests : la suite de stress (`-ta`, StressTests) ne tourne jamais sur l hote, uniquement dans un conteneur Docker limite ; regle globale.
