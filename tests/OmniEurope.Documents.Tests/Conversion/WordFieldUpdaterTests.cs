@@ -57,7 +57,7 @@ public sealed class WordFieldUpdaterTests
         Assert.Equal(["Introduction", "Scope", "Method", "Results", "Annex"], entries.Select(e => e.Text.Split('\t')[0]));
         Assert.Equal(["TOC1", "TOC2", "TOC1", "TOC2", "TOC1"], entries.Select(e => e.StyleId));
 
-        var pdf = PdfDocument.Open(WordToPdf.Convert(bytes).Pdf);
+        var pdf = PdfDocument.Open(WordToPdf.Convert(bytes, null, TestContext.Current.CancellationToken).Pdf);
         Assert.Equal(update.PageCount, pdf.PageCount);
         foreach (var entry in entries)
         {

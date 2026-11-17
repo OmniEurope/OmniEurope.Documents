@@ -41,9 +41,18 @@ public sealed record PdfPageRendering(RasterImage Image, IReadOnlyList<string> G
 public static class PdfRenderer
 {
     /// <summary>Renders one page on a white background.</summary>
-    public static PdfPageRendering Render(PdfPage page, PdfRenderOptions? options = null)
+    public static PdfPageRendering Render(PdfPage page, PdfRenderOptions? options = null) => Render(page, options, CancellationToken.None);
+
+    /// <summary>Renders one page on a white background, checking <paramref name="cancellationToken"/> before the page is
+    /// drawn and every 256 operators of its content. A cancelled rendering returns nothing.</summary>
+    /// <param name="page">The page to render.</param>
+    /// <param name="options">The rendering options, or null for the defaults.</param>
+    /// <param name="cancellationToken">Cancels the rendering.</param>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled.</exception>
+    public static PdfPageRendering Render(PdfPage page, PdfRenderOptions? options, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(page);
+        cancellationToken.ThrowIfCancellationRequested();
         options ??= new PdfRenderOptions();
         // The resolution actually used: the requested one pinched to 1..1200, recorded in the image as well.
         var dpi = Math.Clamp(options.Dpi, 1, 1200);
@@ -56,7 +65,7 @@ public static class PdfRenderer
         }
 
         var surface = new Surface(width, height);
-        var context = new RenderContext(options.Fonts ?? FontLibrary.Default);
+        var context = new RenderContext(options.Fonts ?? FontLibrary.Default) { CancellationToken = cancellationToken };
         var renderer = new PageRenderer(page.Store, surface, DeviceMatrix(crop, page.Rotation, scale), context);
         renderer.Run(page.ContentBytes(out var unreadable), page.Resources);
         if (unreadable > 0)
@@ -64,6 +73,7 @@ public static class PdfRenderer
             context.Gap(DocumentGap.Of(RenderGapCodes.RenderContentStreamUnreadable));
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
         if (options.Annotations)
         {
             AnnotationPainter.Paint(renderer, page.Dictionary, page.Resources);
@@ -75,10 +85,21 @@ public static class PdfRenderer
     }
 
     /// <summary>Renders one page of a document (numbered from 1) as PNG.</summary>
-    public static byte[] RenderToPng(PdfDocument document, int pageNumber, PdfRenderOptions? options = null)
+    public static byte[] RenderToPng(PdfDocument document, int pageNumber, PdfRenderOptions? options = null) =>
+        RenderToPng(document, pageNumber, options, CancellationToken.None);
+
+    /// <summary>Renders one page of a document (numbered from 1) as PNG, checking <paramref name="cancellationToken"/> as
+    /// <see cref="Render(PdfPage, PdfRenderOptions, CancellationToken)"/> does. A cancelled rendering returns nothing.</summary>
+    /// <param name="document">The document.</param>
+    /// <param name="pageNumber">The page number, from 1.</param>
+    /// <param name="options">The rendering options, or null for the defaults.</param>
+    /// <param name="cancellationToken">Cancels the rendering.</param>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled.</exception>
+    public static byte[] RenderToPng(PdfDocument document, int pageNumber, PdfRenderOptions? options, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(document);
-        return Render(document.GetPage(pageNumber), options).ToPng();
+        cancellationToken.ThrowIfCancellationRequested();
+        return Render(document.GetPage(pageNumber), options, cancellationToken).ToPng();
     }
 
     // User space to device pixels: the crop box fills the image, y points down, the page rotation turns it clockwise.

@@ -48,7 +48,7 @@ public sealed class DocumentFontsTests
 
         var document = new WordDocument();
         document.Body.Add(new WordParagraph { Inlines = { new WordText("Hamburg", new WordRunProperties { Font = family, Bold = bold, Italic = italic }) } });
-        var result = WordToPdf.Convert(document, new WordPdfOptions { Fonts = Extra.Value });
+        var result = WordToPdf.Convert(document, new WordPdfOptions { Fonts = Extra.Value }, TestContext.Current.CancellationToken);
 
         Assert.Contains("Hamburg", PdfDocument.Open(result.Pdf).GetPage(1).Text);
         Assert.Contains("+" + face.Names.PostScriptName, Encoding.Latin1.GetString(result.Pdf), StringComparison.Ordinal);
@@ -142,7 +142,7 @@ public sealed class DocumentFontsTests
     {
         var docx = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Word", "rent-receipt-template.docx"));
 
-        var fonts = WordToPdf.Convert(docx).Fonts;
+        var fonts = WordToPdf.Convert(docx, null, TestContext.Current.CancellationToken).Fonts;
 
         var calibri = fonts.Single(f => f.Requested == "Calibri");
         Assert.Equal("Carlito", calibri.Used);

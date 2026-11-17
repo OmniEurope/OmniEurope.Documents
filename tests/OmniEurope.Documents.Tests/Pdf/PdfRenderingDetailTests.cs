@@ -92,7 +92,7 @@ public sealed class PdfRenderingDetailTests
         // A red square at the bottom left corner of the page.
         var page = RawPdf.Page("1 0 0 rg 0 0 50 50 re f", string.Empty, $"/Rotate {rotation}");
 
-        var image = PdfRenderer.Render(PdfDocument.Open(page).GetPage(1), new PdfRenderOptions { Dpi = 72 }).Image;
+        var image = PdfRenderer.Render(PdfDocument.Open(page).GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken).Image;
 
         Assert.Equal((255, 0, 0), Pixel(image, x, y));
     }
@@ -102,7 +102,7 @@ public sealed class PdfRenderingDetailTests
     {
         var page = PdfDocument.Open(RawPdf.Page(string.Empty, string.Empty, "/MediaBox [0 0 14400 14400]")).GetPage(1);
 
-        Assert.Throws<ArgumentException>(() => PdfRenderer.Render(page, new PdfRenderOptions { Dpi = 1_000_000 }));
+        Assert.Throws<ArgumentException>(() => PdfRenderer.Render(page, new PdfRenderOptions { Dpi = 1_000_000 }, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -114,7 +114,7 @@ public sealed class PdfRenderingDetailTests
                 "/XObject << /Im1 5 0 R >> /Shading << /Sh1 << /ShadingType 4 /ColorSpace /DeviceRGB >> >>",
                 string.Empty,
                 RawPdf.Stream("/Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /JPXDecode", [1, 2, 3]))).GetPage(1),
-            new PdfRenderOptions { Dpi = 72 });
+            new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken);
 
         Assert.Contains("images in an unsupported format are not drawn", rendering.Gaps);
         Assert.Contains("shadings of this kind are not drawn", rendering.Gaps);
@@ -129,7 +129,7 @@ public sealed class PdfRenderingDetailTests
                 "/XObject << /Im1 5 0 R >>",
                 string.Empty,
                 RawPdf.Stream("/Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /JPXDecode", [1, 2, 3]))).GetPage(1),
-            new PdfRenderOptions { Dpi = 72 });
+            new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken);
 
         var gap = Assert.Single(rendering.GapDetails);
         Assert.Equal("RenderImageFormatUnsupported", gap.Code);
@@ -170,7 +170,7 @@ public sealed class PdfRenderingDetailTests
                 string.Empty,
                 "0",
                 RawPdf.Stream("/FunctionType 0 /Domain [0 1 0 1] /Range [0 1 0 1 0 1] /Size [2 2] /BitsPerSample 8", new byte[12]))).GetPage(1),
-            new PdfRenderOptions { Dpi = 72 });
+            new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken);
 
         Assert.Contains("shadings of this kind are not drawn", rendering.Gaps);
         Assert.All(rendering.Image.Pixels, p => Assert.Equal(255, p));
@@ -187,7 +187,7 @@ public sealed class PdfRenderingDetailTests
                 string.Empty,
                 "0",
                 RawPdf.Stream("/FunctionType 0 /Domain [0 1] /Range [0 1 0 1 0 1] /Size [2147483647] /BitsPerSample 8", new byte[12]))).GetPage(1),
-            new PdfRenderOptions { Dpi = 72 });
+            new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken);
 
         Assert.Contains("shadings of this kind are not drawn", rendering.Gaps);
     }

@@ -24,7 +24,7 @@ public sealed class WordToPdfTests
         document.AddPageBreak();
         document.AddParagraph("Trois");
 
-        var result = WordToPdf.Convert(document);
+        var result = WordToPdf.Convert(document, null, TestContext.Current.CancellationToken);
 
         Assert.Equal(3, result.PageCount);
         var pdf = PdfDocument.Open(result.Pdf);
@@ -45,7 +45,7 @@ public sealed class WordToPdfTests
         var document = Exact(pageLines: 5);
         document.Body.Add(new WordParagraph(string.Join('\n', Enumerable.Range(1, 6).Select(i => "L" + i))) { Properties = new WordParagraphProperties { WidowControl = widowControl } });
 
-        var pdf = PdfDocument.Open(WordToPdf.Convert(document).Pdf);
+        var pdf = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf);
 
         Assert.Equal(expected, pdf.Pages.Select(p => p.Text.Split('\n', StringSplitOptions.RemoveEmptyEntries).Length));
     }
@@ -62,7 +62,7 @@ public sealed class WordToPdfTests
         document.Body.Add(new WordParagraph("Titre lié") { Properties = new WordParagraphProperties { KeepNext = true } });
         document.Body.Add(new WordParagraph("Bloc A\nBloc B") { Properties = new WordParagraphProperties { KeepLines = true } });
 
-        var pdf = PdfDocument.Open(WordToPdf.Convert(document).Pdf);
+        var pdf = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf);
 
         Assert.Equal(2, pdf.PageCount);
         Assert.DoesNotContain("Titre lié", pdf.GetPage(1).Text);
@@ -79,7 +79,7 @@ public sealed class WordToPdfTests
         document.AddParagraph("Avec note").Add(document.AddFootnote("Texte de la note"));
         document.AddParagraph("Après");
 
-        var pdf = PdfDocument.Open(WordToPdf.Convert(document).Pdf);
+        var pdf = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf);
 
         Assert.DoesNotContain("Texte de la note", pdf.GetPage(1).Text);
         var page = pdf.GetPage(2);
@@ -104,7 +104,7 @@ public sealed class WordToPdfTests
         document.AddPageBreak();
         document.AddParagraph("Echo").Add(document.AddFootnote("Note echo"));
 
-        var result = WordToPdf.Convert(document);
+        var result = WordToPdf.Convert(document, null, TestContext.Current.CancellationToken);
         var pages = PdfDocument.Open(result.Pdf).Pages.Select(p => Lines(p.Text)).ToList();
 
         Assert.Equal(4, pages.Count);
@@ -125,7 +125,7 @@ public sealed class WordToPdfTests
             document.AddParagraph(name).Add(document.AddFootnote("Note " + name));
         }
 
-        var pages = PdfDocument.Open(WordToPdf.Convert(document).Pdf).Pages.Select(p => Lines(p.Text)).ToList();
+        var pages = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf).Pages.Select(p => Lines(p.Text)).ToList();
 
         Assert.Equal(2, pages.Count);
         Assert.Equal(["UnA", "DeuxB", "A Note Un", "B Note Deux"], pages[0]);
@@ -145,7 +145,7 @@ public sealed class WordToPdfTests
 
         document.AddTable(table);
 
-        var pdf = PdfDocument.Open(WordToPdf.Convert(document).Pdf);
+        var pdf = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf);
 
         Assert.True(pdf.PageCount >= 2);
         Assert.All(pdf.Pages, p => Assert.StartsWith("Entête gauche", p.Text));
@@ -166,7 +166,7 @@ public sealed class WordToPdfTests
         document.AddSection(WordPageSetup.A4 with { Start = WordSectionStart.Continuous });
         document.AddParagraph("Pleine largeur");
 
-        var page = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1);
+        var page = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf).GetPage(1);
 
         var middle = page.Width / 2;
         Assert.True(First(page, "A").X < middle && First(page, "B").X < middle);
@@ -182,7 +182,7 @@ public sealed class WordToPdfTests
         document.Body.Add(new WordParagraph(words) { Properties = new WordParagraphProperties { Alignment = WordAlignment.Justify } });
         document.Body.Add(new WordParagraph("Total\t99") { Properties = new WordParagraphProperties { Tabs = [new WordTabStop(300, WordTabAlignment.Right, WordTabLeader.Dot)] } });
 
-        var page = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1);
+        var page = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf).GetPage(1);
 
         var left = WordPageSetup.A4.MarginLeft;
         var right = WordPageSetup.A4.Width - WordPageSetup.A4.MarginRight;
@@ -203,7 +203,7 @@ public sealed class WordToPdfTests
     {
         var docx = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Word", "external.docx"));
 
-        var result = WordToPdf.Convert(docx);
+        var result = WordToPdf.Convert(docx, null, TestContext.Current.CancellationToken);
 
         var text = string.Join('\n', PdfDocument.Open(result.Pdf).Pages.Select(p => p.Text));
         foreach (var expected in new[] { "Rapport de test", "Premier paragraphe avec du gras", "Élément deux", "Étape B", "Fusion sur deux colonnes", "Ωμέγα, Привет, Ţară." })
@@ -212,7 +212,7 @@ public sealed class WordToPdfTests
         }
 
         Assert.DoesNotContain(result.Gaps, g => g.Contains("Symbol", StringComparison.Ordinal));
-        Assert.Equal(result.Pdf, WordToPdf.Convert(docx).Pdf);
+        Assert.Equal(result.Pdf, WordToPdf.Convert(docx, null, TestContext.Current.CancellationToken).Pdf);
     }
 
     [Fact]
@@ -221,7 +221,7 @@ public sealed class WordToPdfTests
         var document = new WordDocument();
         document.AddParagraph().Add(new WordPicture(WordImage.FromBytes(new EmfFixture().Brush(1, 0x00C0FF).Select(1).Ints(43, 10, 10, 390, 190).Text("EMF", 40, 80).ToArray()), 200, 100));
 
-        var result = WordToPdf.Convert(document);
+        var result = WordToPdf.Convert(document, null, TestContext.Current.CancellationToken);
 
         Assert.DoesNotContain(result.Gaps, g => g.Contains("empty frame", StringComparison.Ordinal));
         var page = PdfDocument.Open(result.Pdf).GetPage(1);
@@ -250,7 +250,7 @@ public sealed class WordToPdfTests
         var document = new WordDocument();
         document.AddParagraph().Add(new WordPicture(WordImage.FromBytes(emf.ToArray()), 300, 150));
 
-        var result = WordToPdf.Convert(document);
+        var result = WordToPdf.Convert(document, null, TestContext.Current.CancellationToken);
 
         Assert.Empty(result.Gaps);
         var page = PdfDocument.Open(result.Pdf).GetPage(1);
@@ -274,7 +274,7 @@ public sealed class WordToPdfTests
         });
         document.AddParagraph().Add(new WordPicture(WordImage.FromBytes(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Images", "rgb.png"))), 100, 2000));
 
-        var result = WordToPdf.Convert(document);
+        var result = WordToPdf.Convert(document, null, TestContext.Current.CancellationToken);
 
         var page = PdfDocument.Open(result.Pdf).GetPage(1);
         Assert.True(First(page, "D").X > page.Width / 2);
@@ -303,7 +303,7 @@ public sealed class WordToPdfTests
         kept.Cells.Add(new WordTableCell("fin"));
         document.AddTable(table);
 
-        var pdf = PdfDocument.Open(WordToPdf.Convert(document).Pdf);
+        var pdf = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf);
 
         Assert.Equal(2, pdf.PageCount);
         Assert.Contains("Texte 8", pdf.GetPage(1).Text);
@@ -327,7 +327,7 @@ public sealed class WordToPdfTests
             Floating = new WordFloatingPosition(10, "margin", 10, "paragraph", WordWrap.Tight),
         });
 
-        var gaps = WordToPdf.Convert(document).Gaps;
+        var gaps = WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Gaps;
 
         Assert.Contains("font \"Police Imaginaire\" replaced by LiberationSerif", gaps);
         Assert.Contains("tight and through wrapping follows the bounding box of floating shapes", gaps);

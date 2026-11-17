@@ -181,7 +181,7 @@ public sealed class WordFloatWrapTests
         var paragraphs = Enumerable.Range(1, 58).Select(n => new WordParagraph($"Ligne {n}")).ToList();
         var picture = Picture(100, 60, new WordFloatingPosition(0, "column", 0, "paragraph", WordWrap.Square) { DistanceRight = 9 });
         paragraphs.Add(new WordParagraph().Add(picture).AddText(Words));
-        var pdf = PdfDocument.Open(WordToPdf.Convert(WordDocument.Load(Document([.. paragraphs]).ToArray())).Pdf);
+        var pdf = PdfDocument.Open(WordToPdf.Convert(WordDocument.Load(Document([.. paragraphs]).ToArray()), null, TestContext.Current.CancellationToken).Pdf);
 
         Assert.Empty(pdf.GetPage(1).Images);
         var image = Assert.Single(pdf.GetPage(2).Images).Bounds;
@@ -194,7 +194,7 @@ public sealed class WordFloatWrapTests
     {
         // A page-high picture positioned from the page covers the whole text area of every page its paragraph lands on.
         var picture = Picture(453.5, 700, new WordFloatingPosition(0, "margin", 70, "page", WordWrap.TopAndBottom));
-        var result = WordToPdf.Convert(WordDocument.Load(Document(new WordParagraph().Add(picture).AddText("Texte"), new WordParagraph("Suite")).ToArray()));
+        var result = WordToPdf.Convert(WordDocument.Load(Document(new WordParagraph().Add(picture).AddText("Texte"), new WordParagraph("Suite")).ToArray()), null, TestContext.Current.CancellationToken);
 
         Assert.Contains("content taller than a page runs past its bottom", result.Gaps);
         Assert.Contains("Suite", string.Concat(Enumerable.Range(1, result.PageCount).Select(p => PdfDocument.Open(result.Pdf).GetPage(p).Text)), StringComparison.Ordinal);
@@ -211,7 +211,7 @@ public sealed class WordFloatWrapTests
         table.AddRow("x").Cells[0].Blocks.OfType<WordParagraph>().First().Add(Picture(20, 20, new WordFloatingPosition(0, "column", 0, "paragraph", WordWrap.Square)));
         document.AddTable(table);
 
-        var gaps = WordToPdf.Convert(document).Gaps;
+        var gaps = WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Gaps;
 
         Assert.Contains("text does not flow around floating shapes in tables, headers and footers", gaps);
     }

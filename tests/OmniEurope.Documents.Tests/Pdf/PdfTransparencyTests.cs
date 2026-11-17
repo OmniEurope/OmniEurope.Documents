@@ -246,7 +246,7 @@ public sealed class PdfTransparencyTests
             "/ExtGState << /G1 << /SMask << /S /Luminosity >> >> /G2 << /SMask << /S /Alpha /G 5 0 R /TR 6 0 R >> >> >>",
             string.Empty,
             Group("/BBox [0 0 100 200] /Group << /S /Transparency >>", "0 g 0 0 100 200 re f", box: false),
-            RawPdf.Stream("/FunctionType 4 /Domain [0 1] /Range [0 1]", RawPdf.Ascii("{ 1 exch sub }")))).GetPage(1), new PdfRenderOptions { Dpi = 72 });
+            RawPdf.Stream("/FunctionType 4 /Domain [0 1] /Range [0 1]", RawPdf.Ascii("{ 1 exch sub }")))).GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken);
 
         Assert.Equal(["soft mask transfer functions that cannot be read are ignored", "soft masks that cannot be read are not applied"], rendering.Gaps);
         Assert.Equal((255, 0, 0), Pixel(rendering.Image, 50, 100));

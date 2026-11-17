@@ -59,7 +59,7 @@ public sealed class WordColumnLayoutTests
         document.Sections[0].Page = WordPageSetup.A4 with { Columns = 2, ColumnWidths = [100, 300], ColumnSpacings = [20, 0], ColumnSeparator = separator };
 
         var page = Convert(document);
-        var image = PdfRenderer.Render(page, new PdfRenderOptions { Dpi = 72 }).Image;
+        var image = PdfRenderer.Render(page, new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken).Image;
 
         // The middle of the gap, 10 pt below the top of the columns.
         var (r, g, b, _) = image.GetRgba((int)Math.Round(Margin + 110), (int)Math.Round(Margin + 10));
@@ -135,7 +135,7 @@ public sealed class WordColumnLayoutTests
         document.AddSection(columns with { Start = WordSectionStart.NextColumn });
         document.AddParagraph("CCCC");
 
-        var result = WordToPdf.Convert(WordDocument.Load(document.ToArray()));
+        var result = WordToPdf.Convert(WordDocument.Load(document.ToArray()), null, TestContext.Current.CancellationToken);
 
         Assert.Equal(2, result.PageCount);
         Assert.Contains("CCCC", PdfDocument.Open(result.Pdf).GetPage(2).Text, StringComparison.Ordinal);
@@ -169,7 +169,7 @@ public sealed class WordColumnLayoutTests
         var paragraphs = Enumerable.Range(1, 58).Select(n => new WordParagraph($"Ligne {n}")).ToList();
         paragraphs.Add(new WordParagraph().Add(new WordBreak(WordBreakKind.Page)));
         paragraphs.Add(new WordParagraph("Suite"));
-        var result = WordToPdf.Convert(WordDocument.Load(Document([.. paragraphs]).ToArray()));
+        var result = WordToPdf.Convert(WordDocument.Load(Document([.. paragraphs]).ToArray()), null, TestContext.Current.CancellationToken);
 
         Assert.Equal(2, result.PageCount);
         Assert.Contains("Suite", PdfDocument.Open(result.Pdf).GetPage(2).Text, StringComparison.Ordinal);
@@ -184,7 +184,7 @@ public sealed class WordColumnLayoutTests
         document.AddSection(WordPageSetup.A4);
         document.AddParagraph("Section deux");
 
-        var result = WordToPdf.Convert(WordDocument.Load(document.ToArray()));
+        var result = WordToPdf.Convert(WordDocument.Load(document.ToArray()), null, TestContext.Current.CancellationToken);
 
         Assert.Equal(2, result.PageCount);
         Assert.Contains("Section deux", PdfDocument.Open(result.Pdf).GetPage(2).Text, StringComparison.Ordinal);

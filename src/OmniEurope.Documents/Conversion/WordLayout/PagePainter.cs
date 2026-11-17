@@ -11,6 +11,7 @@ internal sealed class PagePainter(LayoutContext context, bool bookmarks)
         var sectionPages = pages.GroupBy(p => p.Section).ToDictionary(g => g.Key, g => g.Count());
         foreach (var page in pages)
         {
+            context.CancellationToken.ThrowIfCancellationRequested();
             var canvas = context.Builder.AddPage(page.Setup.Width, page.Setup.Height);
             var paint = new PaintContext(canvas, context)
             {

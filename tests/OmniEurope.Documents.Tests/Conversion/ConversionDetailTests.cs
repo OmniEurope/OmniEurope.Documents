@@ -97,7 +97,7 @@ public sealed class ConversionDetailTests
         sheet.Merge(XlsxRange.Parse("C2:C3"));
         sheet.Cell("A3").Value = "fin";
 
-        var table = ExcelToPdf.ToWord(workbook).Blocks.OfType<WordTable>().First();
+        var table = ExcelToPdf.ToWord(workbook, null, TestContext.Current.CancellationToken).Blocks.OfType<WordTable>().First();
 
         Assert.Equal(
             [WordAlignment.Left, WordAlignment.Center, WordAlignment.Right, WordAlignment.Justify],
@@ -147,7 +147,7 @@ public sealed class ConversionDetailTests
         var document = new WordDocument();
         document.Body.Add(new WordParagraph("שלום") { Properties = new WordParagraphProperties { RightToLeft = true } });
 
-        var result = WordToPdf.Convert(document);
+        var result = WordToPdf.Convert(document, null, TestContext.Current.CancellationToken);
         var letters = OmniEurope.Documents.Pdf.PdfDocument.Open(result.Pdf).GetPage(1).Letters;
 
         Assert.DoesNotContain(result.Gaps, g => g.Contains("right-to-left", StringComparison.Ordinal));

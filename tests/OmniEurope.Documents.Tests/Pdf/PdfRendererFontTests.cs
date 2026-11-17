@@ -90,7 +90,7 @@ public sealed class PdfRendererFontTests
             "/Cs1 cs 1 0 0 sc 0 0 50 50 re f /Pattern cs /P1 scn 60 0 20 20 re f BT /F1 50 Tf 0 g 20 100 Td [(I) -2000 (I)] TJ ET",
             "/ColorSpace << /Cs1 /DeviceRGB >> /Font << /F1 5 0 R >>",
             string.Empty,
-            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")).GetPage(1), new PdfRenderOptions { Dpi = 72 });
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")).GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken);
 
         Assert.Equal((255, 0, 0, 255), rendering.Image.GetRgba(25, 175));
         Assert.Contains("patterns that cannot be read are drawn as a flat colour", rendering.Gaps);
@@ -156,7 +156,7 @@ public sealed class PdfRendererFontTests
             "<< >>",
             RawPdf.Stream("/FunctionType 0 /Domain [0 1] /Range [0 1] /Size [2] /BitsPerSample 8", [0, 255]));
 
-        var rendering = PdfRenderer.Render(PdfDocument.Open(pdf).GetPage(1), new PdfRenderOptions { Dpi = 72 });
+        var rendering = PdfRenderer.Render(PdfDocument.Open(pdf).GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken);
         var image = rendering.Image;
 
         Assert.InRange(image.GetRgba(2, 25).R, 245, 255);

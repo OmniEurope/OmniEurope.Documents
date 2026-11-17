@@ -389,6 +389,7 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
 
     private void NewPage(bool firstOfSection, bool natural = false)
     {
+        context.CancellationToken.ThrowIfCancellationRequested();
         if (_pages.Count > 0)
         {
             _page.Full = natural;

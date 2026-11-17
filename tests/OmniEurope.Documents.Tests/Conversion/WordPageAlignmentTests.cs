@@ -16,8 +16,8 @@ public sealed class WordPageAlignmentTests
     [Fact]
     public void A_justified_section_ends_the_last_line_of_its_full_page_on_the_bottom_margin_and_leaves_its_last_page_at_the_top()
     {
-        var top = Baselines(WordToPdf.Convert(Lines(70, WordPageVerticalAlignment.Top)).Pdf);
-        var both = Baselines(WordToPdf.Convert(WordDocument.Load(Lines(70, WordPageVerticalAlignment.Both).ToArray())).Pdf);
+        var top = Baselines(WordToPdf.Convert(Lines(70, WordPageVerticalAlignment.Top), null, TestContext.Current.CancellationToken).Pdf);
+        var both = Baselines(WordToPdf.Convert(WordDocument.Load(Lines(70, WordPageVerticalAlignment.Both).ToArray()), null, TestContext.Current.CancellationToken).Pdf);
 
         Assert.Equal(2, both.Count);
         var (pitch, ascent) = (top[0][1] - top[0][0], top[0][0] - Page.MarginTop);
@@ -34,7 +34,7 @@ public sealed class WordPageAlignmentTests
         var document = Lines(60, WordPageVerticalAlignment.Both);
         document.Body.Insert(1, new WordParagraph(string.Join(' ', Enumerable.Repeat("long", 60))) { Properties = Tight });
 
-        var page = Baselines(WordToPdf.Convert(document).Pdf)[0];
+        var page = Baselines(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf)[0];
 
         var steps = page.Zip(page.Skip(1), (a, b) => Math.Round(b - a, 2)).ToList();
         Assert.Equal(steps[1], steps[2], 0.05);
@@ -46,8 +46,8 @@ public sealed class WordPageAlignmentTests
     [InlineData(WordPageVerticalAlignment.Bottom, 1.0)]
     public void A_centred_or_bottom_aligned_page_moves_its_body_down_by_its_free_space(WordPageVerticalAlignment alignment, double share)
     {
-        var top = Baselines(WordToPdf.Convert(Lines(3, WordPageVerticalAlignment.Top)).Pdf)[0];
-        var moved = Baselines(WordToPdf.Convert(Lines(3, alignment)).Pdf)[0];
+        var top = Baselines(WordToPdf.Convert(Lines(3, WordPageVerticalAlignment.Top), null, TestContext.Current.CancellationToken).Pdf)[0];
+        var moved = Baselines(WordToPdf.Convert(Lines(3, alignment), null, TestContext.Current.CancellationToken).Pdf)[0];
 
         var (pitch, ascent) = (top[1] - top[0], top[0] - Page.MarginTop);
         var free = Page.Height - Page.MarginBottom - (top[^1] + pitch - ascent);
@@ -61,7 +61,7 @@ public sealed class WordPageAlignmentTests
         var document = Lines(3, WordPageVerticalAlignment.Center);
         ((WordParagraph)document.Body[0]).Add(new WordPicture(WordImage.FromBytes(png), 20, 20) { Floating = new WordFloatingPosition(300, "page", 300, "page", WordWrap.None) });
 
-        var result = WordToPdf.Convert(document);
+        var result = WordToPdf.Convert(document, null, TestContext.Current.CancellationToken);
 
         Assert.Contains(result.GapDetails, g => g.Code == "PdfVerticalAlignmentNotApplied");
         Assert.Equal(Page.MarginTop, Baselines(result.Pdf)[0][0], 20.0);

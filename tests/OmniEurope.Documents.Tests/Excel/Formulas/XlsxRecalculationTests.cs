@@ -152,7 +152,7 @@ public sealed class XlsxRecalculationTests
         var csv = XlsxCsvConverter.ToCsv(sheet, culture: CultureInfo.InvariantCulture);
         Assert.Contains(",,Sous-total,66.00\r\n,,TVA,13.20\r\n,,Total,79.20\r\n", csv, StringComparison.Ordinal);
         Assert.Contains("Cahier,3,12.5,37.50", csv, StringComparison.Ordinal);
-        var text = PdfDocument.Open(ExcelToPdf.Convert(workbook, new ExcelPdfOptions { SheetTitles = false }).Pdf).GetPage(1).Text;
+        var text = PdfDocument.Open(ExcelToPdf.Convert(workbook, new ExcelPdfOptions { SheetTitles = false }, TestContext.Current.CancellationToken).Pdf).GetPage(1).Text;
         Assert.Contains("Total 79.20", text, StringComparison.Ordinal);
         Assert.Contains("TVA 13.20", text, StringComparison.Ordinal);
     }

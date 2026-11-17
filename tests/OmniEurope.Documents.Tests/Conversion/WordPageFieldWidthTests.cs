@@ -28,7 +28,7 @@ public sealed class WordPageFieldWidthTests
         footer.Add(new WordField("PAGE", "1")).Add(new WordText("/")).Add(new WordField("NUMPAGES", "1"));
         document.Sections[0].Footers[WordHeaderFooterKind.Default] = new WordHeaderFooter(footer);
 
-        var pdf = PdfDocument.Open(WordToPdf.Convert(document.ToArray()).Pdf);
+        var pdf = PdfDocument.Open(WordToPdf.Convert(document.ToArray(), null, TestContext.Current.CancellationToken).Pdf);
 
         Assert.Equal(27, pdf.PageCount);
         foreach (var number in new[] { 1, 10, 20, 27 })
@@ -54,7 +54,7 @@ public sealed class WordPageFieldWidthTests
         document.Sections[0].Footers[WordHeaderFooterKind.Default] = new WordHeaderFooter(footer);
         var page = document.Sections[0].Page;
 
-        var pdf = PdfDocument.Open(WordToPdf.Convert(document).Pdf);
+        var pdf = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf);
 
         var middle = page.MarginLeft + (page.ContentWidth / 2);
         foreach (var number in new[] { 9, 12 })

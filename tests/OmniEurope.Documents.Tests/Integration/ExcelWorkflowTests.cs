@@ -80,12 +80,12 @@ public sealed class ExcelWorkflowTests
         var workbook = XlsxWorkbook.Load(SampleDocuments.Workbook().ToArray());
         var options = new ExcelPdfOptions { Culture = CultureInfo.InvariantCulture, SheetTitles = true };
 
-        var word = WordDocument.Load(ExcelToPdf.ToWord(workbook, options).ToArray());
+        var word = WordDocument.Load(ExcelToPdf.ToWord(workbook, options, TestContext.Current.CancellationToken).ToArray());
         var tables = word.Blocks.OfType<WordTable>().ToList();
         Assert.Equal(2, tables.Count);
         Samples.InOrder(word.Text, "Ventes", "Région", "Nord", "1,234.50", "25%", "Notes", "Remarque longue");
 
-        var conversion = ExcelToPdf.Convert(workbook.ToArray(), options);
+        var conversion = ExcelToPdf.Convert(workbook.ToArray(), options, TestContext.Current.CancellationToken);
         var pdf = PdfDocument.Open(conversion.Pdf);
         Assert.Equal(conversion.PageCount, pdf.PageCount);
         Assert.Equal("Ventes 2026", pdf.Information.Title);

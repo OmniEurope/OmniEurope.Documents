@@ -59,7 +59,7 @@ public sealed class WordInkTests
         var docx = Package(Anchor(), SyntheticInk, withInkPart: true);
         var document = WordDocument.Load(docx);
         var ink = Assert.IsType<WordInk>(document.Blocks.OfType<WordParagraph>().SelectMany(p => p.Inlines).OfType<WordShape>().Single());
-        var result = WordToPdf.Convert(docx);
+        var result = WordToPdf.Convert(docx, null, TestContext.Current.CancellationToken);
         var image = Render(result.Pdf);
 
         Assert.DoesNotContain(result.Gaps, gap => gap.Contains("skipped", StringComparison.Ordinal));
@@ -95,7 +95,7 @@ public sealed class WordInkTests
             Assert.All(original.Strokes[i].Points.Zip(reread.Strokes[i].Points), pair => Assert.True(Math.Abs(pair.First.X - pair.Second.X) < 0.02 && Math.Abs(pair.First.Y - pair.Second.Y) < 0.02));
         }
 
-        var (before, after) = (Render(WordToPdf.Convert(docx).Pdf), Render(WordToPdf.Convert(saved).Pdf));
+        var (before, after) = (Render(WordToPdf.Convert(docx, null, TestContext.Current.CancellationToken).Pdf), Render(WordToPdf.Convert(saved, null, TestContext.Current.CancellationToken).Pdf));
         double Dark(RasterImage page) => Painted(page, 90, 190, 210, 260);
         Assert.True(Dark(before) > 100, "the ink is not drawn");
         Assert.InRange(Dark(after), Dark(before) * 0.98, Dark(before) * 1.02);
@@ -110,7 +110,7 @@ public sealed class WordInkTests
         document.Body.Add(new WordParagraph().Add(ink));
 
         var reread = Assert.IsType<WordInk>(WordDocument.Load(document.ToArray()).Blocks.OfType<WordParagraph>().SelectMany(p => p.Inlines).OfType<WordShape>().Single());
-        var image = Render(WordToPdf.Convert(document).Pdf);
+        var image = Render(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf);
 
         var stroke = Assert.Single(reread.Strokes);
         Assert.Equal(("00FF00", 0.5), (stroke.Color, Math.Round(stroke.Opacity, 1)));
@@ -126,7 +126,7 @@ public sealed class WordInkTests
         foreach (var inkPart in new[] { null, "<not-xml" })
         {
             var docx = Package(Anchor(), inkPart, withInkPart: inkPart is not null);
-            var result = WordToPdf.Convert(docx);
+            var result = WordToPdf.Convert(docx, null, TestContext.Current.CancellationToken);
             var picture = Assert.IsType<WordPicture>(WordDocument.Load(docx).Blocks.OfType<WordParagraph>().SelectMany(p => p.Inlines).OfType<WordShape>().Single());
             var (r, g, b, _) = Render(result.Pdf).GetRgba(150, 225);
 
@@ -144,7 +144,7 @@ public sealed class WordInkTests
         var points = string.Join(",", Enumerable.Range(0, InkMlReader.MaxPoints + 1).Select(_ => $"{random.Next(100000)} {random.Next(100000)}"));
         var docx = Package(Anchor(), Ink($"<inkml:trace>{points}</inkml:trace>"), withInkPart: true);
 
-        var result = WordToPdf.Convert(docx);
+        var result = WordToPdf.Convert(docx, null, TestContext.Current.CancellationToken);
         var (r, g, b, _) = Render(result.Pdf).GetRgba(150, 225);
 
         Assert.Contains(result.Gaps, gap => gap.StartsWith("unreadable ink part", StringComparison.Ordinal) && gap.Contains("points", StringComparison.Ordinal));
@@ -161,7 +161,7 @@ public sealed class WordInkTests
         {
             var docx = Package(Anchor(), Ink($"<inkml:trace>10 10, {forged} 20, 30 30</inkml:trace>"), withInkPart: true);
 
-            var result = WordToPdf.Convert(docx);
+            var result = WordToPdf.Convert(docx, null, TestContext.Current.CancellationToken);
             var (r, g, b, _) = Render(result.Pdf).GetRgba(150, 225);
 
             Assert.Contains(result.Gaps, gap => gap.StartsWith("unreadable ink part", StringComparison.Ordinal) && gap.Contains("out of range", StringComparison.Ordinal));
@@ -174,7 +174,7 @@ public sealed class WordInkTests
     {
         var docx = Package(Anchor(fallback: false), null, withInkPart: false);
 
-        var result = WordToPdf.Convert(docx);
+        var result = WordToPdf.Convert(docx, null, TestContext.Current.CancellationToken);
 
         Assert.Contains("ink skipped", result.Gaps);
         Assert.Equal(0, Painted(Render(result.Pdf), 0, 150, 595, 300));
@@ -185,7 +185,7 @@ public sealed class WordInkTests
     {
         var docx = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Word", "rent-receipt-template.docx"));
         var reference = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Word", "rent-receipt-template.word365.pdf"));
-        var result = WordToPdf.Convert(docx);
+        var result = WordToPdf.Convert(docx, null, TestContext.Current.CancellationToken);
         var ours = Render(result.Pdf);
         var theirs = Render(reference);
 

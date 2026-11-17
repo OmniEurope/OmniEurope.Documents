@@ -98,8 +98,8 @@ public sealed class WordHtmlContentControlTests
         var without = Build(controls: false);
 
         Assert.Equal(WordToMarkdown.Convert(without).Markdown, WordToMarkdown.Convert(withControls).Markdown);
-        var pdfWith = WordToPdf.Convert(withControls);
-        var pdfWithout = WordToPdf.Convert(without);
+        var pdfWith = WordToPdf.Convert(withControls, null, TestContext.Current.CancellationToken);
+        var pdfWithout = WordToPdf.Convert(without, null, TestContext.Current.CancellationToken);
         Assert.Equal(pdfWithout.PageCount, pdfWith.PageCount);
         Assert.Equal(pdfWithout.Pdf.Length, pdfWith.Pdf.Length);
         Assert.Equal(WordDocument.Load(without).Text, WordDocument.Load(withControls).Text);

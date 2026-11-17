@@ -28,6 +28,7 @@ internal sealed class BlockLayout
         List<FlowItem>? previousItems = null;
         foreach (var block in blocks)
         {
+            _context.CancellationToken.ThrowIfCancellationRequested();
             WordParagraphProperties? resolved = null;
             List<FlowItem> blockItems;
             if (block is WordParagraph paragraph)

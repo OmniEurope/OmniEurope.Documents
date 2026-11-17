@@ -113,7 +113,7 @@ public sealed class PdfRendererTests
             $"<< /Type /FontDescriptor /FontName /Test /Flags 32 /FontBBox [0 0 1000 1000] /ItalicAngle 0 /Ascent 800 /Descent -200 /CapHeight 600 /StemV 80 /{file} 7 0 R >>",
             RawPdf.Stream(dictionary, program));
 
-        var rendering = PdfRenderer.Render(PdfDocument.Open(pdf).GetPage(1), new PdfRenderOptions { Dpi = 72 });
+        var rendering = PdfRenderer.Render(PdfDocument.Open(pdf).GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken);
 
         Assert.Empty(rendering.Gaps);
         Assert.Equal((0, 0, 0), Pixel(rendering.Image, 55, 150));
@@ -134,7 +134,7 @@ public sealed class PdfRendererTests
             "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>", "<< /Type /Font /Subtype /TrueType /BaseFont /Fantaisie >>");
 
         var square = Render(type3);
-        var text = PdfRenderer.Render(PdfDocument.Open(helvetica).GetPage(1), new PdfRenderOptions { Dpi = 72 });
+        var text = PdfRenderer.Render(PdfDocument.Open(helvetica).GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken);
 
         Assert.Equal((0, 0, 0), Pixel(square, 45, 155));
         Assert.Equal((255, 255, 255), Pixel(square, 75, 155));
@@ -148,7 +148,7 @@ public sealed class PdfRendererTests
     {
         var builder = new PdfDocumentBuilder();
         builder.AddPage(200, 100).FillRectangle(0, 0, 20, 20, PdfColor.Red);
-        var rotated = PdfRenderer.Render(PdfDocument.Open(PdfEditor.RotatePages(PdfDocument.Open(builder.ToArray()), [1], 90)).GetPage(1), new PdfRenderOptions { Dpi = 72 }).Image;
+        var rotated = PdfRenderer.Render(PdfDocument.Open(PdfEditor.RotatePages(PdfDocument.Open(builder.ToArray()), [1], 90)).GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken).Image;
         var annotated = Render(RawPdf.Page(string.Empty, string.Empty, "/Annots [5 0 R 7 0 R]",
             "<< /Type /Annot /Subtype /Stamp /Rect [100 100 150 150] /AP << /N 6 0 R >> >>",
             RawPdf.Stream("/Type /XObject /Subtype /Form /BBox [0 0 10 10]", RawPdf.Ascii("0 0 1 rg 0 0 10 10 re f")),
@@ -166,12 +166,12 @@ public sealed class PdfRendererTests
     {
         var pdf = RawPdf.Page("/Sh1 sh /G1 gs 0 g 10 10 20 20 re f", "/ExtGState << /G1 << /BM /Multiply /SMask << /S /Luminosity >> >> >>");
 
-        var rendering = PdfRenderer.Render(PdfDocument.Open(pdf).GetPage(1), new PdfRenderOptions { Dpi = 144 });
+        var rendering = PdfRenderer.Render(PdfDocument.Open(pdf).GetPage(1), new PdfRenderOptions { Dpi = 144 }, TestContext.Current.CancellationToken);
         var png = PngCodec.Decode(rendering.ToPng());
 
         Assert.Equal(["shadings of this kind are not drawn", "soft masks that cannot be read are not applied"], rendering.Gaps);
         Assert.Equal((400, 400), (png.Width, png.Height));
-        Assert.Equal(PdfRenderer.RenderToPng(PdfDocument.Open(pdf), 1, new PdfRenderOptions { Dpi = 144 }), rendering.ToPng());
+        Assert.Equal(PdfRenderer.RenderToPng(PdfDocument.Open(pdf), 1, new PdfRenderOptions { Dpi = 144 }, TestContext.Current.CancellationToken), rendering.ToPng());
     }
 
     [Theory]

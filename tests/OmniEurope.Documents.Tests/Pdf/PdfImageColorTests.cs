@@ -27,7 +27,7 @@ public sealed class PdfImageColorTests
     {
         var pdf = RawPdf.Page("/CS0 cs 53.24 80.09 67.2 scn 0 0 200 200 re f", "/ColorSpace << /CS0 [/Lab << /WhitePoint [0.9505 1 1.089] >>] >>");
 
-        var (r, g, b, _) = Documents.Pdf.Rendering.PdfRenderer.Render(PdfDocument.Open(pdf).GetPage(1), new Documents.Pdf.Rendering.PdfRenderOptions { Dpi = 72 }).Image.GetRgba(100, 100);
+        var (r, g, b, _) = Documents.Pdf.Rendering.PdfRenderer.Render(PdfDocument.Open(pdf).GetPage(1), new Documents.Pdf.Rendering.PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken).Image.GetRgba(100, 100);
 
         Assert.True(r >= 250 && g <= 12 && b <= 12, $"({r}, {g}, {b})");
     }

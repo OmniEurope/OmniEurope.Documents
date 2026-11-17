@@ -89,7 +89,7 @@ public sealed class WordJustifyShrinkTests
         paragraph.Inlines.Add(new WordText(string.Join(' ', words), run));
         document.Body.Add(paragraph);
 
-        var page = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1);
+        var page = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf).GetPage(1);
 
         var rows = Rows(page);
         Assert.Equal(line, rows[0]);
@@ -102,7 +102,7 @@ public sealed class WordJustifyShrinkTests
     public void Every_line_of_the_rent_receipt_template_breaks_where_Word_365_breaks_it()
     {
         var folder = Path.Combine(AppContext.BaseDirectory, "Fixtures", "Word");
-        var ours = PdfDocument.Open(WordToPdf.Convert(File.ReadAllBytes(Path.Combine(folder, "rent-receipt-template.docx"))).Pdf).GetPage(1);
+        var ours = PdfDocument.Open(WordToPdf.Convert(File.ReadAllBytes(Path.Combine(folder, "rent-receipt-template.docx")), null, TestContext.Current.CancellationToken).Pdf).GetPage(1);
         var word = PdfDocument.Open(File.ReadAllBytes(Path.Combine(folder, "rent-receipt-template.word365.pdf"))).GetPage(1);
 
         Assert.Equal(Rows(word), Rows(ours));

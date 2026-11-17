@@ -63,7 +63,7 @@ public sealed class ReadingGapDetailsTests
         Assert.Equal("unreadable chart skipped", gap.Message);
         Assert.Equal("graphique illisible ignoré", gap.Describe(French));
 
-        var converted = ExcelToPdf.ToWord(workbook);
+        var converted = ExcelToPdf.ToWord(workbook, null, TestContext.Current.CancellationToken);
 
         Assert.Equal(["unreadable chart skipped"], converted.Gaps);
         Assert.Equal("ReadChartUnreadable", Assert.Single(converted.GapDetails).Code);

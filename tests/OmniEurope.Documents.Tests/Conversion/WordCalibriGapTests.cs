@@ -11,7 +11,7 @@ public sealed class WordCalibriGapTests
     [Fact]
     public void Calibri_Light_drawn_with_Carlito_is_reported_as_a_gap_and_Calibri_is_not()
     {
-        var result = WordToPdf.Convert(Document("Calibri", "Calibri Light"));
+        var result = WordToPdf.Convert(Document("Calibri", "Calibri Light"), null, TestContext.Current.CancellationToken);
 
         Assert.Contains(result.Gaps, g => g.Contains("\"Calibri Light\" replaced by Carlito", StringComparison.Ordinal) && g.Contains("no light weight", StringComparison.Ordinal));
         Assert.DoesNotContain(result.Gaps, g => g.Contains("\"Calibri\"", StringComparison.Ordinal));
@@ -22,7 +22,7 @@ public sealed class WordCalibriGapTests
     {
         var docx = File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Fixtures", "Word", "rent-receipt-template.docx"));
 
-        var result = WordToPdf.Convert(docx);
+        var result = WordToPdf.Convert(docx, null, TestContext.Current.CancellationToken);
 
         Assert.Contains(result.Gaps, g => g.Contains("\"Calibri Light\" replaced by Carlito", StringComparison.Ordinal));
     }
@@ -30,7 +30,7 @@ public sealed class WordCalibriGapTests
     [Fact]
     public void A_replaced_font_gap_carries_its_code_arguments_and_a_French_description()
     {
-        var details = WordToPdf.Convert(Document("Police Imaginaire", "Calibri Light")).GapDetails;
+        var details = WordToPdf.Convert(Document("Police Imaginaire", "Calibri Light"), null, TestContext.Current.CancellationToken).GapDetails;
 
         var replaced = Assert.Single(details, g => g.Code == "PdfFontReplaced");
         Assert.Equal(["Police Imaginaire", "LiberationSerif"], replaced.Arguments);
@@ -47,7 +47,7 @@ public sealed class WordCalibriGapTests
         var fonts = new FontLibrary();
         fonts.Register(FontLibrary.Bundled("Carlito", false, false).Data, "Calibri");
 
-        var result = WordToPdf.Convert(Document("Calibri", "Calibri Light"), new WordPdfOptions { Fonts = fonts });
+        var result = WordToPdf.Convert(Document("Calibri", "Calibri Light"), new WordPdfOptions { Fonts = fonts }, TestContext.Current.CancellationToken);
 
         Assert.DoesNotContain(result.Gaps, g => g.Contains("\"Calibri\"", StringComparison.Ordinal));
         Assert.Contains(result.Gaps, g => g.Contains("\"Calibri Light\"", StringComparison.Ordinal));

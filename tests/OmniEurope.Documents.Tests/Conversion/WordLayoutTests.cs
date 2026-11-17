@@ -59,7 +59,7 @@ public sealed class WordLayoutTests
         table.AddRow("X");
         document.AddTable(table);
 
-        var letter = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1).Letters[0];
+        var letter = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf).GetPage(1).Letters[0];
 
         // The cell text starts after the default cell margin of 5.4 points.
         Assert.Equal(Math.Round(Page.MarginLeft + ((Page.ContentWidth - 200) * share) + 5.4, 1), Math.Round(letter.X, 1));
@@ -76,7 +76,7 @@ public sealed class WordLayoutTests
         table.AddRow("A", "B");
         document.AddTable(table);
 
-        var letter = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1).Letters.First(l => l.Value == "B");
+        var letter = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf).GetPage(1).Letters.First(l => l.Value == "B");
 
         // Within a tenth of a point: the position read back can sit on a rounding midpoint (303.05), which
         // Math.Round(x, 1) resolves differently from one runtime to the next.
@@ -97,7 +97,7 @@ public sealed class WordLayoutTests
         document.AddTable(table);
         document.AddParagraph("Après");
 
-        var page = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1);
+        var page = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf).GetPage(1);
 
         var quatre = page.Letters.First(l => l.Value == "q").Y;
         var seul = page.Letters.First(l => Word(page, l) == "se").Y;
@@ -111,7 +111,7 @@ public sealed class WordLayoutTests
         document.Sections[0].Page = Page with { Columns = 2, ColumnWidths = [100, 300], ColumnSpacing = 20 };
         document.AddParagraph("Gauche").Add(new WordBreak(WordBreakKind.Column)).AddText("Droite");
 
-        var page = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1);
+        var page = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf).GetPage(1);
 
         Assert.Equal(Math.Round(Page.MarginLeft + 120, 1), Math.Round(page.Letters.First(l => l.Value == "D").X, 1));
     }
@@ -126,7 +126,7 @@ public sealed class WordLayoutTests
         document.AddSection(Page with { Start = start });
         document.AddParagraph("Second");
 
-        var pdf = PdfDocument.Open(WordToPdf.Convert(document).Pdf);
+        var pdf = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf);
 
         Assert.Equal(page, pdf.PageCount);
         Assert.Equal("Second", pdf.GetPage(page).Text);
@@ -139,7 +139,7 @@ public sealed class WordLayoutTests
         document.AddParagraph("Corps").Add(document.AddEndnote("Note finale"));
         document.AddParagraph("Fin du texte");
 
-        var page = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1);
+        var page = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf).GetPage(1);
 
         Assert.Contains("Note finale", page.Text, StringComparison.Ordinal);
         Assert.True(page.Letters.First(l => l.Value == "N").Y < page.Letters.First(l => l.Value == "F").Y, "the endnote comes after the last paragraph");
@@ -154,7 +154,7 @@ public sealed class WordLayoutTests
         document.AddParagraph().Add(box);
         document.AddParagraph().Add(new WordPicture(new WordImage([1, 2, 3], "image/svg+xml"), 50, 50));
 
-        var result = WordToPdf.Convert(document);
+        var result = WordToPdf.Convert(document, null, TestContext.Current.CancellationToken);
 
         Assert.Contains("Dans la boîte", PdfDocument.Open(result.Pdf).GetPage(1).Text, StringComparison.Ordinal);
         Assert.Contains("picture format image/svg+xml drawn as an empty frame", result.Gaps);
@@ -170,7 +170,7 @@ public sealed class WordLayoutTests
         paragraph.AddText("A").Add(new WordTab()).AddText("B");
         document.Body.Add(paragraph);
 
-        var text = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1).Text;
+        var text = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf).GetPage(1).Text;
 
         Assert.Contains(character + character + character, text, StringComparison.Ordinal);
     }
@@ -205,7 +205,7 @@ public sealed class WordLayoutTests
         document.Body.Add(new WordParagraph("NN") { Properties = new WordParagraphProperties { Alignment = WordAlignment.Center } });
         document.Body.Add(new WordParagraph("O P") { Properties = new WordParagraphProperties { Alignment = WordAlignment.Distribute } });
 
-        var letters = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1).Letters;
+        var letters = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf).GetPage(1).Letters;
 
         double Middle(string value) => (letters.First(l => l.Value == value).X + letters.Last(l => l.Value == value).X + letters.Last(l => l.Value == value).Width) / 2;
         Assert.Equal(Math.Round(Page.MarginLeft + 200, 0), Math.Round(Middle("M"), 0));
@@ -221,7 +221,7 @@ public sealed class WordLayoutTests
         document.AddParagraph("a", null).Inlines[0].Properties = new WordRunProperties { Font = "Symbol" };
         document.AddParagraph().Add(new WordSymbol("Wingdings", '')).Add(new WordSymbol("Symbol", ''));
 
-        var result = WordToPdf.Convert(document);
+        var result = WordToPdf.Convert(document, null, TestContext.Current.CancellationToken);
         var text = PdfDocument.Open(result.Pdf).GetPage(1).Text;
 
         // Symbol "a" is alpha; Wingdings 0xFC is a check mark or a bullet; Symbol 0x21 has no look-alike entry.
@@ -237,7 +237,7 @@ public sealed class WordLayoutTests
         document.AddParagraph().Add(new WordField("REF signet", "résultat"));
         document.AddParagraph("Pages : ").Add(new WordField("SECTIONPAGES", "9"));
 
-        var text = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1).Text;
+        var text = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf).GetPage(1).Text;
 
         Assert.Contains("résultat", text, StringComparison.Ordinal);
         Assert.Contains("Pages : 1", text, StringComparison.Ordinal);
@@ -250,7 +250,7 @@ public sealed class WordLayoutTests
         document.AddParagraph("Texte").Add(document.AddFootnote("note"));
         document.AddParagraph().Add(new WordPicture(new WordImage([1, 2, 3, 4], "image/png"), 40, 40));
 
-        var gaps = WordToPdf.Convert(document).Gaps;
+        var gaps = WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Gaps;
 
         Assert.DoesNotContain(gaps, g => g.Contains("footnote", StringComparison.Ordinal));
         Assert.Contains("unreadable picture replaced by a frame", gaps);
@@ -266,7 +266,7 @@ public sealed class WordLayoutTests
         var document = new WordDocument();
         document.AddParagraph().Add(new WordPicture(WordImage.FromBytes(png), 50, 50) { Floating = new WordFloatingPosition(dx, horizontal, dy, vertical, WordWrap.None) });
 
-        var page = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1);
+        var page = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf).GetPage(1);
         var bounds = Assert.Single(page.Images).Bounds;
 
         var left = (horizontal == "page" ? 0 : Page.MarginLeft) + dx;
@@ -285,7 +285,7 @@ public sealed class WordLayoutTests
         var hanging = new WordParagraph { Properties = new WordParagraphProperties { SpacingBefore = before, IndentLeft = 50, FirstLineIndent = -50 } };
         document.Body.Add(hanging.Add(new WordBreak(WordBreakKind.Page)).AddText("Second"));
 
-        var pdf = PdfDocument.Open(WordToPdf.Convert(document).Pdf);
+        var pdf = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf);
         var page = pdf.GetPage(2);
         var letter = page.Letters.First(l => l.Value == "S");
 
@@ -308,7 +308,7 @@ public sealed class WordLayoutTests
         document.Body.Add(new WordParagraph { Properties = new WordParagraphProperties { SpacingBefore = before, SpacingAfter = 0 } }.AddText("Two"));
         document.Body.Add(new WordParagraph { Properties = new WordParagraphProperties { SpacingBefore = 0 } }.AddText("Three"));
 
-        var page = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1);
+        var page = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf).GetPage(1);
         var one = page.Letters.First(l => l.Value == "O").Y;
         var two = page.Letters.First(l => l.Value == "T").Y;
         var three = page.Letters.Last(l => l.Value == "T").Y;
@@ -327,7 +327,7 @@ public sealed class WordLayoutTests
         document.Body.Add(new WordParagraph { Properties = new WordParagraphProperties { IndentRight = text - room } }
             .AddText("aaaa bbbbbbbbbb-cccccccccc", new WordRunProperties { Font = "Liberation Serif", FontSize = 12 }));
 
-        var page = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1);
+        var page = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf).GetPage(1);
         var lines = page.Letters.Where(l => l.Value.Trim().Length > 0).GroupBy(l => Math.Round(l.Y)).OrderByDescending(g => g.Key)
             .Select(g => string.Concat(g.OrderBy(l => l.X).Select(l => l.Value))).ToList();
 

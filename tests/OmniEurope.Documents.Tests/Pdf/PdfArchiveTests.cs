@@ -125,10 +125,10 @@ public sealed class PdfArchiveTests
     [Fact]
     public void Word_excel_markdown_and_image_conversions_produce_conforming_files()
     {
-        var word = WordToPdf.Convert(SampleDocuments.Report(), new WordPdfOptions { Conformance = PdfConformance.PdfA2u });
-        var plain = WordToPdf.Convert(SampleDocuments.Report());
-        var excel = ExcelToPdf.Convert(SampleDocuments.Workbook(), new ExcelPdfOptions { Pdf = new WordPdfOptions { Conformance = PdfConformance.PdfA2b } });
-        var markdown = MarkdownToPdf.Convert("# Titre\n\nTexte **gras** et [lien](https://example.org).", options: new WordPdfOptions { Conformance = PdfConformance.PdfA2u });
+        var word = WordToPdf.Convert(SampleDocuments.Report(), new WordPdfOptions { Conformance = PdfConformance.PdfA2u }, TestContext.Current.CancellationToken);
+        var plain = WordToPdf.Convert(SampleDocuments.Report(), null, TestContext.Current.CancellationToken);
+        var excel = ExcelToPdf.Convert(SampleDocuments.Workbook(), new ExcelPdfOptions { Pdf = new WordPdfOptions { Conformance = PdfConformance.PdfA2b } }, TestContext.Current.CancellationToken);
+        var markdown = MarkdownToPdf.Convert("# Titre\n\nTexte **gras** et [lien](https://example.org).", null, new WordPdfOptions { Conformance = PdfConformance.PdfA2u }, TestContext.Current.CancellationToken);
         var images = ImagesToPdf.Convert([Fixture("cmyk-plain.jpg"), SampleDocuments.Png], new ImagePdfOptions { Conformance = PdfConformance.PdfA2b });
 
         Assert.Empty(PdfAChecker.Check(word.Pdf, 'U'));
@@ -141,7 +141,7 @@ public sealed class PdfArchiveTests
     [Fact]
     public void Missing_glyphs_of_a_conversion_are_reported_in_its_gaps()
     {
-        var result = MarkdownToPdf.Convert("x " + Missing, options: new WordPdfOptions { Conformance = PdfConformance.PdfA2b });
+        var result = MarkdownToPdf.Convert("x " + Missing, null, new WordPdfOptions { Conformance = PdfConformance.PdfA2b }, TestContext.Current.CancellationToken);
 
         Assert.Contains(result.Gaps, g => g.Contains(".notdef", StringComparison.Ordinal));
         Assert.Empty(PdfAChecker.Check(result.Pdf, 'B'));

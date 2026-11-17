@@ -57,7 +57,7 @@ public sealed class DocumentGapTests
     [Fact]
     public void A_gap_of_the_engine_keeps_its_english_text_in_gaps_and_reads_in_french_under_a_french_culture()
     {
-        var result = WordToPdf.Convert(Document(new WordParagraph("بت 12")));
+        var result = WordToPdf.Convert(Document(new WordParagraph("بت 12")), null, TestContext.Current.CancellationToken);
 
         var gap = Assert.Single(result.GapDetails, g => g.Code == "PdfArabicWithoutJoining");
         Assert.Contains("Arabic letters drawn without joining forms", result.Gaps);
@@ -70,7 +70,7 @@ public sealed class DocumentGapTests
     [Fact]
     public void Describe_follows_the_current_ui_culture()
     {
-        var gap = Assert.Single(WordToPdf.Convert(Document(new WordParagraph("بت 12"))).GapDetails, g => g.Code == "PdfArabicWithoutJoining");
+        var gap = Assert.Single(WordToPdf.Convert(Document(new WordParagraph("بت 12")), null, TestContext.Current.CancellationToken).GapDetails, g => g.Code == "PdfArabicWithoutJoining");
         var previous = CultureInfo.CurrentUICulture;
         try
         {
@@ -89,7 +89,7 @@ public sealed class DocumentGapTests
         var document = Document(new WordParagraph("Bonjour"));
         document.Gaps.Add("my own remark");
 
-        var result = WordToPdf.Convert(document);
+        var result = WordToPdf.Convert(document, null, TestContext.Current.CancellationToken);
 
         var gap = Assert.Single(result.GapDetails, g => g.Message == "my own remark");
         Assert.Equal(string.Empty, gap.Code);

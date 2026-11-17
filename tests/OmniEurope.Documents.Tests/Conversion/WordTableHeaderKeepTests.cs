@@ -21,7 +21,7 @@ public sealed class WordTableHeaderKeepTests
         // 33 lines of 20 leave 40.1 of the 700.1 an A4 page holds: the header row (20) fits, header and row 1 (60) do not.
         var document = Document(fillers: 33, keepNext, bodyRows: 3);
 
-        var pdf = PdfDocument.Open(WordToPdf.Convert(document.ToArray()).Pdf);
+        var pdf = PdfDocument.Open(WordToPdf.Convert(document.ToArray(), null, TestContext.Current.CancellationToken).Pdf);
 
         Assert.DoesNotContain("Header", pdf.GetPage(1).Text);
         // A paragraph kept with the table (w:keepNext) goes along with its header row.
@@ -38,7 +38,7 @@ public sealed class WordTableHeaderKeepTests
         // 31 lines leave 80.1: the header row and row 1 (60) fit, row 2 goes on with a repeated header.
         var document = Document(fillers: 31, keepNext: false, bodyRows: 3);
 
-        var pdf = PdfDocument.Open(WordToPdf.Convert(document).Pdf);
+        var pdf = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf);
 
         Assert.Contains("Header", pdf.GetPage(1).Text);
         Assert.Contains("Row 1", pdf.GetPage(1).Text);

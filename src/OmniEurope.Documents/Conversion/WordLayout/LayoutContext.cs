@@ -25,6 +25,9 @@ internal sealed class LayoutContext
 
     public WordDocument Document { get; }
 
+    /// <summary>Checked once per block laid out, per page placed and per page painted.</summary>
+    public CancellationToken CancellationToken { get; init; }
+
     public PdfDocumentBuilder Builder { get; }
 
     public WordStyleSheet Styles => Document.Styles;

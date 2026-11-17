@@ -21,7 +21,7 @@ public sealed class WordFootnoteSeparatorTests
         var loaded = WordDocument.Load(WithFootnote().ToArray());
 
         Assert.Null(loaded.FootnoteSeparator);
-        Assert.Equal(144, LongestRule(WordToPdf.Convert(loaded).Pdf), 1);
+        Assert.Equal(144, LongestRule(WordToPdf.Convert(loaded, null, TestContext.Current.CancellationToken).Pdf), 1);
     }
 
     [Fact]
@@ -35,7 +35,7 @@ public sealed class WordFootnoteSeparatorTests
 
         var separator = Assert.IsType<WordParagraph>(Assert.Single(loaded.FootnoteSeparator!));
         Assert.Equal(page.ContentWidth - 52, separator.Properties.IndentRight!.Value, 1);
-        Assert.Equal(52, LongestRule(WordToPdf.Convert(loaded).Pdf), 1);
+        Assert.Equal(52, LongestRule(WordToPdf.Convert(loaded, null, TestContext.Current.CancellationToken).Pdf), 1);
     }
 
     [Fact]
@@ -45,8 +45,8 @@ public sealed class WordFootnoteSeparatorTests
         var tall = WithFootnote(lines: 80);
         tall.FootnoteSeparator = [new WordParagraph { Properties = Spacing(60) }, Rule(0)];
 
-        var plainLines = BodyLines(WordToPdf.Convert(plain).Pdf);
-        var tallLines = BodyLines(WordToPdf.Convert(tall).Pdf);
+        var plainLines = BodyLines(WordToPdf.Convert(plain, null, TestContext.Current.CancellationToken).Pdf);
+        var tallLines = BodyLines(WordToPdf.Convert(tall, null, TestContext.Current.CancellationToken).Pdf);
 
         Assert.True(tallLines < plainLines, $"{tallLines} lines under a 60 pt taller separator, {plainLines} under the default rule");
     }

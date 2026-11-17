@@ -59,7 +59,7 @@ public sealed class MarkupWorkflowTests
         var table = Assert.Single(word.Blocks.OfType<WordTable>());
         Assert.Equal("Poste\tMontant\na | b\t12,50\n\t3", table.Text);
 
-        var conversion = MarkdownToPdf.Convert(markdown);
+        var conversion = MarkdownToPdf.Convert(markdown, null, null, TestContext.Current.CancellationToken);
         var pdf = PdfDocument.Open(conversion.Pdf);
         Samples.InOrder(Samples.AllText(pdf), "Compte rendu", Tricky, "Premier *point*", "1. pas une liste", "Ouvrir", "Signer", "Poste", "a | b", "12,50");
         var lines = PdfLayoutAnalyzer.AnalyzePage(pdf.GetPage(1)).Blocks.SelectMany(b => b.Lines).ToList();
@@ -97,8 +97,8 @@ public sealed class MarkupWorkflowTests
         Assert.DoesNotContain(parsed.DescendantElements(), e => (e.GetAttribute("href") ?? string.Empty).StartsWith("javascript", StringComparison.OrdinalIgnoreCase));
 
         // No script, style or javascript: link reaches either PDF, not even as a link annotation.
-        var fromHtml = HtmlToPdf.Convert(clean).Pdf;
-        var fromMarkdown = MarkdownToPdf.Convert(markdown).Pdf;
+        var fromHtml = HtmlToPdf.Convert(clean, null, TestContext.Current.CancellationToken).Pdf;
+        var fromMarkdown = MarkdownToPdf.Convert(markdown, null, null, TestContext.Current.CancellationToken).Pdf;
         foreach (var pdf in new[] { fromHtml, fromMarkdown })
         {
             var raw = System.Text.Encoding.Latin1.GetString(pdf);

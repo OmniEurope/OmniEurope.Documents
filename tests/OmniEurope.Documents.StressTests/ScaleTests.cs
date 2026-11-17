@@ -85,7 +85,7 @@ public sealed class ScaleTests
         }
 
         printed.FreezePanes(1);
-        var pdf = PdfDocument.Open(ExcelToPdf.Convert(excerpt, new ExcelPdfOptions { SheetTitles = false }).Pdf);
+        var pdf = PdfDocument.Open(ExcelToPdf.Convert(excerpt, new ExcelPdfOptions { SheetTitles = false }, TestContext.Current.CancellationToken).Pdf);
         Assert.True(pdf.PageCount > 3);
         Assert.All(pdf.Pages, p => Assert.StartsWith("Colonne 1 Colonne 2 Colonne 3", p.Text, StringComparison.Ordinal));
         Assert.True(saving + reading < TimeSpan.FromSeconds(30), $"{saving} + {reading}");

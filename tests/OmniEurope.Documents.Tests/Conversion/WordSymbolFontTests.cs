@@ -60,7 +60,7 @@ public sealed class WordSymbolFontTests
         var plain = new WordDocument();
         plain.AddParagraph().Add(new WordText("x") { Properties = new WordRunProperties { Font = "Arial", FontSize = Size } });
 
-        var result = WordToPdf.Convert(bulleted);
+        var result = WordToPdf.Convert(bulleted, null, TestContext.Current.CancellationToken);
         var page = PdfDocument.Open(result.Pdf).GetPage(1);
         var letters = page.Letters;
 

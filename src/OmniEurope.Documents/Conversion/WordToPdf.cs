@@ -47,9 +47,18 @@ public static class WordToPdf
     private const int MaxPasses = 4;
 
     /// <summary>Converts a loaded document.</summary>
-    public static WordPdfResult Convert(WordDocument document, WordPdfOptions? options = null)
+    public static WordPdfResult Convert(WordDocument document, WordPdfOptions? options = null) => Convert(document, options, CancellationToken.None);
+
+    /// <summary>Converts a loaded document, checking <paramref name="cancellationToken"/> for each block laid out and
+    /// each page placed and painted. A cancelled conversion returns nothing.</summary>
+    /// <param name="document">The document to convert.</param>
+    /// <param name="options">The conversion options, or null for the defaults.</param>
+    /// <param name="cancellationToken">Cancels the conversion.</param>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled.</exception>
+    public static WordPdfResult Convert(WordDocument document, WordPdfOptions? options, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(document);
+        cancellationToken.ThrowIfCancellationRequested();
         options ??= new WordPdfOptions();
         var information = document.Information;
         var builder = new PdfDocumentBuilder
@@ -62,7 +71,7 @@ public static class WordToPdf
             Creator = "OmniEurope.Documents",
             Conformance = options.Conformance,
         };
-        var context = new LayoutContext(document, builder);
+        var context = new LayoutContext(document, builder) { CancellationToken = cancellationToken };
         var pages = Paginate(context);
         ReportFloatingShapes(document, context);
         new PagePainter(context, options.Bookmarks).Paint(pages);
@@ -96,7 +105,19 @@ public static class WordToPdf
     }
 
     /// <summary>Loads a .docx package and converts it.</summary>
-    public static WordPdfResult Convert(byte[] docx, WordPdfOptions? options = null) => Convert(WordDocument.Load(docx), options);
+    public static WordPdfResult Convert(byte[] docx, WordPdfOptions? options = null) => Convert(docx, options, CancellationToken.None);
+
+    /// <summary>Loads a .docx package and converts it, checking <paramref name="cancellationToken"/> as
+    /// <see cref="Convert(WordDocument, WordPdfOptions, CancellationToken)"/> does. A cancelled conversion returns nothing.</summary>
+    /// <param name="docx">The .docx package.</param>
+    /// <param name="options">The conversion options, or null for the defaults.</param>
+    /// <param name="cancellationToken">Cancels the conversion.</param>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled.</exception>
+    public static WordPdfResult Convert(byte[] docx, WordPdfOptions? options, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Convert(WordDocument.Load(docx), options, cancellationToken);
+    }
 
     // What the layout of floating shapes, right-to-left text and columns leaves approximate.
     private static void ReportFloatingShapes(WordDocument document, LayoutContext context)

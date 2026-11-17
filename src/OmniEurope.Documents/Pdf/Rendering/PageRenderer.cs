@@ -12,6 +12,9 @@ namespace OmniEurope.Documents.Pdf.Rendering;
 /// </summary>
 internal sealed class PageRenderer
 {
+    /// <summary>Operators run between two checks of the cancellation token.</summary>
+    internal const int CancellationBatch = 256;
+
     private const int MaxDepth = 12;
 
     // Operators other than text ones; marked-content and compatibility operators are accepted and ignored.
@@ -90,6 +93,7 @@ internal sealed class PageRenderer
     private GraphicsState _state;
     private bool? _pendingClip;
     private int _depth;
+    private int _operations;
 
     public PageRenderer(PdfObjectStore store, Surface surface, Matrix toDevice, RenderContext context)
     {
@@ -122,6 +126,11 @@ internal sealed class PageRenderer
     {
         foreach (var operation in ContentStreamReader.Read(content))
         {
+            if (++_operations % CancellationBatch == 0)
+            {
+                Context.CancellationToken.ThrowIfCancellationRequested();
+            }
+
             try
             {
                 Execute(operation, resources);

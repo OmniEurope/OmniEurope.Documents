@@ -113,7 +113,7 @@ public sealed class ChartRobustnessTests
         var document = WordDocument.Load(Docx(ChartSpace(Bar(Series(0, "A", Quarters, [1, 2, 3])), Axes())));
         document.Blocks.OfType<WordParagraph>().SelectMany(p => p.Inlines).OfType<WordChart>().Single().Chart.Truncated = true;
 
-        var result = WordToPdf.Convert(document);
+        var result = WordToPdf.Convert(document, null, TestContext.Current.CancellationToken);
 
         Assert.Contains(result.Gaps, g => g.StartsWith("chart past the point limit", StringComparison.Ordinal));
     }
@@ -174,7 +174,7 @@ public sealed class ChartRobustnessTests
         var workbook = XlsxWorkbook.Load(Xlsx(string.Empty, "<c:chartSpace", TwoCell(3, 1, 9, 16)));
 
         Assert.Empty(workbook.Worksheets[0].Charts);
-        Assert.Contains("unreadable chart skipped", ExcelToPdf.ToWord(workbook).Gaps);
+        Assert.Contains("unreadable chart skipped", ExcelToPdf.ToWord(workbook, null, TestContext.Current.CancellationToken).Gaps);
     }
 
     [Fact]
@@ -202,7 +202,7 @@ public sealed class ChartRobustnessTests
         var workbook = XlsxWorkbook.Load(Replace(good, "xl/drawings/drawing1.xml", "<xdr:wsDr"));
 
         Assert.Empty(workbook.Worksheets[0].Charts);
-        Assert.Contains("unreadable drawing skipped", ExcelToPdf.ToWord(workbook).Gaps);
+        Assert.Contains("unreadable drawing skipped", ExcelToPdf.ToWord(workbook, null, TestContext.Current.CancellationToken).Gaps);
     }
 
     [Fact]
@@ -213,7 +213,7 @@ public sealed class ChartRobustnessTests
         var workbook = XlsxWorkbook.Load(Replace(good, "xl/theme/theme1.xml", "<a:theme"));
 
         Assert.Equal("4472C4", workbook.Worksheets[0].Charts.Single().Chart.Series[0].Color);
-        Assert.Contains("unreadable theme skipped", ExcelToPdf.ToWord(workbook).Gaps);
+        Assert.Contains("unreadable theme skipped", ExcelToPdf.ToWord(workbook, null, TestContext.Current.CancellationToken).Gaps);
     }
 
     [Fact]
