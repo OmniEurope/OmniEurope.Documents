@@ -24,6 +24,8 @@ Notable changes to this project are documented here, following the Keep a Change
   aligned left, centred or right (a totals block), and `PdfFlowLayout.AddBox` draws padded text with an optional fill
   and a four-sided border (`PdfBoxStyle`), such as a status badge. Both advance the flow and move to a new page when
   they do not fit.
+- PDF writing: `PdfFont.SemiBold` (and `AsSemiBold()`) draws a weight between regular and bold, the regular face
+  outlined in its own colour; text measures and wraps exactly as in regular.
 
 ### Changed
 

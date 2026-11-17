@@ -235,6 +235,38 @@ public sealed class PdfCanvasTests
         Assert.Equal("é", PdfTextEncoding.Decode([0xEF, 0xBB, 0xBF, 0xC3, 0xA9]));
     }
 
+    [Fact]
+    public void Semi_bold_text_inks_between_regular_and_bold_and_keeps_the_regular_widths()
+    {
+        var semiBold = PdfFont.Sans.AsSemiBold();
+        int InkOf(PdfFont font) => Ink(Render(page => page.DrawText("HIH", 20, 80, font, 40)));
+
+        var (regular, semi, bold) = (InkOf(PdfFont.Sans), InkOf(semiBold), InkOf(PdfFont.Sans.AsBold()));
+
+        Assert.InRange(semi, regular + 1, bold - 1);
+        Assert.Equal(bold, InkOf(PdfFont.Sans.AsBold() with { SemiBold = true }));
+        var document = new PdfDocumentBuilder();
+        var page = document.AddPage(200, 200);
+        Assert.Equal(page.MeasureText("Total", PdfFont.Sans, 12), page.DrawText("Total", 10, 50, semiBold, 12));
+        page.DrawRotatedText("Total", 10, 150, 90, semiBold, 12);
+        var content = Encoding.Latin1.GetString(PdfDocument.Open(document.ToArray()).GetPage(1).ContentBytes());
+        Assert.Equal(2, content.Split("2 Tr").Length - 1);
+    }
+
+    private static int Ink(RasterImage image)
+    {
+        var count = 0;
+        for (var y = 0; y < image.Height; y++)
+        {
+            for (var x = 0; x < image.Width; x++)
+            {
+                count += Pixel(image, x, y).R < 128 ? 1 : 0;
+            }
+        }
+
+        return count;
+    }
+
     private static RasterImage Render(Action<PdfCanvas> draw)
     {
         var document = new PdfDocumentBuilder();

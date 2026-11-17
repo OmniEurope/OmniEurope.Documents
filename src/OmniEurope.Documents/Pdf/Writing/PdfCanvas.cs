@@ -54,9 +54,10 @@ public sealed class PdfCanvas
         var start = x;
         _content.SaveState();
         Opacity(opacity);
+        var outline = Outline(font, size, fill);
         foreach (var (face, run) in Runs(text, font))
         {
-            x += DrawRun(face, run, (1, 0, x, Y(baseline)), size, fill, characterSpacing);
+            x += DrawRun(face, run, (1, 0, x, Y(baseline)), size, fill, characterSpacing, outline);
         }
 
         _content.RestoreState();
@@ -91,10 +92,12 @@ public sealed class PdfCanvas
         var radians = angle * Math.PI / 180;
         var (cos, sin) = (Math.Cos(radians), Math.Sin(radians));
         double width = 0;
+        var fill = color ?? PdfColor.Black;
         _content.SaveState();
+        var outline = Outline(font, size, fill);
         foreach (var (face, run) in Runs(text, font))
         {
-            width += DrawRun(face, run, (cos, sin, x + (width * cos), Y(baseline) + (width * sin)), size, color ?? PdfColor.Black, characterSpacing);
+            width += DrawRun(face, run, (cos, sin, x + (width * cos), Y(baseline) + (width * sin)), size, fill, characterSpacing, outline);
         }
 
         _content.RestoreState();
@@ -386,8 +389,24 @@ public sealed class PdfCanvas
         }
     }
 
+    // Semi-bold draws the regular outlines filled and stroked in the text colour; the stroke widens each stem by
+    // 2.8 % of the size, about half the gap between the regular and bold stems of the bundled sans. Called inside
+    // the caller's saved graphics state, so the stroke settings end with it.
+    private bool Outline(PdfFont font, double size, PdfColor color)
+    {
+        if (!font.SemiBold || font.Bold)
+        {
+            return false;
+        }
+
+        _content.StrokeColor(color).Op("w", size * SemiBoldStroke).Op("j", 1);
+        return true;
+    }
+
+    private const double SemiBoldStroke = 0.028;
+
     // Draws a run of one face from an origin in PDF space, its baseline along the direction (cos, sin).
-    private double DrawRun(TrueTypeFont face, List<(int Glyph, string Text)> run, (double Cos, double Sin, double X, double Y) origin, double size, PdfColor color, double characterSpacing)
+    private double DrawRun(TrueTypeFont face, List<(int Glyph, string Text)> run, (double Cos, double Sin, double X, double Y) origin, double size, PdfColor color, double characterSpacing, bool outline)
     {
         var font = _document.Embed(face);
         _fonts.Add(font);
@@ -406,6 +425,11 @@ public sealed class PdfCanvas
         if (characterSpacing != 0)
         {
             _content.Op("Tc", characterSpacing);
+        }
+
+        if (outline)
+        {
+            _content.Op("Tr", 2);
         }
 
         _content.Op("Tm", origin.Cos, origin.Sin, -origin.Sin, origin.Cos, origin.X, origin.Y);

@@ -27,7 +27,8 @@ signs with an application certificate (PAdES baseline B-B, detached CMS written 
 verifies signatures (byte range, digest, signature, signing certificate; certificate trust is the application's).
 PDF writing (`PdfFlowLayout`) flows paragraphs, images and tables (borders per side, header rows repeated) across pages,
 reserves header and footer zones (`PdfFlowOptions.HeaderHeight`, `FooterHeight`), and lays out fixed-width aligned
-blocks (`AddBlock`) and padded filled boxes (`AddBox`).
+blocks (`AddBlock`) and padded filled boxes (`AddBox`); fonts come in regular, semi-bold (`PdfFont.AsSemiBold`),
+bold and italic.
 
 `PdfRedactor.Redact` truly redacts (the text and image pixels under an area are removed from the new file, not covered), and refuses (`PdfRedactionException`, no
 document produced) a page whose text is shown with a font it cannot resolve, since it could not tell whether that text

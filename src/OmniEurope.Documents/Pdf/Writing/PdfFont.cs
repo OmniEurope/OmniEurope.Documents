@@ -19,8 +19,16 @@ public sealed record PdfFont(string Family, bool Bold = false, bool Italic = fal
     /// <summary>Liberation Mono (Courier New metrics).</summary>
     public static PdfFont Mono { get; } = new("Liberation Mono");
 
+    /// <summary>Semi-bold (weight 600): the regular face drawn with a thin outline of its own colour, between
+    /// regular and bold. Advance widths stay those of the regular face, so the text measures and wraps the
+    /// same. Ignored when <see cref="Bold"/> is set.</summary>
+    public bool SemiBold { get; init; }
+
     /// <summary>The same family in bold.</summary>
     public PdfFont AsBold() => this with { Bold = true };
+
+    /// <summary>The same family in semi-bold (see <see cref="SemiBold"/>).</summary>
+    public PdfFont AsSemiBold() => this with { SemiBold = true };
 
     /// <summary>The same family in italic.</summary>
     public PdfFont AsItalic() => this with { Italic = true };
