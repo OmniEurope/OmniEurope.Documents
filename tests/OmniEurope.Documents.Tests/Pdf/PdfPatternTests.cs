@@ -136,7 +136,7 @@ public sealed class PdfPatternTests
             "/Pattern << /P2 << /PatternType 1 >> /P3 5 0 R /P4 6 0 R >>",
             string.Empty,
             Tiling("/XStep 0", Checker),
-            Tiling("/PaintType 3", Checker))).GetPage(1), new PdfRenderOptions { Dpi = 72 });
+            Tiling("/PaintType 3", Checker))).GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken);
 
         Assert.Equal(["patterns that cannot be read are drawn as a flat colour"], rendering.Gaps);
         Assert.Equal((0, 0, 0), Pixel(rendering.Image, 100, 100));

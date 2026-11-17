@@ -77,6 +77,8 @@ var result = WordToPdf.Convert(docx);
 var remarks = result.GapDetails.Select(g => g.Describe(CultureInfo.GetCultureInfo("fr-FR")));
 ```
 
+The conversions to PDF (`WordToPdf`, `ExcelToPdf`, `HtmlToPdf`, `MarkdownToPdf`) and page rendering (`PdfRenderer`) accept a `CancellationToken` and throw `OperationCanceledException`, returning no partial output.
+
 Companion tools: HTML parsing and sanitising, text diff (lines and words).
 
 ## What it does not do

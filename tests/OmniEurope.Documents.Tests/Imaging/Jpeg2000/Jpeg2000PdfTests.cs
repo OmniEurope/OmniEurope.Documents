@@ -119,9 +119,9 @@ public sealed class Jpeg2000PdfTests
         var highThroughput = (byte[])data.Clone();
         highThroughput[Cod(highThroughput) + 12] |= 0x40;
 
-        var drawn = PdfRenderer.Render(PdfDocument.Open(Jpeg2000Conformance.Pdf(data, expected.Width, expected.Height)).GetPage(1), new PdfRenderOptions { Dpi = 72 });
+        var drawn = PdfRenderer.Render(PdfDocument.Open(Jpeg2000Conformance.Pdf(data, expected.Width, expected.Height)).GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken);
         var refused = PdfDocument.Open(Jpeg2000Conformance.Pdf(highThroughput, expected.Width, expected.Height));
-        var reported = PdfRenderer.Render(refused.GetPage(1), new PdfRenderOptions { Dpi = 72 });
+        var reported = PdfRenderer.Render(refused.GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken);
 
         Assert.Empty(drawn.Gaps);
         Assert.Equal(expected.Samples[(50 * expected.Width) + 60], drawn.Image.GetRgba(60, 50).R);

@@ -29,8 +29,8 @@ public sealed class PdfAuditRegressionTests
             "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents [4 0 R 5 0 R] >>", bad, good);
         var options = new PdfRenderOptions { Dpi = 72 };
 
-        var empty = PdfRenderer.Render(PdfDocument.Open(onlyBad).GetPage(1), options);
-        var partial = PdfRenderer.Render(PdfDocument.Open(both).GetPage(1), options);
+        var empty = PdfRenderer.Render(PdfDocument.Open(onlyBad).GetPage(1), options, TestContext.Current.CancellationToken);
+        var partial = PdfRenderer.Render(PdfDocument.Open(both).GetPage(1), options, TestContext.Current.CancellationToken);
 
         Assert.Contains(empty.GapDetails, g => g.Code == "RenderContentStreamUnreadable");
         Assert.Equal(empty.Gaps, empty.GapDetails.Select(g => g.Message));
@@ -44,7 +44,7 @@ public sealed class PdfAuditRegressionTests
     {
         var pdf = RawPdf.Page("0 0 1 rg 0 0 100 100 re f");
 
-        var rendering = PdfRenderer.Render(PdfDocument.Open(pdf).GetPage(1), new PdfRenderOptions { Dpi = 72 });
+        var rendering = PdfRenderer.Render(PdfDocument.Open(pdf).GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken);
 
         Assert.Empty(rendering.GapDetails);
     }
@@ -161,7 +161,7 @@ public sealed class PdfAuditRegressionTests
     {
         var page = PdfDocument.Open(RawPdf.Page("0 g 0 0 10 10 re f", pageExtra: "/CropBox [0 0 72 72]")).GetPage(1);
 
-        var png = PdfRenderer.Render(page, new PdfRenderOptions { Dpi = requested }).ToPng();
+        var png = PdfRenderer.Render(page, new PdfRenderOptions { Dpi = requested }, TestContext.Current.CancellationToken).ToPng();
 
         var decoded = PngCodec.Decode(png);
         Assert.Equal(expectedPixels, decoded.Width);

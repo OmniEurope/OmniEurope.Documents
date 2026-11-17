@@ -63,7 +63,7 @@ public sealed class WordWorkflowTests
         var document = WordDocument.Load(merged);
         Samples.InOrder(document.Text, "Rapport annuel", "Annexe", "Conclusion", "Annexe B : glossaire");
 
-        var conversion = WordToPdf.Convert(merged);
+        var conversion = WordToPdf.Convert(merged, null, TestContext.Current.CancellationToken);
         var pdf = PdfDocument.Open(conversion.Pdf);
 
         Assert.Empty(conversion.Gaps);
@@ -82,7 +82,7 @@ public sealed class WordWorkflowTests
     [Fact]
     public void The_converted_report_shows_its_picture_header_and_heading()
     {
-        var pdf = PdfDocument.Open(WordToPdf.Convert(Report()).Pdf);
+        var pdf = PdfDocument.Open(WordToPdf.Convert(Report(), null, TestContext.Current.CancellationToken).Pdf);
         var first = pdf.GetPage(1);
 
         // The red logo is 40 x 30 points: about 20 x 15 pixels at 36 dpi.

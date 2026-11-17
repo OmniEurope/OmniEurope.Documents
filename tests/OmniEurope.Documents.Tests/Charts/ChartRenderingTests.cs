@@ -344,7 +344,7 @@ public sealed class ChartRenderingTests
     {
         var part = ChartSpace(Bar(Series(0, "Ventes", Quarters, [10, 20, 40])), Axes(), title: "Résultats", legend: "b");
 
-        var result = ExcelToPdf.Convert(XlsxWorkbook.Load(Xlsx(Cells, part, TwoCell(3, 0, 9, 15))), new ExcelPdfOptions { SheetTitles = false });
+        var result = ExcelToPdf.Convert(XlsxWorkbook.Load(Xlsx(Cells, part, TwoCell(3, 0, 9, 15))), new ExcelPdfOptions { SheetTitles = false }, TestContext.Current.CancellationToken);
         var tokens = Tokens(PdfDocument.Open(result.Pdf).GetPage(1));
 
         // The ticks 0 to 40, and the 10 of cell B2.
@@ -361,8 +361,8 @@ public sealed class ChartRenderingTests
         var workbook = XlsxWorkbook.Load(Xlsx(Cells, part, TwoCell(2, 25, 8, 38)));
         var options = new ExcelPdfOptions { SheetTitles = false };
 
-        var table = ExcelToPdf.ToWord(workbook, options).Blocks.OfType<WordTable>().Single();
-        var image = Render(ExcelToPdf.Convert(workbook, options).Pdf).Image;
+        var table = ExcelToPdf.ToWord(workbook, options, TestContext.Current.CancellationToken).Blocks.OfType<WordTable>().Single();
+        var image = Render(ExcelToPdf.Convert(workbook, options, TestContext.Current.CancellationToken).Pdf).Image;
 
         Assert.Equal(39, table.Rows.Count);
         Assert.Equal(9, table.Columns.Count);
@@ -378,8 +378,8 @@ public sealed class ChartRenderingTests
         // Eleven default columns of 48 pt are 528 pt, more than the 453 pt of an A4 portrait page; five are 240 pt.
         var part = ChartSpace(Pie(Series(0, "Parts", Quarters, [1, 2, 3])));
 
-        var wide = PdfDocument.Open(ExcelToPdf.Convert(XlsxWorkbook.Load(Xlsx(Cells, part, TwoCell(0, 4, 10, 14))), new ExcelPdfOptions { SheetTitles = false }).Pdf).GetPage(1);
-        var narrow = PdfDocument.Open(ExcelToPdf.Convert(XlsxWorkbook.Load(Xlsx(Cells, part, TwoCell(0, 4, 4, 14))), new ExcelPdfOptions { SheetTitles = false }).Pdf).GetPage(1);
+        var wide = PdfDocument.Open(ExcelToPdf.Convert(XlsxWorkbook.Load(Xlsx(Cells, part, TwoCell(0, 4, 10, 14))), new ExcelPdfOptions { SheetTitles = false }, TestContext.Current.CancellationToken).Pdf).GetPage(1);
+        var narrow = PdfDocument.Open(ExcelToPdf.Convert(XlsxWorkbook.Load(Xlsx(Cells, part, TwoCell(0, 4, 4, 14))), new ExcelPdfOptions { SheetTitles = false }, TestContext.Current.CancellationToken).Pdf).GetPage(1);
 
         Assert.True(wide.Width > wide.Height, "landscape");
         Assert.True(narrow.Width < narrow.Height, "portrait");
@@ -396,8 +396,8 @@ public sealed class ChartRenderingTests
         var merged = Xlsx(data, part, anchor, afterData: """<mergeCells count="1"><mergeCell ref="A1:C3"/></mergeCells>""");
         var plain = Xlsx(data, part, anchor);
 
-        var withMerge = Extent(Render(ExcelToPdf.Convert(XlsxWorkbook.Load(merged), new ExcelPdfOptions { SheetTitles = false }).Pdf).Image, "FFFFCC");
-        var without = Extent(Render(ExcelToPdf.Convert(XlsxWorkbook.Load(plain), new ExcelPdfOptions { SheetTitles = false }).Pdf).Image, "FFFFCC");
+        var withMerge = Extent(Render(ExcelToPdf.Convert(XlsxWorkbook.Load(merged), new ExcelPdfOptions { SheetTitles = false }, TestContext.Current.CancellationToken).Pdf).Image, "FFFFCC");
+        var without = Extent(Render(ExcelToPdf.Convert(XlsxWorkbook.Load(plain), new ExcelPdfOptions { SheetTitles = false }, TestContext.Current.CancellationToken).Pdf).Image, "FFFFCC");
 
         Assert.Equal((double)without.Left, withMerge.Left, 1d);
         Assert.Equal((double)without.Top, withMerge.Top, 2d);
@@ -410,7 +410,7 @@ public sealed class ChartRenderingTests
     {
         var scatter = "<c:scatterChart><c:scatterStyle val=\"lineMarker\"/><c:varyColors val=\"0\"/><c:axId val=\"1\"/><c:axId val=\"2\"/></c:scatterChart>";
 
-        var result = ExcelToPdf.Convert(XlsxWorkbook.Load(Xlsx(Cells, ChartSpace(scatter, title: "Nuage"), TwoCell(3, 0, 9, 15))));
+        var result = ExcelToPdf.Convert(XlsxWorkbook.Load(Xlsx(Cells, ChartSpace(scatter, title: "Nuage"), TwoCell(3, 0, 9, 15))), null, TestContext.Current.CancellationToken);
 
         Assert.Contains("chart type not drawn: scatter chart", result.Gaps);
     }

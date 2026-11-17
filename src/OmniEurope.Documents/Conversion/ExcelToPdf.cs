@@ -39,16 +39,44 @@ public sealed record ExcelPdfOptions
 public static class ExcelToPdf
 {
     /// <summary>Converts a loaded workbook.</summary>
-    public static WordPdfResult Convert(XlsxWorkbook workbook, ExcelPdfOptions? options = null) =>
-        WordToPdf.Convert(ToWord(workbook, options), options?.Pdf);
+    public static WordPdfResult Convert(XlsxWorkbook workbook, ExcelPdfOptions? options = null) => Convert(workbook, options, CancellationToken.None);
+
+    /// <summary>Converts a loaded workbook, checking <paramref name="cancellationToken"/> for each worksheet read, then as
+    /// <see cref="WordToPdf.Convert(WordDocument, WordPdfOptions, CancellationToken)"/> does. A cancelled conversion returns nothing.</summary>
+    /// <param name="workbook">The workbook to convert.</param>
+    /// <param name="options">The conversion options, or null for the defaults.</param>
+    /// <param name="cancellationToken">Cancels the conversion.</param>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled.</exception>
+    public static WordPdfResult Convert(XlsxWorkbook workbook, ExcelPdfOptions? options, CancellationToken cancellationToken) =>
+        WordToPdf.Convert(ToWord(workbook, options, cancellationToken), options?.Pdf, cancellationToken);
 
     /// <summary>Loads an .xlsx package and converts it.</summary>
-    public static WordPdfResult Convert(byte[] xlsx, ExcelPdfOptions? options = null) => Convert(XlsxWorkbook.Load(xlsx), options);
+    public static WordPdfResult Convert(byte[] xlsx, ExcelPdfOptions? options = null) => Convert(xlsx, options, CancellationToken.None);
+
+    /// <summary>Loads an .xlsx package and converts it, checking <paramref name="cancellationToken"/> as
+    /// <see cref="Convert(XlsxWorkbook, ExcelPdfOptions, CancellationToken)"/> does. A cancelled conversion returns nothing.</summary>
+    /// <param name="xlsx">The .xlsx package.</param>
+    /// <param name="options">The conversion options, or null for the defaults.</param>
+    /// <param name="cancellationToken">Cancels the conversion.</param>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled.</exception>
+    public static WordPdfResult Convert(byte[] xlsx, ExcelPdfOptions? options, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Convert(XlsxWorkbook.Load(xlsx), options, cancellationToken);
+    }
 
     /// <summary>The Word document the PDF is laid out from.</summary>
-    public static WordDocument ToWord(XlsxWorkbook workbook, ExcelPdfOptions? options = null)
+    public static WordDocument ToWord(XlsxWorkbook workbook, ExcelPdfOptions? options = null) => ToWord(workbook, options, CancellationToken.None);
+
+    /// <summary>The Word document the PDF is laid out from, checking <paramref name="cancellationToken"/> for each worksheet.</summary>
+    /// <param name="workbook">The workbook to convert.</param>
+    /// <param name="options">The conversion options, or null for the defaults.</param>
+    /// <param name="cancellationToken">Cancels the conversion.</param>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled.</exception>
+    public static WordDocument ToWord(XlsxWorkbook workbook, ExcelPdfOptions? options, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(workbook);
+        cancellationToken.ThrowIfCancellationRequested();
         options ??= new ExcelPdfOptions();
         var ranges = workbook.Worksheets.Select(PrintedRange).ToList();
         var cells = ranges.Sum(r => r is { } used ? (long)(used.LastRow - used.FirstRow + 1) * (used.LastColumn - used.FirstColumn + 1) : 0);
@@ -66,6 +94,7 @@ public static class ExcelToPdf
         document.Styles.DefaultParagraphProperties = new WordParagraphProperties { SpacingAfter = 0, LineSpacing = 1, LineSpacingRule = WordLineSpacingRule.Multiple };
         for (var i = 0; i < workbook.Worksheets.Count; i++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var sheet = workbook.Worksheets[i];
             var table = ranges[i] is { } range ? new ExcelSheetTable(sheet, range, options).Build() : null;
             var page = ExcelSheetTable.Page(table?.Columns.Sum() ?? 0);

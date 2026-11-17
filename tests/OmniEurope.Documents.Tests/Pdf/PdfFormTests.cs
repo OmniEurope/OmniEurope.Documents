@@ -115,8 +115,8 @@ public sealed class PdfFormTests
     [Fact]
     public void The_renderer_shows_the_filled_values()
     {
-        var before = PdfRenderer.Render(PdfDocument.Open(Source()).GetPage(1), new PdfRenderOptions { Dpi = 72 }).Image;
-        var after = PdfRenderer.Render(PdfDocument.Open(PdfForm.Fill(Source(), Values())).GetPage(1), new PdfRenderOptions { Dpi = 72 }).Image;
+        var before = PdfRenderer.Render(PdfDocument.Open(Source()).GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken).Image;
+        var after = PdfRenderer.Render(PdfDocument.Open(PdfForm.Fill(Source(), Values())).GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken).Image;
 
         Assert.Equal(0, Count(before, NameBox, Blue));
         Assert.True(Count(after, NameBox, Blue) > 40, "blue text drawn in the text field");
@@ -140,7 +140,7 @@ public sealed class PdfFormTests
         Assert.Contains("Zoë Ünïcode €", text, StringComparison.Ordinal);
         Assert.Contains("France", text, StringComparison.Ordinal);
         Assert.Contains("Bruxelles", text, StringComparison.Ordinal);
-        var image = PdfRenderer.Render(document.GetPage(1), new PdfRenderOptions { Dpi = 72, Annotations = false }).Image;
+        var image = PdfRenderer.Render(document.GetPage(1), new PdfRenderOptions { Dpi = 72, Annotations = false }, TestContext.Current.CancellationToken).Image;
         Assert.True(Count(image, NameBox, Blue) > 40);
         Assert.True(Count(image, AgreeBox, Dark) >= 49);
     }
@@ -159,7 +159,7 @@ public sealed class PdfFormTests
 
         var flat = PdfForm.Flatten(source);
         var document = PdfDocument.Open(flat);
-        var image = PdfRenderer.Render(document.GetPage(1), new PdfRenderOptions { Dpi = 72 }).Image;
+        var image = PdfRenderer.Render(document.GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken).Image;
 
         Assert.Null(document.Store.Get(document.GetPage(1).Dictionary, "Annots"));
         Assert.Equal("Form", ((PdfName)((PdfStream)document.Store.Resolve(new PdfReference(7, 0))!)["Subtype"]!).Value);

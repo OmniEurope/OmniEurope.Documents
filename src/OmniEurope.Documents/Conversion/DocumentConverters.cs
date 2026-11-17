@@ -52,7 +52,19 @@ public static class HtmlToWord
 public static class HtmlToPdf
 {
     /// <summary>Converts HTML into PDF.</summary>
-    public static WordPdfResult Convert(string html, WordPdfOptions? options = null) => WordToPdf.Convert(HtmlToWord.Convert(html), options);
+    public static WordPdfResult Convert(string html, WordPdfOptions? options = null) => Convert(html, options, CancellationToken.None);
+
+    /// <summary>Converts HTML into PDF, checking <paramref name="cancellationToken"/> as
+    /// <see cref="WordToPdf.Convert(WordDocument, WordPdfOptions, CancellationToken)"/> does. A cancelled conversion returns nothing.</summary>
+    /// <param name="html">The HTML document or fragment.</param>
+    /// <param name="options">The PDF options, or null for the defaults.</param>
+    /// <param name="cancellationToken">Cancels the conversion.</param>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled.</exception>
+    public static WordPdfResult Convert(string html, WordPdfOptions? options, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return WordToPdf.Convert(HtmlToWord.Convert(html), options, cancellationToken);
+    }
 }
 
 /// <summary>
@@ -74,5 +86,18 @@ public static class MarkdownToPdf
 {
     /// <summary>Converts Markdown into PDF.</summary>
     public static WordPdfResult Convert(string markdown, MarkdownOptions? markdownOptions = null, WordPdfOptions? options = null) =>
-        WordToPdf.Convert(MarkdownToWord.Convert(markdown, markdownOptions), options);
+        Convert(markdown, markdownOptions, options, CancellationToken.None);
+
+    /// <summary>Converts Markdown into PDF, checking <paramref name="cancellationToken"/> as
+    /// <see cref="WordToPdf.Convert(WordDocument, WordPdfOptions, CancellationToken)"/> does. A cancelled conversion returns nothing.</summary>
+    /// <param name="markdown">The Markdown text.</param>
+    /// <param name="markdownOptions">The Markdown options, or null for <see cref="MarkdownOptions.GitHub"/>.</param>
+    /// <param name="options">The PDF options, or null for the defaults.</param>
+    /// <param name="cancellationToken">Cancels the conversion.</param>
+    /// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was cancelled.</exception>
+    public static WordPdfResult Convert(string markdown, MarkdownOptions? markdownOptions, WordPdfOptions? options, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return WordToPdf.Convert(MarkdownToWord.Convert(markdown, markdownOptions), options, cancellationToken);
+    }
 }

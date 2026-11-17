@@ -163,7 +163,7 @@ public sealed class PdfRedactionTests
     [Fact]
     public void The_areas_are_painted_and_the_rest_of_the_page_still_renders()
     {
-        var rendering = PdfRenderer.Render(PdfDocument.Open(Redact(Source(), new PdfRedactionOptions { Fill = PdfColor.Blue }).Pdf).GetPage(1), new PdfRenderOptions { Dpi = 72 });
+        var rendering = PdfRenderer.Render(PdfDocument.Open(Redact(Source(), new PdfRedactionOptions { Fill = PdfColor.Blue }).Pdf).GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken);
 
         foreach (var area in new[] { LineArea, ArrayArea, FormArea })
         {

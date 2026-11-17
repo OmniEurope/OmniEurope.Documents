@@ -59,7 +59,7 @@ public sealed class RemainingAuditRegressionTests
         var source = RawPdf.Page("0 0 1 rg 0 0 50 50 re f q 50 0 0 50 0 0 cm /Im Do Q", "/XObject << /Im 5 0 R >>", "",
             RawPdf.Stream($"/Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace {space} /BitsPerComponent {bits} /Filter /ASCIIHexDecode {mask}", RawPdf.Ascii(data)));
         var page = PdfDocument.Open(source).GetPage(1);
-        var rendered = PdfRenderer.Render(page, new PdfRenderOptions { Dpi = 72 });
+        var rendered = PdfRenderer.Render(page, new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken);
         Assert.Equal(((byte)0, (byte)0, (byte)255, (byte)255), rendered.Image.GetRgba(25, 175));
         Assert.Empty(rendered.Gaps);
         Assert.Equal(0, page.Images[0].Decode()!.GetRgba(0, 0).A);
@@ -145,7 +145,7 @@ public sealed class RemainingAuditRegressionTests
             RawPdf.Stream("/Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Mask 6 0 R", [255, 0, 0]),
             RawPdf.Stream($"/Type /XObject /Subtype /Image /Width 1 /Height 1 /ImageMask true /BitsPerComponent 1 {decode}", [stencil]));
         var page = PdfDocument.Open(source).GetPage(1);
-        var rendered = PdfRenderer.Render(page, new PdfRenderOptions { Dpi = 72 });
+        var rendered = PdfRenderer.Render(page, new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken);
         Assert.Equal(((byte)r, (byte)g, (byte)b, (byte)255), rendered.Image.GetRgba(25, 175));
         Assert.Empty(rendered.Gaps);
         Assert.NotNull(page.Images[0].Decode());
@@ -158,7 +158,7 @@ public sealed class RemainingAuditRegressionTests
         var source = RawPdf.Page("0 0 1 rg 0 0 50 50 re f q 50 0 0 50 0 0 cm /Im Do Q", "/XObject << /Im 5 0 R >>", "",
             RawPdf.Stream("/Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Mask 6 0 R", [255, 0, 0]),
             RawPdf.Stream("/Type /XObject /Subtype /Image /Width 2 /Height 1 /ImageMask true /BitsPerComponent 1", [0x40]));
-        var image = PdfRenderer.Render(PdfDocument.Open(source).GetPage(1), new PdfRenderOptions { Dpi = 72 }).Image;
+        var image = PdfRenderer.Render(PdfDocument.Open(source).GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken).Image;
         Assert.Equal(((byte)255, (byte)0, (byte)0, (byte)255), image.GetRgba(10, 175));
         Assert.Equal(((byte)0, (byte)0, (byte)255, (byte)255), image.GetRgba(40, 175));
     }
@@ -172,7 +172,7 @@ public sealed class RemainingAuditRegressionTests
             RawPdf.Stream("/Type /XObject /Subtype /Image /Width 1 /Height 16384 /ImageMask true /BitsPerComponent 1", new byte[16384]));
         var page = PdfDocument.Open(source).GetPage(1);
         Assert.Null(page.Images[0].Decode());
-        Assert.NotEmpty(PdfRenderer.Render(page, new PdfRenderOptions { Dpi = 72 }).Gaps);
+        Assert.NotEmpty(PdfRenderer.Render(page, new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken).Gaps);
     }
 
     [Fact]
@@ -194,7 +194,7 @@ public sealed class RemainingAuditRegressionTests
         var source = RawPdf.Page("q 50 0 0 50 0 0 cm /Im Do Q", "/XObject << /Im 5 0 R >>", "",
             RawPdf.Stream("/Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Mask 6 0 R", [255, 0, 0]),
             RawPdf.Stream("/Type /XObject /Subtype /Image /Width 1 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8", [255]));
-        var result = PdfRenderer.Render(PdfDocument.Open(source).GetPage(1));
+        var result = PdfRenderer.Render(PdfDocument.Open(source).GetPage(1), null, TestContext.Current.CancellationToken);
         Assert.NotEmpty(result.Gaps);
     }
 
@@ -205,7 +205,7 @@ public sealed class RemainingAuditRegressionTests
             RawPdf.Stream("/Type /XObject /Subtype /Image /Width 2 /Height 1 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Mask 6 0 R", [255, 0, 0, 0, 255, 0]),
             RawPdf.Stream("/Type /XObject /Subtype /Image /Width 2 /Height 1 /ImageMask true /BitsPerComponent 1", [0x00]));
         var redacted = PdfRedactor.Redact(PdfDocument.Open(source), [new PdfRedaction(1, new PdfRectangle(0, 0, 50, 100))]).Pdf;
-        var image = PdfRenderer.Render(PdfDocument.Open(redacted).GetPage(1), new PdfRenderOptions { Dpi = 72 }).Image;
+        var image = PdfRenderer.Render(PdfDocument.Open(redacted).GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken).Image;
         Assert.Equal(((byte)0, (byte)255, (byte)0, (byte)255), image.GetRgba(75, 150));
         Assert.NotEqual(((byte)255, (byte)0, (byte)0, (byte)255), image.GetRgba(25, 150));
     }

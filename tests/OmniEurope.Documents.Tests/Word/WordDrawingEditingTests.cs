@@ -281,10 +281,10 @@ public sealed class WordDrawingEditingTests
     {
         var bytesA = EditedTemplate(withNewDrawings: true);
         var bytesB = WordDocument.Load(bytesA).ToArray();
-        var pdfA = WordToPdf.Convert(bytesA);
-        var pdfB = WordToPdf.Convert(bytesB);
+        var pdfA = WordToPdf.Convert(bytesA, null, TestContext.Current.CancellationToken);
+        var pdfB = WordToPdf.Convert(bytesB, null, TestContext.Current.CancellationToken);
         var comparison = PdfPageComparison.Compare(PdfDocument.Open(pdfA.Pdf), PdfDocument.Open(pdfB.Pdf), 1);
-        var without = PdfPageComparison.Compare(PdfDocument.Open(pdfA.Pdf), PdfDocument.Open(WordToPdf.Convert(EditedTemplate(withNewDrawings: false)).Pdf), 1);
+        var without = PdfPageComparison.Compare(PdfDocument.Open(pdfA.Pdf), PdfDocument.Open(WordToPdf.Convert(EditedTemplate(withNewDrawings: false), null, TestContext.Current.CancellationToken).Pdf), 1);
 
         Assert.Equal(pdfA.Gaps, pdfB.Gaps);
         Assert.DoesNotContain(pdfA.Gaps, gap => gap.Contains("skipped", StringComparison.Ordinal));
@@ -330,7 +330,7 @@ public sealed class WordDrawingEditingTests
         paragraph.InsertDrawing(WordDrawingContent.Ink([new WordInkStroke([(0, 0), (60, 30)], 4, "FF0000")]), new WordDrawingPlacement { OffsetX = 100, OffsetY = 100, Width = 60, Height = 30 });
         paragraph.InsertDrawing(WordDrawingContent.Png(TransparentSquare()), new WordDrawingPlacement { OffsetX = 300, OffsetY = 100, Width = 40, Height = 40 });
 
-        var page = Render(WordToPdf.Convert(editor.ToArray()).Pdf);
+        var page = Render(WordToPdf.Convert(editor.ToArray(), null, TestContext.Current.CancellationToken).Pdf);
 
         // The page is Letter with 72 pt margins, the paragraph starts at (72, 72): the ink box is (172, 172) to (232, 202).
         Assert.True(Painted(page, 195, 180, 210, 195) > 20, "the red diagonal is not at the centre of its box");

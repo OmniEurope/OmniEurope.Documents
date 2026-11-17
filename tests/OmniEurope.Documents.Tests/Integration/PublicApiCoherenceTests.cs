@@ -102,7 +102,7 @@ public sealed class PublicApiCoherenceTests
         var loaded = WordDocument.Load(document.ToArray());
         var originalRows = ((WordTable)loaded.Blocks.Single()).Rows.Count;
 
-        var views = new[] { loaded.Text, WordToHtml.Convert(loaded).Html, MarkdownToWord.Convert(WordToMarkdown.Convert(loaded).Markdown).Text, PdfDocument.Open(WordToPdf.Convert(loaded).Pdf).GetPage(1).Text };
+        var views = new[] { loaded.Text, WordToHtml.Convert(loaded).Html, MarkdownToWord.Convert(WordToMarkdown.Convert(loaded).Markdown).Text, PdfDocument.Open(WordToPdf.Convert(loaded, null, TestContext.Current.CancellationToken).Pdf).GetPage(1).Text };
 
         foreach (var view in views)
         {
@@ -153,7 +153,7 @@ public sealed class PublicApiCoherenceTests
         Assert.Equal(18.0032, page.Letters[1].X, 3);
         Assert.Equal(12, page.Letters[2].FontSize);
         Assert.Equal(2, page.Letters[0].RenderingMode);
-        Assert.Empty(PdfRenderer.Render(page).Gaps);
+        Assert.Empty(PdfRenderer.Render(page, null, TestContext.Current.CancellationToken).Gaps);
     }
 
     [Fact]

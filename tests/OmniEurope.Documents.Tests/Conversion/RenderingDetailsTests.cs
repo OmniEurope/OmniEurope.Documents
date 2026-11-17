@@ -96,7 +96,7 @@ public sealed class RenderingDetailsTests
         paragraph.AddText("surligné", new WordRunProperties { Highlight = "green" });
         paragraph.Add(new WordHyperlink("https://example.org/", "lien"));
 
-        var page = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1);
+        var page = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf).GetPage(1);
 
         Assert.Contains("CAPITALES", page.Text);
         Assert.Contains("PETITES CAPITALES", page.Text);
@@ -118,7 +118,7 @@ public sealed class RenderingDetailsTests
         document.AddTable(table);
         document.AddParagraph("Après");
 
-        var page = PdfDocument.Open(WordToPdf.Convert(document).Pdf).GetPage(1);
+        var page = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf).GetPage(1);
 
         var lastMerged = page.Letters.Where(l => l.Value == "6").Min(l => l.Y);
         var after = page.Letters.First(l => l.Value == "A").Y;

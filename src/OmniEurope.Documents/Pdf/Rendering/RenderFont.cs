@@ -16,6 +16,9 @@ internal sealed class RenderContext(FontLibrary fonts)
 
     public GapSet Gaps { get; } = new();
 
+    /// <summary>Checked every <see cref="PageRenderer.CancellationBatch"/> operators of a content stream.</summary>
+    public CancellationToken CancellationToken { get; init; }
+
     public void Gap(DocumentGap gap) => Gaps.Add(gap);
 
     public RenderFont Font(PdfObjectStore store, PdfDictionary dictionary)

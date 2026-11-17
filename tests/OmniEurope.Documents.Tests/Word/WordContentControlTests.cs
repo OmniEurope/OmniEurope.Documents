@@ -305,7 +305,7 @@ public sealed class WordContentControlTests
         Assert.Contains("document.main+xml", DocxFactory.Part(bytes, "[Content_Types].xml"), StringComparison.Ordinal);
         Assert.DoesNotContain("template.main+xml", DocxFactory.Part(bytes, "[Content_Types].xml"), StringComparison.Ordinal);
         var document = WordDocument.Load(bytes);
-        var pdf = WordToPdf.Convert(document).Pdf;
+        var pdf = WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf;
         var text = PdfDocument.Open(pdf).GetPage(1).Text;
         Assert.Contains("01/03/2026", text, StringComparison.Ordinal);
         Assert.Contains("31/03/2026", text, StringComparison.Ordinal);
@@ -371,7 +371,7 @@ public sealed class WordContentControlTests
         Assert.All(editor.ContentControls(), c => Assert.False(c.ShowingPlaceholder));
         var reopened = WordEditor.Open(editor.ToDocumentArray());
         Assert.All(reopened.ContentControls().Where(c => c.Kind == WordContentControlKind.Date), c => Assert.Equal("01/03/2026", c.Text));
-        Assert.NotEmpty(WordToPdf.Convert(WordDocument.Load(editor.ToDocumentArray())).Pdf);
+        Assert.NotEmpty(WordToPdf.Convert(WordDocument.Load(editor.ToDocumentArray()), null, TestContext.Current.CancellationToken).Pdf);
     }
 
     private static WordEditor ListEditor(string kind, bool placeholder = false)
@@ -405,7 +405,7 @@ public sealed class WordContentControlTests
         Assert.DoesNotContain("showingPlcHdr", xml, StringComparison.Ordinal);
         Assert.DoesNotContain("PlaceholderText", xml, StringComparison.Ordinal);
         Assert.Matches("<w:b ?/>", xml);
-        Assert.Contains("Bleu ciel", PdfDocument.Open(WordToPdf.Convert(WordDocument.Load(editor.ToDocumentArray())).Pdf).GetPage(1).Text, StringComparison.Ordinal);
+        Assert.Contains("Bleu ciel", PdfDocument.Open(WordToPdf.Convert(WordDocument.Load(editor.ToDocumentArray()), null, TestContext.Current.CancellationToken).Pdf).GetPage(1).Text, StringComparison.Ordinal);
     }
 
     [Theory]

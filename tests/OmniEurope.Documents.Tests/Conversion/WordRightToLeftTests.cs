@@ -162,7 +162,7 @@ public sealed class WordRightToLeftTests
     [Fact]
     public void Arabic_text_is_reported_as_drawn_without_joining_forms()
     {
-        var gaps = WordToPdf.Convert(Document(new WordParagraph("بت 12"))).Gaps;
+        var gaps = WordToPdf.Convert(Document(new WordParagraph("بت 12")), null, TestContext.Current.CancellationToken).Gaps;
 
         Assert.Contains("Arabic letters drawn without joining forms", gaps);
     }

@@ -57,7 +57,7 @@ public sealed class Jbig2PdfTests
         var pdf = Pdf([1, 2, 3], null);
 
         var document = PdfDocument.Open(pdf);
-        var rendering = PdfRenderer.Render(document.GetPage(1), new PdfRenderOptions { Dpi = 72 });
+        var rendering = PdfRenderer.Render(document.GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken);
 
         Assert.Null(Assert.Single(document.GetPage(1).Images).Decode());
         Assert.Contains("images in an unsupported format are not drawn", rendering.Gaps);
@@ -75,7 +75,7 @@ public sealed class Jbig2PdfTests
             string.Empty,
             RawPdf.Stream("/Type /XObject /Subtype /Image /Width 2 /Height 1 /ImageMask true /Filter /JBIG2Decode", stream.ToArray()));
 
-        var page = PdfRenderer.Render(PdfDocument.Open(pdf).GetPage(1), new PdfRenderOptions { Dpi = 72 }).Image;
+        var page = PdfRenderer.Render(PdfDocument.Open(pdf).GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken).Image;
 
         Assert.Equal((0, 0, 255, 255), page.GetRgba(0, 199));
         Assert.Equal((255, 255, 255, 255), page.GetRgba(1, 199));

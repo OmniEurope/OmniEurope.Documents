@@ -70,7 +70,7 @@ public sealed class PdfWorkflowTests
         var rotated = PdfEditor.RotatePages(PdfDocument.Open(original), [1], 90);
         var page = PdfDocument.Open(rotated).GetPage(1);
         Assert.Equal(90, page.Rotation);
-        var image = PdfRenderer.Render(page, new PdfRenderOptions { Dpi = 36 }).Image;
+        var image = PdfRenderer.Render(page, new PdfRenderOptions { Dpi = 36 }, TestContext.Current.CancellationToken).Image;
         Assert.True(image.Width > image.Height);
         Assert.Contains("Rapport page 1", page.Text, StringComparison.Ordinal);
 

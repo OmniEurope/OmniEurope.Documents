@@ -102,7 +102,7 @@ public sealed class PdfCanvasTests
 
         var pdf = PdfDocument.Open(document.ToArray());
         var letters = pdf.GetPage(1).Letters;
-        var image = PdfRenderer.Render(pdf.GetPage(1), new PdfRenderOptions { Dpi = 72 }).Image;
+        var image = PdfRenderer.Render(pdf.GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken).Image;
 
         Assert.Equal(page.MeasureText("AB", PdfFont.Sans, 10), upwards, 3);
         Assert.Equal(page.MeasureText("CD", PdfFont.Sans, 10, 1), downwards, 3);
@@ -164,7 +164,7 @@ public sealed class PdfCanvasTests
         flow.Finish();
 
         var pdf = PdfDocument.Open(document.ToArray());
-        var image = PdfRenderer.Render(pdf.GetPage(1), new PdfRenderOptions { Dpi = 72 }).Image;
+        var image = PdfRenderer.Render(pdf.GetPage(1), new PdfRenderOptions { Dpi = 72 }, TestContext.Current.CancellationToken).Image;
         var first = pdf.GetPage(1).Letters;
 
         Assert.Equal(2, pdf.PageCount);

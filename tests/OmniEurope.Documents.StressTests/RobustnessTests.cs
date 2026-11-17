@@ -76,7 +76,7 @@ public sealed class RobustnessTests
     [Fact]
     public async Task Damaged_pdf_files_fail_cleanly()
     {
-        var sources = new[] { SampleDocuments.MergedPdf(), WordToPdf.Convert(SampleDocuments.Report()).Pdf, Fixture("Pdf", "browser.pdf") };
+        var sources = new[] { SampleDocuments.MergedPdf(), WordToPdf.Convert(SampleDocuments.Report(), null, TestContext.Current.CancellationToken).Pdf, Fixture("Pdf", "browser.pdf") };
         var inputs = sources.SelectMany((s, i) => Damage.Bytes(s, 300, 20 + i));
 
         await Survive(inputs, (bytes, i) =>

@@ -61,8 +61,8 @@ public sealed class ConvertersTests
     [Fact]
     public void Html_and_markdown_reach_pdf_with_their_text()
     {
-        var html = HtmlToPdf.Convert("<h2>Rapport HTML</h2><p>Contenu <em>accentué</em> : été, Ωμέγα.</p>");
-        var markdown = MarkdownToPdf.Convert("# Rapport Markdown\n\nTexte **gras** et `code`.\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n- [x] fait\n- [ ] à faire\n\n<script>x</script>");
+        var html = HtmlToPdf.Convert("<h2>Rapport HTML</h2><p>Contenu <em>accentué</em> : été, Ωμέγα.</p>", null, TestContext.Current.CancellationToken);
+        var markdown = MarkdownToPdf.Convert("# Rapport Markdown\n\nTexte **gras** et `code`.\n\n| A | B |\n|---|---|\n| 1 | 2 |\n\n- [x] fait\n- [ ] à faire\n\n<script>x</script>", null, null, TestContext.Current.CancellationToken);
 
         var htmlText = PdfDocument.Open(html.Pdf).GetPage(1).Text;
         var markdownText = PdfDocument.Open(markdown.Pdf).GetPage(1).Text;
@@ -97,7 +97,7 @@ public sealed class ConvertersTests
             wide.Cell(1, c).Value = "Col" + c;
         }
 
-        var result = ExcelToPdf.Convert(workbook.ToArray());
+        var result = ExcelToPdf.Convert(workbook.ToArray(), null, TestContext.Current.CancellationToken);
 
         var pdf = PdfDocument.Open(result.Pdf);
         Assert.Equal(2, pdf.PageCount);
@@ -107,7 +107,7 @@ public sealed class ConvertersTests
         Assert.Contains("Total fusionné", text);
         Assert.True(pdf.GetPage(2).Width > pdf.GetPage(2).Height);
         Assert.Contains("Col14", pdf.GetPage(2).Text);
-        var table = ExcelToPdf.ToWord(workbook).Blocks.OfType<WordTable>().First();
+        var table = ExcelToPdf.ToWord(workbook, null, TestContext.Current.CancellationToken).Blocks.OfType<WordTable>().First();
         Assert.True(table.Rows[0].Properties.IsHeader);
         Assert.Equal(2, table.Rows[2].Cells[0].Properties.GridSpan);
         Assert.Equal("DDEBF7", table.Rows[0].Cells[0].Properties.Shading);
@@ -123,7 +123,7 @@ public sealed class ConvertersTests
         sheet.Cell("XFD1048576").Value = "fin";
         var xlsx = workbook.ToArray();
 
-        var error = Assert.Throws<DocumentFormatException>(() => ExcelToPdf.Convert(xlsx));
+        var error = Assert.Throws<DocumentFormatException>(() => ExcelToPdf.Convert(xlsx, null, TestContext.Current.CancellationToken));
         Assert.Contains("17,179,869,184 cells", error.Message, StringComparison.Ordinal);
         Assert.Contains(nameof(ExcelPdfOptions.MaxCells), error.Message, StringComparison.Ordinal);
     }
@@ -139,8 +139,8 @@ public sealed class ConvertersTests
             sheet.Cell("K11").Value = 2;
         }
 
-        Assert.Throws<DocumentFormatException>(() => ExcelToPdf.ToWord(workbook, new ExcelPdfOptions { MaxCells = 199 }));
-        Assert.Equal(2, ExcelToPdf.ToWord(workbook, new ExcelPdfOptions { MaxCells = 200 }).Blocks.OfType<WordTable>().Count());
+        Assert.Throws<DocumentFormatException>(() => ExcelToPdf.ToWord(workbook, new ExcelPdfOptions { MaxCells = 199 }, TestContext.Current.CancellationToken));
+        Assert.Equal(2, ExcelToPdf.ToWord(workbook, new ExcelPdfOptions { MaxCells = 200 }, TestContext.Current.CancellationToken).Blocks.OfType<WordTable>().Count());
     }
 
     [Fact]
