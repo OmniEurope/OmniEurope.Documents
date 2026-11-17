@@ -70,7 +70,8 @@ public sealed class ExcelWorkflowTests
         Assert.Equal(new XlsxRange(1, 1, rows.Count, 6), imported.AutoFilter);
         Assert.Equal(1234.5, imported.Cell("B3").Value);
         Assert.Equal(XlsxValueType.Text, imported.Cell("C3").ValueType);
-        Assert.Equal("=cmd|' /C calc'!A0", imported.Cell("A5").Value);
+        // Exported without options, the formula text comes back neutralised: it stays text.
+        Assert.Equal("'=cmd|' /C calc'!A0", imported.Cell("A5").Value);
     }
 
     [Fact]

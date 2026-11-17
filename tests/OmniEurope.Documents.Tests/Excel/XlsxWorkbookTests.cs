@@ -177,6 +177,27 @@ public sealed class XlsxWorkbookTests
     }
 
     [Fact]
+    public void Csv_export_neutralises_formula_text_by_default_but_never_a_number()
+    {
+        var workbook = new XlsxWorkbook();
+        var sheet = workbook.AddWorksheet("Export");
+        sheet.Cell("A1").Value = "=HYPERLINK(\"http://x\",\"y\")";
+        sheet.Cell("B1").Value = "@SUM(1)";
+        sheet.Cell("C1").Value = -12.5;
+        sheet.Cell("D1").Value = "-2+3";
+        sheet.Cell("E1").Value = "plain";
+        var french = System.Globalization.CultureInfo.GetCultureInfo("fr-FR");
+
+        var neutral = XlsxCsvConverter.ToCsv(sheet, culture: french);
+        var raw = XlsxCsvConverter.ToCsv(sheet, new CsvWriterOptions { Delimiter = ';' }, french);
+        var chosen = XlsxCsvConverter.ToCsv(sheet, new CsvWriterOptions { Delimiter = ';', NeutralizeFormulas = true }, french);
+
+        Assert.Equal("\"'=HYPERLINK(\"\"http://x\"\",\"\"y\"\")\",'@SUM(1),\"-12,5\",'-2+3,plain\r\n", neutral);
+        Assert.Equal("\"=HYPERLINK(\"\"http://x\"\",\"\"y\"\")\";@SUM(1);-12,5;-2+3;plain\r\n", raw);
+        Assert.Equal("\"'=HYPERLINK(\"\"http://x\"\",\"\"y\"\")\";'@SUM(1);-12,5;'-2+3;plain\r\n", chosen);
+    }
+
+    [Fact]
     public void A_sparse_giant_sheet_is_refused_before_any_csv_is_written()
     {
         var workbook = new XlsxWorkbook();

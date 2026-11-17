@@ -4,7 +4,28 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ## [Unreleased]
 
+### Changed
+
+- `XlsxCsvConverter.WriteCsv` and `ToCsv` called without options now neutralise text a spreadsheet would run as a
+  formula (prefixed with an apostrophe, CSV injection); numbers are never prefixed, whatever the culture. Pass
+  `CsvWriterOptions` to choose (`NeutralizeFormulas` stays off by default in `CsvWriter`).
+- The build enforces the code style rules of `.editorconfig`.
+
 ### Fixed
+
+- PDF redaction removes the page thumbnail (`/Thumb`) of every redacted page: it showed the page before redaction.
+- A JPEG 2000 file with a header box nested in another is refused (`InvalidDataException`) instead of recursing
+  without bound.
+- Damaged Flate data is recovered in large reads up to the damage, then byte by byte, instead of byte by byte
+  from the start.
+- An encrypted PDF whose `OE` or `UE` entry is shorter than 32 bytes is reported as damaged data
+  (`InvalidDataException`) instead of a cryptographic exception.
+- Excel wildcard criteria (`COUNTIF`, `SUMIF`, `MATCH`, `SEARCH`...) match without backtracking, in linear time;
+  a pathological pattern could time out and stop the whole recalculation. The pattern is built once per criterion.
+- Word to PDF: a table row that cannot split but is taller than a page breaks across pages, as in Word, instead of
+  running under the footer.
+- Word to PDF: an inline picture taller than an exact line height grows its line instead of covering the lines
+  above it.
 
 - Numbers written into PDF content and HTML styles are the same on .NET 10 and .NET 11 at a rounding midpoint
   (`Math.Round(double, digits)` changed there in .NET 11); on .NET 10 a midpoint such as 1.005 pt now writes `1.01pt`.

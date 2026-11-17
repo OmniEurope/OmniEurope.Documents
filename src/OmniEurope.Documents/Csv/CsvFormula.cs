@@ -17,7 +17,10 @@ public static class CsvFormula
     private static readonly SearchValues<char> FormulaSigns = SearchValues.Create("=+-@");
 
     /// <summary>True when a spreadsheet would read <paramref name="value"/> as a formula.</summary>
-    public static bool IsDangerous(ReadOnlySpan<char> value)
+    public static bool IsDangerous(ReadOnlySpan<char> value) => IsDangerous(value, signedNumber: false);
+
+    // With signedNumber, the value is a number written by a number format: a leading + or - is its sign, not a formula.
+    internal static bool IsDangerous(ReadOnlySpan<char> value, bool signedNumber)
     {
         if (value.IsEmpty)
         {
@@ -37,9 +40,10 @@ public static class CsvFormula
         }
 
         // A formula sign, unless the whole value is a plain number such as -12.5 or +3.
-        return start < value.Length && FormulaSigns.Contains(value[start])
+        return start < value.Length && FormulaSigns.Contains(value[start]) && !(signedNumber && value[start] is '+' or '-')
             && !double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out _);
     }
+
     /// <summary>Returns <paramref name="value"/> prefixed with an apostrophe when it is dangerous.</summary>
     public static string Neutralize(string value)
     {

@@ -14,3 +14,9 @@
 - 2026-11-11 : plans : PLAN-007, PLAN-009 et PLAN-010 terminés, archivés.
 - 2026-11-11 : publication : 1.2.0 publiée (main df96d32, tag v1.2.0, release GitHub, push NuGet accepté).
 - 2026-11-17 : tests : la suite de stress (`-ta`, StressTests) ne tourne jamais sur l hote, uniquement dans un conteneur Docker limite ; regle globale.
+- 2026-11-17 : Excel vers CSV : formules neutralisées par défaut dans XlsxCsvConverter quand l'appelant ne passe pas d'options ; CsvWriter garde son défaut ; nombres mis en forme selon la culture jamais préfixés.
+- 2026-11-17 : historique git : purge de .claude/audit de tout l'historique (main, develop, tags) demandée.
+- 2026-11-17 : PdfDocument.Open(Stream) : paramètre optionnel maxLength, 1 Gio par défaut, InvalidDataException au-delà.
+- 2026-11-17 : PackageLimits : défauts conservés, paragraphe « usage serveur » au README.
+- 2026-11-17 : annulation : surcharges avec CancellationToken sur les conversions longues et le rendu PDF.
+- 2026-11-17 : suite de stress : lanceur Docker limité (processeurs et mémoire bornés), seule façon de lancer -ta.

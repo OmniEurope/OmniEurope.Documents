@@ -96,7 +96,10 @@ public sealed class CsvWriter : IDisposable, IAsyncDisposable
     }
 
     /// <summary>Writes one field of the current record.</summary>
-    public void WriteField(string? value)
+    public void WriteField(string? value) => WriteField(value, _options.NeutralizeFormulas);
+
+    // Writes one field, neutralised when asked: a caller that knows what the value is decides for it.
+    internal void WriteField(string? value, bool neutralize)
     {
         if (_fieldWritten)
         {
@@ -105,7 +108,7 @@ public sealed class CsvWriter : IDisposable, IAsyncDisposable
 
         _fieldWritten = true;
         var text = value ?? string.Empty;
-        if (_options.NeutralizeFormulas)
+        if (neutralize)
         {
             text = CsvFormula.Neutralize(text);
         }

@@ -7,9 +7,15 @@ namespace OmniEurope.Documents.Excel;
 /// <summary>Conversions between worksheets and CSV.</summary>
 public static class XlsxCsvConverter
 {
+    // Without options, text a spreadsheet would run as a formula is neutralised (CSV injection).
+    private static readonly CsvWriterOptions Neutralizing = new() { NeutralizeFormulas = true };
+
     /// <summary>
     /// Writes the used range of <paramref name="sheet"/> as CSV, each cell as Excel displays it (number
     /// formats applied with <paramref name="culture"/>, invariant by default). Formulas give their last result.
+    /// Without <paramref name="options"/>, a text a spreadsheet would run as a formula (<c>=</c>, <c>+</c>,
+    /// <c>-</c>, <c>@</c>) is prefixed with an apostrophe (<see cref="CsvFormula"/>); numbers never are. Options
+    /// given decide through <see cref="CsvWriterOptions.NeutralizeFormulas"/>.
     /// A used range of more than <paramref name="maxCells"/> cells, empty ones included (a sheet holding only
     /// <c>A1</c> and <c>XFD1048576</c> spans 17 billion), throws <see cref="DocumentFormatException"/> before
     /// anything is written.
@@ -30,12 +36,17 @@ public static class XlsxCsvConverter
             throw new DocumentFormatException(string.Create(CultureInfo.InvariantCulture, $"The used range {range} holds {cells:N0} cells, more than the {maxCells:N0} allowed by {nameof(maxCells)}."));
         }
 
+        options ??= Neutralizing;
         using var csv = new CsvWriter(output, options, leaveOpen: true);
         for (var row = range.FirstRow; row <= range.LastRow; row++)
         {
             for (var column = range.FirstColumn; column <= range.LastColumn; column++)
             {
-                csv.WriteField(sheet.FindCell(row, column)?.FormatValue(culture) ?? string.Empty);
+                var cell = sheet.FindCell(row, column);
+                var text = cell?.FormatValue(culture) ?? string.Empty;
+
+                // A number keeps its sign in any culture (-12,5 is not a formula); text is checked in full.
+                csv.WriteField(text, options.NeutralizeFormulas && CsvFormula.IsDangerous(text, signedNumber: cell is { ValueType: not XlsxValueType.Text }));
             }
 
             csv.NextRecord();
