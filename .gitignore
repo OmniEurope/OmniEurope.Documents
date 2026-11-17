@@ -9,3 +9,6 @@ TestResults/
 coverage/
 *.nupkg
 *.snupkg
+
+# Local agent state (review reports, handoffs) is never published.
+.claude/audit/
