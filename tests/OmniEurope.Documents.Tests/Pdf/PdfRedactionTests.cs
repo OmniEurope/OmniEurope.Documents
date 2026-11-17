@@ -190,6 +190,25 @@ public sealed class PdfRedactionTests
     }
 
     [Fact]
+    public void A_redacted_page_loses_its_thumbnail_and_an_untouched_page_keeps_it()
+    {
+        static byte[] WithThumbnail() => RawPdf.Page(
+            "BT /F1 12 Tf 10 100 Td (Name: ) Tj (SECRET42) Tj ET",
+            "/Font << /F1 5 0 R >>",
+            "/Thumb 6 0 R",
+            "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+            RawPdf.Stream("/Width 11 /Height 1 /ColorSpace /DeviceGray /BitsPerComponent 8", RawPdf.Ascii("THUMBSECRET")));
+
+        var redacted = PdfRedactor.Redact(PdfDocument.Open(WithThumbnail()), [new PdfRedaction(1, LineArea)]);
+        var untouched = PdfRedactor.Redact(PdfDocument.Open(WithThumbnail()), []);
+
+        Assert.Equal("SECRET42", redacted.RemovedText);
+        Assert.Null(PdfDocument.Open(redacted.Pdf).GetPage(1).Dictionary["Thumb"]);
+        Assert.DoesNotContain("THUMBSECRET", Everything(redacted.Pdf), StringComparison.Ordinal);
+        Assert.Contains("THUMBSECRET", Everything(untouched.Pdf), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Metadata_goes_only_on_request_and_other_pages_are_copied_unchanged()
     {
         var builder = new PdfDocumentBuilder { Title = "Board minutes", Author = "Clerk" };

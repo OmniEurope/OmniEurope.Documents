@@ -112,6 +112,9 @@ public static class PdfRedactor
         {
             entries.Set("Contents", Register(RedactionContext.Compressed(Painted(body, areas, options.Fill))));
             entries.Set("Annots", Annotations(store, page, areas, totals));
+
+            // The thumbnail is a picture of the page before redaction.
+            entries.Remove("Thumb");
             if (ContentStreamReader.Read(body).Any(o => PathOperators.Contains(o.Operator)))
             {
                 context.Gaps.Add(DocumentGap.Of(RedactGapCodes.RedactVectorsPaintedOver));

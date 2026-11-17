@@ -154,6 +154,41 @@ public sealed class Jpeg2000StructureTests
         Assert.True(decoded >= 8, $"only {decoded} cuts decoded");
     }
 
+    [Fact]
+    public void A_header_box_inside_a_header_box_is_refused()
+    {
+        var data = SignedBoxes([.. JpxBox("jp2h", JpxBox("jp2h", [])), .. JpxBox("jp2c", [0xFF, 0x4F])]);
+
+        var error = Assert.Throws<InvalidDataException>(() => Jp2File.Read(data));
+        Assert.Contains("nested", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Deeply_nested_header_boxes_are_refused_without_exhausting_the_stack()
+    {
+        const int depth = 200_000;
+        var nested = new byte[8 * depth];
+        for (var level = 0; level < depth; level++)
+        {
+            System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(nested.AsSpan(8 * level), (uint)(8 * (depth - level)));
+            "jp2h"u8.CopyTo(nested.AsSpan((8 * level) + 4));
+        }
+
+        Assert.Throws<InvalidDataException>(() => Jp2File.Read(SignedBoxes(nested)));
+    }
+
+    // A JP2 file: the signature box, then the boxes given.
+    private static byte[] SignedBoxes(byte[] boxes) => [0, 0, 0, 12, .. "jP  "u8, 0x0D, 0x0A, 0x87, 0x0A, .. boxes];
+
+    private static byte[] JpxBox(string type, byte[] content)
+    {
+        var box = new byte[8 + content.Length];
+        System.Buffers.Binary.BinaryPrimitives.WriteUInt32BigEndian(box, (uint)box.Length);
+        System.Text.Encoding.ASCII.GetBytes(type).CopyTo(box, 4);
+        content.CopyTo(box, 8);
+        return box;
+    }
+
     // A one-component tile-component of 16 by 16 samples with the given number of decomposition levels.
     private static J2kTileComponent Component(int levels)
     {

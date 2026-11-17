@@ -100,7 +100,7 @@ internal static class Jp2File
     public static Jp2Header Read(byte[] data)
     {
         var header = new Jp2Header();
-        ReadBoxes(data, 0, data.Length, header);
+        ReadBoxes(data, 0, data.Length, header, inHeader: false);
         if (header.CodestreamStart < 0)
         {
             throw new InvalidDataException("The JPEG 2000 file holds no codestream.");
@@ -109,7 +109,8 @@ internal static class Jp2File
         return header;
     }
 
-    private static void ReadBoxes(byte[] data, int start, int end, Jp2Header header)
+    // The header box is a superbox of the file only: one inside another is refused, so the recursion stays one deep.
+    private static void ReadBoxes(byte[] data, int start, int end, Jp2Header header, bool inHeader)
     {
         var at = start;
         while (at + 8 <= end && header.CodestreamStart < 0)
@@ -117,8 +118,10 @@ internal static class Jp2File
             var (type, contentStart, boxEnd) = Box(data, at, end);
             switch (type)
             {
+                case HeaderBox when inHeader:
+                    throw new InvalidDataException("The JPEG 2000 file holds a nested header box.");
                 case HeaderBox:
-                    ReadBoxes(data, contentStart, boxEnd, header);
+                    ReadBoxes(data, contentStart, boxEnd, header, inHeader: true);
                     break;
                 case CodestreamBox:
                     header.CodestreamStart = contentStart;
