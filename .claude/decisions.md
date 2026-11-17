@@ -22,3 +22,4 @@
 - 2026-11-17 : suite de stress : lanceur Docker limité (processeurs et mémoire bornés), seule façon de lancer -ta.
 - 2026-11-17 : semi-gras (poids 600) dans la mise en page PDF : simulé (contour du glyphe), pas de nouvelle police.
 - 2026-11-17 : découplage Fonts vers Conversion et Charts vers Excel : reporté, inscrit dans PLAN-008.
+- 2026-11-17 : version : publication 1.3.0 (version du milieu augmentée).

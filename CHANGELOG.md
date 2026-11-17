@@ -4,6 +4,8 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-17
+
 ### Added
 
 - Cancellation: `WordToPdf.Convert`, `ExcelToPdf.Convert` and `ToWord`, `HtmlToPdf.Convert`, `MarkdownToPdf.Convert`,
