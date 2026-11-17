@@ -19,7 +19,7 @@ public sealed class WordTableCantSplitTests
         // 52 lines of 20 are 1040, about 1.5 times the 700.1 an A4 page body holds.
         var document = Document(fillers: 0, paragraphs: 52);
 
-        var pdf = PdfDocument.Open(WordToPdf.Convert(document).Pdf);
+        var pdf = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf);
 
         Assert.True(pdf.PageCount >= 2, $"the row stayed on {pdf.PageCount} page(s)");
         var all = string.Join('\n', Enumerable.Range(1, pdf.PageCount).Select(n => pdf.GetPage(n).Text));
@@ -43,7 +43,7 @@ public sealed class WordTableCantSplitTests
         // 33 lines leave 40.1 of the page; the row of 10 lines (200) fits a page, not this space.
         var document = Document(fillers: 33, paragraphs: 10);
 
-        var pdf = PdfDocument.Open(WordToPdf.Convert(document).Pdf);
+        var pdf = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf);
 
         Assert.Equal(2, pdf.PageCount);
         Assert.DoesNotContain("Para ", pdf.GetPage(1).Text);
