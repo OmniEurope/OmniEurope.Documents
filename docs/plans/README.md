@@ -9,6 +9,7 @@ un plan décrit un travail, pas l'état du produit.
 - Format obligatoire : `PLAN-NNN-description-minimale.md`.
 - `NNN` est dense et suit l'ordre du registre ci-dessous.
 - Un plan terminé est déplacé dans `archive/` ; il garde son numéro.
+- `PLAN-008` est un numéro réservé, hors numérotation dense : son absence du registre est voulue.
 
 ## Plans actifs
 

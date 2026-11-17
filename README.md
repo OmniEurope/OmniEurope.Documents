@@ -116,6 +116,15 @@ One package, one namespace per format, conversions on their own:
   HTML and Markdown to Word or PDF, images to PDF; `WordFieldUpdater`: tables of contents and fields updated from
   the layout)
 
+Shared building blocks the formats rely on, public for direct use:
+
+- `OmniEurope.Documents.Fonts` (`TrueTypeFont`, `TrueTypeSubsetter`, `FontLibrary`: font reading, subsetting and the
+  shipped font set)
+- `OmniEurope.Documents.Charts` (`Chart`, `ChartSeries`: the chart model shared by Excel and Word)
+- `OmniEurope.Documents.Imaging` (`ImageDecoder`, `PngCodec`, `JpegEncoder`, `ImageScaler`, `RasterImage`: image
+  codecs and rasters)
+- `OmniEurope.Documents.Text` (`TextEncodingDetector`, `Windows1252Encoding`: text encoding detection)
+
 ## Requirements
 
 The package targets `net10.0` and `net11.0`. Building it from source needs the .NET SDK 11.0.100 or later (`global.json`).
