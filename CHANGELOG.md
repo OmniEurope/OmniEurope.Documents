@@ -6,6 +6,10 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ### Added
 
+- Cancellation: `WordToPdf.Convert`, `ExcelToPdf.Convert` and `ToWord`, `HtmlToPdf.Convert`, `MarkdownToPdf.Convert`,
+  `PdfRenderer.Render` and `RenderToPng` gain overloads taking a `CancellationToken`, checked per block and page
+  laid out, per worksheet, and every 256 content-stream operators; a cancelled run throws
+  `OperationCanceledException` and returns nothing. The existing signatures are unchanged.
 - `PdfDocument.Open(Stream, string?, long maxLength)`: a stream longer than the limit is refused
   (`InvalidDataException`) before more than the limit is held; a seekable stream is read straight into an array of
   its size.
