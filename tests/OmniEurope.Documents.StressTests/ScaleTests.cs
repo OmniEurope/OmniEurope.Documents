@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: EUPL-1.2
-using System.Diagnostics;
 using System.Globalization;
 using OmniEurope.Documents.Conversion;
 using OmniEurope.Documents.Csv;
@@ -155,11 +154,12 @@ public sealed class ScaleTests
         Assert.All(parallel, r => Assert.Equal(expected[r.Index], r.Bytes));
     }
 
+    // The processor time of the calling thread (the library runs no work on other threads), so that a limit measures
+    // the code under test and not how many other tests share the machine.
     private static (T Result, TimeSpan Elapsed) Timed<T>(Func<T> work)
     {
-        var watch = Stopwatch.StartNew();
-        var result = work();
-        TestContext.Current.SendDiagnosticMessage($"{watch.Elapsed.TotalMilliseconds:N0} ms");
-        return (result, watch.Elapsed);
+        var (result, time) = ThreadCpuTime.Measure(work);
+        TestContext.Current.SendDiagnosticMessage($"{time.TotalMilliseconds:N0} ms of processor time");
+        return (result, time);
     }
 }

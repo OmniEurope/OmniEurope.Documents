@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: EUPL-1.2
-using System.Diagnostics;
 using OmniEurope.Documents.Pdf;
 using OmniEurope.Documents.Tests;
 
@@ -20,11 +19,10 @@ public sealed class Jbig2ScaleTests
         var sample = Assert.Single(Jbig2Conformance.Samples("Large"), s => s.File == file);
         var (globals, data) = Jbig2Conformance.Embedded(sample);
         var (width, height, pixels) = Jbig2Conformance.Expected(sample);
-        var watch = Stopwatch.StartNew();
 
-        var raster = Assert.Single(PdfDocument.Open(Jbig2Conformance.Pdf(data, globals, width, height)).GetPage(1).Images).Decode()!;
+        var (raster, time) = ThreadCpuTime.Measure(() => Assert.Single(PdfDocument.Open(Jbig2Conformance.Pdf(data, globals, width, height)).GetPage(1).Images).Decode()!);
 
-        Assert.True(watch.Elapsed < TimeSpan.FromSeconds(10), $"{file} took {watch.Elapsed}");
+        Assert.True(time < TimeSpan.FromSeconds(10), $"{file} took {time} of processor time");
         Assert.Equal(pixels.Select(p => p == 1 ? (byte)0 : (byte)255), raster.Pixels);
     }
 }
