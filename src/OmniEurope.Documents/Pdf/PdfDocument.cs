@@ -88,6 +88,8 @@ public sealed class PdfDocument
     }
 
     /// <summary>Opens a PDF from a stream (read to its end).</summary>
+    /// <exception cref="InvalidDataException">The data is not a readable PDF.</exception>
+    /// <exception cref="PdfPasswordException">The password does not open the encrypted file.</exception>
     public static PdfDocument Open(Stream stream, string? password = null)
     {
         ArgumentNullException.ThrowIfNull(stream);

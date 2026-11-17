@@ -141,6 +141,18 @@ public sealed class PdfEncryptionTests
     }
 
     [Theory]
+    [InlineData("UE", "user")]
+    [InlineData("OE", "owner")]
+    public void A_short_file_key_entry_is_reported_as_damaged_data(string entry, string password)
+    {
+        var text = Encoding.Latin1.GetString(Protected(new PdfEncryption("user", "owner")));
+        var altered = System.Text.RegularExpressions.Regex.Replace(text, $"/{entry} <[0-9A-F]+>", $"/{entry} <0011>");
+        Assert.NotEqual(text, altered);
+
+        Assert.Throws<InvalidDataException>(() => PdfDocument.Open(Encoding.Latin1.GetBytes(altered), password));
+    }
+
+    [Theory]
     [InlineData("I\u00ADX", "IX")]
     [InlineData("user", "user")]
     [InlineData("USER", "USER")]

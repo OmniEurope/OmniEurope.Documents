@@ -123,6 +123,28 @@ public sealed class PdfFilterTests
         Assert.Throws<InvalidDataException>(() => PdfFilters.Decode(empty, ["FlateDecode"], []));
     }
 
+    [Fact]
+    public void Large_damaged_deflate_data_is_recovered_in_bounded_time()
+    {
+        // 128 stored blocks of 65535 bytes (about 8 MB), then a final block of the reserved type 3.
+        const int blockLength = 65535;
+        const int blocks = 128;
+        var payload = Enumerable.Range(0, blockLength * blocks).Select(i => (byte)(i * 7)).ToArray();
+        var data = new List<byte>();
+        for (var block = 0; block < blocks; block++)
+        {
+            data.AddRange([0x00, 0xFF, 0xFF, 0x00, 0x00]);
+            data.AddRange(payload.AsSpan(block * blockLength, blockLength).ToArray());
+        }
+
+        data.Add(0x07);
+
+        var (decoded, time) = ThreadCpuTime.Measure(() => PdfFilters.Decode([.. data], ["FlateDecode"], []).Data);
+
+        Assert.Equal(payload[..^1], decoded);
+        Assert.True(time < TimeSpan.FromMilliseconds(200), $"recovery took {time.TotalMilliseconds:N0} ms of processor time");
+    }
+
     private const long Ceiling = 1000;
 
     [Fact]

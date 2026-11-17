@@ -83,29 +83,30 @@ internal static class PdfFilters
         }
 
         // Raw deflate after the header: a bad or missing Adler-32 checksum does not lose the data.
-        var output = Inflate(data, skip, 65536, max, out var damaged);
+        var output = Inflate(data, skip, long.MaxValue, max, out var damaged);
         if (!damaged)
         {
             return output;
         }
 
         // Corrupt data: keep what was decoded, as viewers do. A failing read loses what it had decoded, so the
-        // data is read again one byte at a time (only the byte decoded by the failing read is lost); nothing
-        // decoded at all is an error.
-        var kept = Inflate(data, skip, 1, max, out _);
+        // data is read again: in large reads up to where the first pass failed, then one byte at a time (only the
+        // byte decoded by the failing read is lost); nothing decoded at all is an error.
+        var kept = Inflate(data, skip, output.Length, max, out _);
         return kept.Length > 0 ? kept : throw new InvalidDataException("Damaged FlateDecode data.");
     }
 
-    private static byte[] Inflate(byte[] data, int skip, int chunk, long max, out bool damaged)
+    // Inflates in reads of 64 KiB up to <paramref name="whole"/> bytes, then one byte at a time.
+    private static byte[] Inflate(byte[] data, int skip, long whole, long max, out bool damaged)
     {
         using var input = new DeflateStream(new MemoryStream(data, skip, data.Length - skip), CompressionMode.Decompress);
         using var output = new MemoryStream();
-        var buffer = new byte[chunk];
+        var buffer = new byte[65536];
         damaged = false;
         try
         {
             int n;
-            while ((n = input.Read(buffer, 0, buffer.Length)) > 0)
+            while ((n = input.Read(buffer, 0, output.Length < whole ? (int)Math.Min(buffer.Length, whole - output.Length) : 1)) > 0)
             {
                 Guard(output.Length, n, max);
                 output.Write(buffer, 0, n);

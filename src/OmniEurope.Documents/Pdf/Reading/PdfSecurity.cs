@@ -205,12 +205,12 @@ internal sealed class PdfSecurity
         {
             if (PdfPasswordHash.Compute(bytes, owner[32..40], user[..48], revision).AsSpan().SequenceEqual(owner.AsSpan(0, 32)))
             {
-                return (AesNoIv(PdfPasswordHash.Compute(bytes, owner[40..48], user[..48], revision), ownerKey), true);
+                return (AesNoIv(PdfPasswordHash.Compute(bytes, owner[40..48], user[..48], revision), FileKeyEntry(ownerKey, "OE")), true);
             }
 
             if (PdfPasswordHash.Compute(bytes, user[32..40], [], revision).AsSpan().SequenceEqual(user.AsSpan(0, 32)))
             {
-                return (AesNoIv(PdfPasswordHash.Compute(bytes, user[40..48], [], revision), userKey), false);
+                return (AesNoIv(PdfPasswordHash.Compute(bytes, user[40..48], [], revision), FileKeyEntry(userKey, "UE")), false);
             }
         }
 
@@ -259,6 +259,12 @@ internal sealed class PdfSecurity
             throw new InvalidDataException("The permissions of the encrypted PDF do not match its Perms entry; the file has been altered.");
         }
     }
+
+    // The OE or UE entry: the 32-byte file key encrypted with the password's key.
+    private static byte[] FileKeyEntry(byte[] entry, string name) => entry.Length >= 32
+        ? entry[..32]
+        : throw new InvalidDataException($"The {name} entry of the encrypted PDF is shorter than 32 bytes; the file is damaged.");
+
     private static byte[] AesNoIv(byte[] key, byte[] data)
     {
         using var aes = Aes.Create();
