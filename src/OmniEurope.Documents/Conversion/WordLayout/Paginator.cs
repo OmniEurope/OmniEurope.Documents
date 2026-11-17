@@ -143,14 +143,20 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
 
         if (item.Split(bottom - _y - before - drop) is { } parts)
         {
-            _queue[i] = parts.First;
-            _queue.Insert(i + 1, parts.Remainder);
-            Put(parts.First, i, before + drop);
-            NextColumn(i + 1, natural: true);
-            return i + 1;
+            return PlaceSplit(parts, i, before + drop);
         }
 
         return AtColumnTop() ? TooTall(item, i, before, drop) : Backtrack(i);
+    }
+
+    // Puts the first part of a split item where it stands and sends the remainder to the next column.
+    private int PlaceSplit((FlowItem First, FlowItem Remainder) parts, int i, double before)
+    {
+        _queue[i] = parts.First;
+        _queue.Insert(i + 1, parts.Remainder);
+        Put(parts.First, i, before);
+        NextColumn(i + 1, natural: true);
+        return i + 1;
     }
 
     // A line holding nothing but a page or column break, and the empty paragraph mark that ends a section before a new
@@ -211,6 +217,12 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
             _page.Floats.RemoveAll(f => f.QueueIndex >= i);
             NextColumn(i, natural: true);
             return i;
+        }
+
+        // A cannot-split row taller than the empty column breaks across columns anyway, as in Word.
+        if (item is RowItem { CantSplit: true } row && row.SplitOversized(Bottom(item) - _y - before - drop) is { } parts)
+        {
+            return PlaceSplit(parts, i, before + drop);
         }
 
         context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.PdfContentTallerThanPage));

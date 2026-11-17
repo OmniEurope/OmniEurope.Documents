@@ -82,13 +82,16 @@ internal sealed class RowItem : FlowItem
         Height = ExactHeight && MinimumHeight > 0 ? MinimumHeight : Math.Max(content, MinimumHeight);
     }
 
-    public override (FlowItem First, FlowItem Remainder)? Split(double available)
-    {
-        if (CantSplit || ExactHeight)
-        {
-            return null;
-        }
+    public override (FlowItem First, FlowItem Remainder)? Split(double available) => CantSplit || ExactHeight ? null : SplitCells(available);
 
+    /// <summary>
+    /// Breaks a cannot-split row anyway, as Word does when the row is taller than an empty page body; null for a row
+    /// that may split on its own (the paginator then uses <see cref="Split"/>) or has an exact height.
+    /// </summary>
+    public (FlowItem First, FlowItem Remainder)? SplitOversized(double available) => CantSplit && !ExactHeight ? SplitCells(available) : null;
+
+    private (FlowItem First, FlowItem Remainder)? SplitCells(double available)
+    {
         var first = new RowItem { Table = Table, MinimumHeight = 0 };
         var rest = new RowItem { Table = Table, MinimumHeight = 0 };
         var moved = false;
