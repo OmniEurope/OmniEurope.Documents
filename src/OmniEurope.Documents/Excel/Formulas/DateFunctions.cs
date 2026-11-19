@@ -47,8 +47,8 @@ internal static class DateFunctions
 
         try
         {
-            var date = new DateTime((int)year, 1, 1).AddMonths((int)Math.Truncate(parts[1].Number) - 1).AddDays(Math.Truncate(parts[2].Number) - 1);
-            return ToSerial(evaluator, date);
+            var firstOfMonth = new DateTime((int)year, 1, 1).AddMonths((int)Math.Truncate(parts[1].Number) - 1);
+            return InRange(evaluator, ExcelCalendar.Serial(firstOfMonth, Math.Truncate(parts[2].Number), evaluator.Date1904));
         }
         catch (ArgumentOutOfRangeException)
         {
@@ -68,11 +68,8 @@ internal static class DateFunctions
         return seconds < 0 ? FormulaValue.Num : FormulaValue.Of(seconds % 86400 / 86400);
     }
 
-    private static FormulaValue ToSerial(FormulaEvaluator evaluator, DateTime date)
-    {
-        var serial = ExcelDate.ToSerial(date, evaluator.Date1904);
-        return ExcelDate.IsInRange(serial, evaluator.Date1904) ? FormulaValue.Of(serial) : FormulaValue.Num;
-    }
+    private static FormulaValue InRange(FormulaEvaluator evaluator, double serial) =>
+        ExcelDate.IsInRange(serial, evaluator.Date1904) ? FormulaValue.Of(serial) : FormulaValue.Num;
 
     // A serial number argument: a number, or text that reads as one.
     private static FormulaValue Serial(FormulaEvaluator evaluator, FormulaNode argument)
@@ -81,10 +78,10 @@ internal static class DateFunctions
         return value.IsError || ExcelDate.IsInRange(value.Number, evaluator.Date1904) ? value : FormulaValue.Num;
     }
 
-    private static FormulaValue Part(FormulaEvaluator evaluator, FormulaNode argument, Func<DateTime, int> part)
+    private static FormulaValue Part(FormulaEvaluator evaluator, FormulaNode argument, Func<ExcelDateParts, int> part)
     {
         var serial = Serial(evaluator, argument);
-        return serial.IsError ? serial : FormulaValue.Of(part(ExcelDate.FromSerial(serial.Number, evaluator.Date1904)));
+        return serial.IsError ? serial : FormulaValue.Of(part(ExcelCalendar.Split(serial.Number, evaluator.Date1904)));
     }
 
     // WEEKDAY(serial, [type]): 1 Sunday is 1, 2 Monday is 1, 3 Monday is 0.
@@ -97,7 +94,7 @@ internal static class DateFunctions
             return serial.IsError ? serial : type;
         }
 
-        var day = (int)ExcelDate.FromSerial(serial.Number, evaluator.Date1904).DayOfWeek;
+        var day = (int)ExcelCalendar.Split(serial.Number, evaluator.Date1904).DayOfWeek;
         return type.Number switch
         {
             1 => FormulaValue.Of(day + 1),
@@ -117,15 +114,22 @@ internal static class DateFunctions
             return serial.IsError ? serial : months;
         }
 
-        try
-        {
-            var date = ExcelDate.FromSerial(Math.Truncate(serial.Number), evaluator.Date1904).AddMonths((int)Math.Truncate(months.Number));
-            return ToSerial(evaluator, endOfMonth ? new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month)) : date);
-        }
-        catch (ArgumentOutOfRangeException)
+        // No date lies 120,000 months (10,000 years) from another.
+        if (Math.Abs(months.Number) >= 120_000)
         {
             return FormulaValue.Num;
         }
+
+        var from = ExcelCalendar.Split(Math.Truncate(serial.Number), evaluator.Date1904);
+        var monthIndex = (from.Year * 12L) + from.Month - 1 + (long)Math.Truncate(months.Number);
+        if (monthIndex is < 12 or >= 10000 * 12L)
+        {
+            return FormulaValue.Num;
+        }
+
+        var (year, month) = ((int)(monthIndex / 12), (int)(monthIndex % 12) + 1);
+        var day = endOfMonth ? ExcelCalendar.DaysInMonth(year, month, evaluator.Date1904) : Math.Min(from.Day, ExcelCalendar.DaysInMonth(year, month, evaluator.Date1904));
+        return InRange(evaluator, ExcelCalendar.Serial(new DateTime(year, month, 1), day, evaluator.Date1904));
     }
 
     // DATEDIF(start, end, unit): whole years (Y), months (M) or days (D) between two dates.
@@ -144,8 +148,8 @@ internal static class DateFunctions
             return FormulaValue.Num;
         }
 
-        var from = ExcelDate.FromSerial(Math.Truncate(start.Number), evaluator.Date1904);
-        var to = ExcelDate.FromSerial(Math.Truncate(end.Number), evaluator.Date1904);
+        var from = ExcelCalendar.Split(Math.Truncate(start.Number), evaluator.Date1904);
+        var to = ExcelCalendar.Split(Math.Truncate(end.Number), evaluator.Date1904);
         var months = ((to.Year - from.Year) * 12) + to.Month - from.Month - (to.Day < from.Day ? 1 : 0);
         return unit.Text.ToUpperInvariant() switch
         {

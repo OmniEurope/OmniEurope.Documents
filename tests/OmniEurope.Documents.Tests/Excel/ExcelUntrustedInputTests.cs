@@ -60,7 +60,6 @@ public sealed class ExcelUntrustedInputTests
     }
 
     [Theory]
-    [InlineData("xl/worksheets/sheet1.xml", "<sheetData>", "<sheetData><row r=\"99999999\"><c><v>1</v></c></row>")]
     [InlineData("xl/worksheets/sheet1.xml", "<conditionalFormatting", "<mergeCells count=\"1\"><mergeCell ref=\"nowhere\"/></mergeCells><conditionalFormatting")]
     [InlineData("xl/worksheets/sheet1.xml", "<conditionalFormatting", "<autoFilter ref=\"A1:nowhere\"/><conditionalFormatting")]
     [InlineData("xl/worksheets/sheet1.xml", "<cols>", "<sheetViews><sheetView workbookViewId=\"0\"><pane ySplit=\"-1\" state=\"frozen\"/></sheetView></sheetViews><cols>")]

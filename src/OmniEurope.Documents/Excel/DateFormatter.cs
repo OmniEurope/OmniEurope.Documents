@@ -19,7 +19,7 @@ internal static class DateFormatter
             return new string('#', 8);
         }
 
-        var date = ExcelDate.FromSerial(serial, date1904);
+        var date = ExcelCalendar.Split(serial, date1904);
         var twelveHour = tokens.Exists(t => t.Kind == FormatTokenKind.AmPm);
         var minutes = MinuteTokens(tokens);
         var output = new StringBuilder();
@@ -57,7 +57,7 @@ internal static class DateFormatter
         return minutes;
     }
 
-    private static string Render(FormatToken token, bool isMinute, DateTime date, double serial, bool twelveHour, CultureInfo culture)
+    private static string Render(FormatToken token, bool isMinute, ExcelDateParts date, double serial, bool twelveHour, CultureInfo culture)
     {
         var names = culture.DateTimeFormat;
         return token.Kind switch
@@ -75,7 +75,7 @@ internal static class DateFormatter
         };
     }
 
-    private static string DatePart(string code, bool isMinute, DateTime date, bool twelveHour, DateTimeFormatInfo names)
+    private static string DatePart(string code, bool isMinute, ExcelDateParts date, bool twelveHour, DateTimeFormatInfo names)
     {
         var length = code.Length;
         var invariant = CultureInfo.InvariantCulture;
@@ -98,7 +98,7 @@ internal static class DateFormatter
     }
 
     // m, mm, mmm (Jan), mmmm (January), mmmmm (J).
-    private static string Month(int length, DateTime date, DateTimeFormatInfo names) => length switch
+    private static string Month(int length, ExcelDateParts date, DateTimeFormatInfo names) => length switch
     {
         1 => date.Month.ToString(CultureInfo.InvariantCulture),
         2 => date.Month.ToString("00", CultureInfo.InvariantCulture),
@@ -108,7 +108,7 @@ internal static class DateFormatter
     };
 
     // d, dd, ddd (Mon), dddd (Monday).
-    private static string Day(int length, DateTime date, DateTimeFormatInfo names) => length switch
+    private static string Day(int length, ExcelDateParts date, DateTimeFormatInfo names) => length switch
     {
         1 => date.Day.ToString(CultureInfo.InvariantCulture),
         2 => date.Day.ToString("00", CultureInfo.InvariantCulture),
@@ -116,7 +116,7 @@ internal static class DateFormatter
         _ => names.GetDayName(date.DayOfWeek),
     };
 
-    private static string AmPm(string marker, DateTime date)
+    private static string AmPm(string marker, ExcelDateParts date)
     {
         // Excel shows AM/PM in capitals whatever the case of the code; A/P keeps the case of its letters.
         var pm = date.Hour >= 12;
@@ -136,7 +136,7 @@ internal static class DateFormatter
         return total.ToString(new string('0', code.Length), CultureInfo.InvariantCulture);
     }
 
-    private static string FractionOfSecond(DateTime date, int digits)
+    private static string FractionOfSecond(ExcelDateParts date, int digits)
     {
         digits = Math.Clamp(digits, 0, 3);
         return digits == 0
