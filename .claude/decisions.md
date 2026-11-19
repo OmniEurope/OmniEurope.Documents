@@ -24,3 +24,7 @@
 - 2026-11-17 : découplage Fonts vers Conversion et Charts vers Excel : reporté, inscrit dans PLAN-008.
 - 2026-11-17 : version : publication 1.3.0 (version du milieu augmentée).
 - 2026-11-19 : audit Fable : audit par échantillonnage large (pas chaque fichier) avec corrections directes ; changements d'API publique, de comportement visible ou touchant beaucoup de fichiers non corrigés, laissés à la décision du propriétaire.
+- 2026-11-19 : format Excel General : comme l'export Excel, jusqu'à 15 chiffres significatifs sans notation scientifique tant que le nombre tient (0.00001, 123456789012).
+- 2026-11-19 : dates Excel série 1 à 60 : alignées sur Excel (série 1 = 01/01/1900, série 60 = 29/02/1900 fictif pour DAY/MONTH/WEEKDAY et l'affichage, FromSerial(60) renvoie le 28/02/1900).
+- 2026-11-19 : référence de cellule impossible (A99999999) : classeur refusé avec DocumentFormatException.
+- 2026-11-19 : tags de version : le pipeline de publication refuse un tag absent, mal nommé ou hors de main (demande relayée par OE.Diagnostics).

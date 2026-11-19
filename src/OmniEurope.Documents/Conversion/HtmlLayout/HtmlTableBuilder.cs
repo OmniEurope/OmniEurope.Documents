@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: EUPL-1.2
+using System.Globalization;
 using OmniEurope.Documents.Html;
 using OmniEurope.Documents.Word;
 
@@ -146,5 +147,5 @@ internal static class HtmlTableBuilder
         row[column] = cell;
     }
 
-    private static int Number(HtmlElement element, string attribute) => int.TryParse(element.GetAttribute(attribute), out var value) ? value : 1;
+    private static int Number(HtmlElement element, string attribute) => int.TryParse(element.GetAttribute(attribute), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value) ? value : 1;
 }

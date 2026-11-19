@@ -232,9 +232,12 @@ internal sealed class FormulaEvaluator(
         return double.IsNaN(result) && onNaN is { } error ? error : FormulaValue.Of(result);
     }
 
-    // 0^0 and a negative number to a fractional power have no real value (#NUM!).
+    // 0^0 and a negative number to a fractional power have no real value (#NUM!); 0 to a negative power
+    // divides by zero (#DIV/0!).
     private static FormulaValue Power(FormulaValue left, FormulaValue right) =>
-        Arithmetic(left, right, (x, y) => x == 0 && y == 0 ? double.NaN : Math.Pow(x, y));
+        left.ToNumber() is { IsError: false, Number: 0 } && right.ToNumber() is { IsError: false, Number: < 0 }
+            ? FormulaValue.Div0
+            : Arithmetic(left, right, (x, y) => x == 0 && y == 0 ? double.NaN : Math.Pow(x, y));
 
     private static FormulaValue Concatenate(FormulaValue left, FormulaValue right)
     {

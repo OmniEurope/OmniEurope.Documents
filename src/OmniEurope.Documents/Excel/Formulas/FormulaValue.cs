@@ -104,7 +104,8 @@ internal readonly struct FormulaValue
 
     public bool IsError => Kind == ValueKind.Error;
 
-    public static FormulaValue Of(double number) => double.IsFinite(number) ? new(ValueKind.Number, number, null, null) : Num;
+    /// <summary>A number; a spreadsheet has no negative zero, so -0 is held as 0.</summary>
+    public static FormulaValue Of(double number) => double.IsFinite(number) ? new(ValueKind.Number, number == 0 ? 0 : number, null, null) : Num;
 
     public static FormulaValue Of(string text) => new(ValueKind.Text, 0, text, null);
 
@@ -173,6 +174,10 @@ internal readonly struct FormulaValue
         };
     }
 
+    /// <summary>
+    /// Reads text as a number the way a formula coerces it: a plain or scientific number with thousands
+    /// separators, a percentage, or an accounting amount with a dollar sign or parentheses for a negative.
+    /// </summary>
     public static bool TryParseNumber(string text, out double number)
     {
         var trimmed = text.Trim();
@@ -182,8 +187,11 @@ internal readonly struct FormulaValue
             return true;
         }
 
-        return double.TryParse(trimmed, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out number) && double.IsFinite(number);
+        return (double.TryParse(trimmed, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out number)
+            || double.TryParse(trimmed, NumberStyles.Currency, Accounting, out number)) && double.IsFinite(number);
     }
+
+    private static readonly NumberFormatInfo Accounting = new() { CurrencySymbol = "$" };
 
     /// <summary>The value written back into a cell: number, text, boolean or error; a blank gives 0, as in Excel.</summary>
     public object? ToCellValue()

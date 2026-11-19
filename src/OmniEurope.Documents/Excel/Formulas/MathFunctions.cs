@@ -38,7 +38,7 @@ internal static class MathFunctions
         registry["LN"] = new(1, 1, (e, a) => Unary(e, a, x => x <= 0 ? double.NaN : Math.Log(x)));
         registry["LOG10"] = new(1, 1, (e, a) => Unary(e, a, x => x <= 0 ? double.NaN : Math.Log10(x)));
         registry["LOG"] = new(1, 2, (e, a) => Binary(e, a[0], a.Count > 1 ? a[1] : null, 10, (x, b) => x <= 0 || b <= 0 || b == 1 ? double.NaN : Math.Log(x, b)));
-        registry["POWER"] = new(2, 2, (e, a) => Binary(e, a[0], a[1], 0, (x, y) => x == 0 && y == 0 ? double.NaN : Math.Pow(x, y)));
+        registry["POWER"] = new(2, 2, Power);
         registry["MOD"] = new(2, 2, Mod);
         registry["PI"] = new(0, 0, (_, _) => FormulaValue.Of(Math.PI));
         registry["CEILING"] = new(1, 2, (e, a) => Multiple(e, a, Math.Ceiling));
@@ -202,6 +202,20 @@ internal static class MathFunctions
         var x = Number(evaluator, first);
         var y = second is null ? FormulaValue.Of(fallback) : Number(evaluator, second);
         return x.IsError ? x : y.IsError ? y : FormulaValue.Of(compute(x.Number, y.Number));
+    }
+
+    // 0^0 and a negative number to a fractional power are #NUM!; 0 to a negative power is #DIV/0!.
+    private static FormulaValue Power(FormulaEvaluator evaluator, IReadOnlyList<FormulaNode> arguments)
+    {
+        var x = Number(evaluator, arguments[0]);
+        var y = Number(evaluator, arguments[1]);
+        if (x.IsError || y.IsError)
+        {
+            return x.IsError ? x : y;
+        }
+
+        return x.Number == 0 && y.Number < 0 ? FormulaValue.Div0
+            : FormulaValue.Of(x.Number == 0 && y.Number == 0 ? double.NaN : Math.Pow(x.Number, y.Number));
     }
 
     // The remainder with the sign of the divisor: MOD(-3, 2) is 1.

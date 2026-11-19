@@ -76,6 +76,10 @@ public sealed class FormulaFunctionTests
     [InlineData("FLOOR(4,-1)", "#NUM!")]
     [InlineData("SUMIF(A1:A5,1,A1:A2)", "#VALUE!")]
     [InlineData("ROUND(1)", "#VALUE!")]
+    [InlineData("POWER(0,-1)", "#DIV/0!")]
+    [InlineData("0^-1", "#DIV/0!")]
+    [InlineData("POWER(0,0)", "#NUM!")]
+    [InlineData("0^0", "#NUM!")]
     public void Mathematical_errors(string formula, string error)
     {
         Assert.Equal(Error(error), Evaluate(formula));
@@ -202,6 +206,13 @@ public sealed class FormulaFunctionTests
     [InlineData("VALUE(\"12.5\")", 12.5)]
     [InlineData("VALUE(\"25%\")", 0.25)]
     [InlineData("VALUE(\"abc\")", "#VALUE!")]
+    [InlineData("VALUE(\"$1,000\")", 1000.0)]
+    [InlineData("VALUE(\"(5)\")", -5.0)]
+    [InlineData("VALUE(\"($1,234.50)\")", -1234.5)]
+    [InlineData("VALUE(\"1,000\")", 1000.0)]
+    [InlineData("VALUE(\"1e3\")", 1000.0)]
+    [InlineData("VALUE(\"(abc)\")", "#VALUE!")]
+    [InlineData("\"$5\"+1", 6.0)]
     [InlineData("TEXT(1234.567,\"#,##0.00\")", "1,234.57")]
     [InlineData("TEXT(0.25,\"0%\")", "25%")]
     [InlineData("TEXT(46303,\"yyyy-mm-dd\")", "2026-10-08")]
@@ -253,6 +264,19 @@ public sealed class FormulaFunctionTests
         {
             Assert.Equal(Expected(expected), value);
         }
+    }
+
+    [Theory]
+    [InlineData("ROUND(-0.4,0)")]
+    [InlineData("ROUNDDOWN(-0.4,0)")]
+    [InlineData("TRUNC(-0.4)")]
+    [InlineData("-0.4*0")]
+    [InlineData("-0")]
+    public void A_result_of_zero_is_never_a_negative_zero(string formula)
+    {
+        var value = Assert.IsType<double>(Evaluate(formula));
+        Assert.Equal(0.0, value);
+        Assert.False(double.IsNegative(value), $"{formula} gave negative zero");
     }
 
     [Fact]
