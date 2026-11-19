@@ -4,8 +4,28 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ## [Unreleased]
 
+### Changed
+
+- Excel: the General format writes what a spreadsheet's CSV export writes, up to 15 significant digits without
+  scientific notation while the number fits (`0.00001`, `123456789012`, `1000000000000`), scientific beyond
+  (`1.23456789012346E+18`, `1E-20`), instead of 10 significant digits and `1E-05`.
+- Word: `WordEditor.ReplaceText(IReadOnlyDictionary<string, string>)` replaces every key in one pass: a value is
+  never searched again for another key, so the result no longer depends on the key order; where two keys overlap,
+  the one starting first wins, the longer one at the same position.
+- PDF: `PdfFlowLayout` and `ImagesToPdf.Convert` (with a page size) throw `ArgumentOutOfRangeException` when the
+  margins, header and footer leave no room on the page, instead of writing one page per line or a negative scale.
+
 ### Fixed
 
+- Excel number formats: conditional sections (`[>=1000]#,##0,"K";0`, `[Red][<=100]0;[Blue][>100]0`) pick the
+  section by their condition; `General` inside a section (`General" units"`) writes the General rendering.
+- Excel formulas: `0^-1` and `POWER(0,-1)` give `#DIV/0!`; a zero result is never a negative zero
+  (`ROUND(-0.4,0)`); `VALUE` and text arithmetic read dollar amounts and parentheses (`"$1,000"`, `"(5)"`).
+- Excel to PDF: a merge reaching past the printed range spans the printed columns only, and is listed on the
+  printed rows only.
+- HTML: legacy character references are read without their semicolon (`&amp`, `&nbsp`, `&eacute`, `&#38`) and the
+  upper-case spellings (`&AMP;`, `&COPY`) are decoded; in an attribute value a legacy name followed by a letter, a
+  digit or `=` stays as written. Table spans are parsed with the invariant culture.
 - Word to PDF: a cannot-split table row taller than a whole page body now starts right under the previous row and breaks across the following pages, as in Word, instead of moving to a new page and leaving a page that holds only the repeated heading rows.
 - Excel: `NaN`, `Infinity` and `1e999` stay text in `XlsxCsvConverter.FromCsv`; a stored number that is not finite
   reads as `#NUM!`; `NumberFormatter.Format` shows `#NUM!` for such a number instead of throwing.
