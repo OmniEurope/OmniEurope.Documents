@@ -41,13 +41,14 @@ internal sealed class ExcelRowLayout
         }
     }
 
-    /// <summary>The merged ranges of each row of the sheet, built once per sheet.</summary>
-    public static Dictionary<int, List<XlsxRange>> MergesByRow(XlsxWorksheet sheet)
+    /// <summary>The merged ranges crossing each printed row, built once per sheet; a range is listed on the rows of
+    /// <paramref name="range"/> only, so that the cost follows the rows printed and not the area merged.</summary>
+    public static Dictionary<int, List<XlsxRange>> MergesByRow(XlsxWorksheet sheet, XlsxRange range)
     {
         var rows = new Dictionary<int, List<XlsxRange>>();
         foreach (var merge in sheet.MergedRanges)
         {
-            for (var r = merge.FirstRow; r <= merge.LastRow; r++)
+            for (var r = Math.Max(merge.FirstRow, range.FirstRow); r <= Math.Min(merge.LastRow, range.LastRow); r++)
             {
                 if (!rows.TryGetValue(r, out var list))
                 {

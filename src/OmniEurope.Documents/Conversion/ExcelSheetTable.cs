@@ -60,7 +60,7 @@ internal sealed class ExcelSheetTable
             },
         };
         table.Columns.AddRange(_pixels.Select(p => p * 0.75));
-        var merges = ExcelRowLayout.MergesByRow(_sheet);
+        var merges = ExcelRowLayout.MergesByRow(_sheet, _range);
         for (var r = _range.FirstRow; r <= _range.LastRow; r++)
         {
             var row = new WordTableRow { Properties = new WordTableRowProperties { IsHeader = r < _range.FirstRow + _sheet.FrozenRows ? true : null, CantSplit = true } };
@@ -82,7 +82,7 @@ internal sealed class ExcelSheetTable
     {
         var cell = _sheet.FindCell(r, segment.Owner);
         var style = cell?.Style ?? XlsxStyle.Default;
-        var properties = CellProperties(style, segment.Merge, r);
+        var properties = CellProperties(style, segment, r);
         var charts = _charts.At(r, segment.First);
         if (charts.Count > 0)
         {
@@ -212,12 +212,12 @@ internal sealed class ExcelSheetTable
 
     private double Pixels(XlsxCell cell, string text) => Points(cell, text) * DigitPixels / _digitPoints;
 
-    private static WordTableCellProperties CellProperties(XlsxStyle style, XlsxRange merge, int r)
+    private static WordTableCellProperties CellProperties(XlsxStyle style, ExcelSegment segment, int r)
     {
-        var merged = merge != default;
+        var (merge, merged) = (segment.Merge, segment.Merge != default);
         return new WordTableCellProperties
         {
-            GridSpan = merged && merge.LastColumn > merge.FirstColumn ? merge.LastColumn - merge.FirstColumn + 1 : null,
+            GridSpan = merged && segment.Last > segment.First ? segment.Last - segment.First + 1 : null,
             VerticalMerge = VerticalMerge(merged, merge, r),
             Shading = style.FillColor is { } fill ? XlsxStyle.NormalizeColor(fill) : null,
             VerticalAlignment = style.VerticalAlignment switch
