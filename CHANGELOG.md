@@ -4,6 +4,8 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-11-19
+
 ### Changed
 
 - Excel: the General format writes what a spreadsheet's CSV export writes, up to 15 significant digits without
