@@ -17,6 +17,7 @@ internal enum FormatTokenKind
     Elapsed,
     FractionalSeconds,
     TextPlaceholder,
+    General,
 }
 
 /// <summary>One token: its kind and text (the placeholder character, the literal, the date code...).</summary>
@@ -141,6 +142,13 @@ internal static class FormatTokens
 
     private static int ReadDateOrLiteral(string s, int i, List<FormatToken> tokens)
     {
+        const string general = "General";
+        if (string.Compare(s, i, general, 0, general.Length, StringComparison.OrdinalIgnoreCase) == 0)
+        {
+            tokens.Add(new FormatToken(FormatTokenKind.General, general));
+            return i + general.Length;
+        }
+
         foreach (var marker in (string[])["AM/PM", "am/pm", "A/P", "a/p"])
         {
             if (string.CompareOrdinal(s, i, marker, 0, marker.Length) == 0)

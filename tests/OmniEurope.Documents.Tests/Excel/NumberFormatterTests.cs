@@ -39,7 +39,7 @@ public sealed class NumberFormatterTests
     [InlineData(-0.001, "0.00", "0.00")]
     [InlineData(11700000.0, "General", "11700000")]
     [InlineData(0.30000000000000004, "General", "0.3")]
-    [InlineData(1e12, "General", "1E+12")]
+    [InlineData(1e12, "General", "1000000000000")]
     [InlineData(-2.5, "General", "-2.5")]
     public void Formats_numbers(double value, string format, string expected)
     {

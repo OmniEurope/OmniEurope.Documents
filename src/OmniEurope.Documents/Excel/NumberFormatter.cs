@@ -26,7 +26,7 @@ public static class NumberFormatter
 
         var sections = FormatTokens.SplitSections(format);
         var (section, autoMinus) = Pick(sections, value);
-        if (sections.Count > 1 && value < 0)
+        if (!autoMinus && value < 0)
         {
             value = -value;
         }
@@ -37,6 +37,11 @@ public static class NumberFormatter
         }
 
         var tokens = FormatTokens.Tokenize(section);
+        if (tokens.Exists(t => t.Kind == FormatTokenKind.General))
+        {
+            return WithGeneral(value, tokens, culture);
+        }
+
         if (FormatTokens.HasDateParts(tokens))
         {
             return DateFormatter.Format(value, tokens, culture, date1904);
@@ -79,19 +84,39 @@ public static class NumberFormatter
     internal static bool IsDurationFormat(string format) =>
         FormatTokens.Tokenize(FormatTokens.SplitSections(format)[0]).Exists(t => t.Kind == FormatTokenKind.Elapsed);
 
-    /// <summary>The General format: integers as is, otherwise up to 10 significant digits, scientific when
-    /// very large or very small.</summary>
+    /// <summary>The General format, as a spreadsheet's CSV export writes it: the value rounded to 15
+    /// significant digits, trailing zeros dropped. Fixed notation when the decimal exponent of the first digit
+    /// is between -10 and 14 inclusive and the fixed text (sign excluded) takes at most 20 characters, so
+    /// integers of up to 15 digits print in full (<c>123456789012</c>) and <c>0.00001</c> stays
+    /// <c>0.00001</c>; otherwise scientific notation with an exponent of at least two digits
+    /// (<c>1.23456789012346E+18</c>, <c>1E-20</c>, <c>1.5E+21</c>). The culture gives the decimal separator
+    /// and the minus sign; a value that is not finite gives the culture's text for it.</summary>
     public static string General(double value, CultureInfo culture)
     {
         ArgumentNullException.ThrowIfNull(culture);
-        if (value == Math.Floor(value) && Math.Abs(value) < 1e11)
-        {
-            return ((long)value).ToString(culture);
-        }
-
-        return value.ToString("G10", culture);
+        return GeneralFormat.Render(value, culture);
     }
 
+    // A section holding the token General (General" units"): the General rendering where the token stands, the
+    // literals around it; other placeholders write nothing.
+    private static string WithGeneral(double value, List<FormatToken> tokens, CultureInfo culture)
+    {
+        var builder = new StringBuilder();
+        foreach (var token in tokens)
+        {
+            builder.Append(token.Kind == FormatTokenKind.General ? General(value, culture) : token.Kind == FormatTokenKind.Literal ? token.Text : string.Empty);
+        }
+
+        return builder.ToString();
+    }
+
+    // Without a condition on the first two sections: positive, negative, zero by sign. With conditions: the
+    // spreadsheet rule. The first section applies when its condition holds (a first section without one stands
+    // for the non-negative numbers, positives only with three sections or more); else the second when it has no
+    // condition or its condition holds, with two sections always; else the third. A value matching no condition of
+    // two conditional sections is shown with the last section (an assumption: the rule was not checked against
+    // a spreadsheet). A negative value keeps its minus sign unless the chosen section's condition admits only
+    // negative numbers, in which case the section's own text shows it.
     private static (string Section, bool AutoMinus) Pick(List<string> sections, double value)
     {
         if (sections.Count == 1)
@@ -99,12 +124,22 @@ public static class NumberFormatter
             return (sections[0], true);
         }
 
-        if (value < 0)
+        var first = FormatCondition.Find(sections[0]);
+        var second = FormatCondition.Find(sections[1]);
+        if (first is null && second is null)
         {
-            return (sections[1], false);
+            if (value < 0)
+            {
+                return (sections[1], false);
+            }
+
+            return value == 0 && sections.Count >= 3 ? (sections[2], false) : (sections[0], false);
         }
 
-        return value == 0 && sections.Count >= 3 ? (sections[2], false) : (sections[0], false);
+        var firstHolds = first?.Matches(value) ?? (sections.Count >= 3 ? value > 0 : value >= 0);
+        var (index, condition) = firstHolds ? (0, first)
+            : sections.Count == 2 || second is null || second.Value.Matches(value) ? (1, second) : (2, null);
+        return (sections[index], condition?.AdmitsOnlyNegatives != true);
     }
 }
 
