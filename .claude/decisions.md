@@ -29,3 +29,4 @@
 - 2026-11-19 : référence de cellule impossible (A99999999) : classeur refusé avec DocumentFormatException.
 - 2026-11-19 : tags de version : le pipeline de publication refuse un tag absent, mal nommé ou hors de main (demande relayée par OE.Diagnostics).
 - 2026-11-19 : version : publication 1.3.1 (correctif) de l'état actuel de develop, promue vers main, tag v1.3.1, release GitHub.
+- 2026-11-19 : publication : 1.3.1 publiée (main 6d1f5f4, tag v1.3.1, release GitHub, listée sur NuGet).
