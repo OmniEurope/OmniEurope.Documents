@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: EUPL-1.2
-using System.Net;
 
 namespace OmniEurope.Documents.Html;
 
@@ -38,7 +37,7 @@ internal sealed class HtmlTokenizer(string html)
                 _rawTextEnd = null;
                 if (raw.Length > 0)
                 {
-                    yield return Text(escapable ? Decode(raw) : raw);
+                    yield return Text(escapable ? HtmlCharacterReferences.Decode(raw, attribute: false) : raw);
                 }
 
                 continue;
@@ -56,13 +55,12 @@ internal sealed class HtmlTokenizer(string html)
                 continue;
             }
 
-            yield return Text(Decode(ReadText()));
+            yield return Text(HtmlCharacterReferences.Decode(ReadText(), attribute: false));
         }
     }
 
     private static HtmlToken Text(string data) => new(HtmlTokenKind.Text, data, NoAttributes, false);
 
-    private static string Decode(string text) => text.Contains('&') ? WebUtility.HtmlDecode(text) : text;
 
     private string ReadText()
     {
@@ -239,7 +237,7 @@ internal sealed class HtmlTokenizer(string html)
         {
             var close = html.IndexOf(quote, i + 1);
             var end = close < 0 ? html.Length : close;
-            return (Math.Min(end + 1, html.Length), Decode(html[(i + 1)..end]));
+            return (Math.Min(end + 1, html.Length), HtmlCharacterReferences.Decode(html[(i + 1)..end], attribute: true));
         }
 
         var start = i;
@@ -248,7 +246,7 @@ internal sealed class HtmlTokenizer(string html)
             i++;
         }
 
-        return (i, Decode(html[start..i]));
+        return (i, HtmlCharacterReferences.Decode(html[start..i], attribute: true));
     }
 
     private int SkipSpaces(int i)

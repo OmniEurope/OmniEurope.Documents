@@ -37,6 +37,32 @@ public sealed class HtmlParserTests
         Assert.Equal(expected, HtmlParser.ParseFragment(html).InnerHtml);
     }
 
+    [Theory]
+    [InlineData("Tom &amp Jerry", "Tom & Jerry")]
+    [InlineData("a&nbspb", "a b")]
+    [InlineData("caf&eacute bar", "café bar")]
+    [InlineData("&copy2026", "©2026")]
+    [InlineData("&AMP; &COPY &LT;b&GT;", "& © <b>")]
+    [InlineData("&#38 &#x26 &#233;", "& & é")]
+    [InlineData("&notin; &notit;", "∉ ¬it;")]
+    [InlineData("&unknown &amp;", "&unknown &")]
+    [InlineData("&# &#x; & ;", "&# &#x; & ;")]
+    public void Text_reads_character_references_with_or_without_their_semicolon(string html, string expected)
+    {
+        Assert.Equal(expected, HtmlParser.ParseFragment($"<p>{html}</p>").TextContent);
+    }
+
+    [Theory]
+    [InlineData("<a href=\"?a=1&amp;b=2\">", "?a=1&b=2")]
+    [InlineData("<a href=\"?a=1&amp b=2\">", "?a=1& b=2")]
+    [InlineData("<a href=\"?a=1&copy=2\">", "?a=1&copy=2")]
+    [InlineData("<a href=\"?x&ampy\">", "?x&ampy")]
+    [InlineData("<a href=?a&lt>", "?a<")]
+    public void An_attribute_keeps_a_legacy_name_followed_by_a_letter_or_equals_as_written(string html, string expected)
+    {
+        Assert.Equal(expected, HtmlParser.ParseFragment(html).QuerySelector("a")!.GetAttribute("href"));
+    }
+
     [Fact]
     public void Raw_text_elements_keep_markup_as_text()
     {

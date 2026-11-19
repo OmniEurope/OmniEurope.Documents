@@ -46,6 +46,43 @@ public sealed class WordEditorTests
         Assert.Contains("MERGEFIELD {{prenom}}", DocxFactory.Part(editor.ToArray(), "word/document.xml"), StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Several_keys_are_replaced_in_one_pass_whatever_their_order()
+    {
+        // A value holding another key is not replaced again, so the result does not depend on the key order.
+        const string body = "<w:p><w:r><w:t>{{a}} et {{b}}</w:t></w:r></w:p>";
+        var forward = WordEditor.Open(DocxFactory.Build(body));
+        var backward = WordEditor.Open(DocxFactory.Build(body));
+
+        var forwardCount = forward.ReplaceText(new Dictionary<string, string> { ["{{a}}"] = "{{b}}", ["{{b}}"] = "B" });
+        var backwardCount = backward.ReplaceText(new Dictionary<string, string> { ["{{b}}"] = "B", ["{{a}}"] = "{{b}}" });
+
+        Assert.Equal(2, forwardCount);
+        Assert.Equal(2, backwardCount);
+        Assert.Equal("{{b}} et B", forward.ToDocument().Blocks.OfType<WordParagraph>().Single().Text);
+        Assert.Equal("{{b}} et B", backward.ToDocument().Blocks.OfType<WordParagraph>().Single().Text);
+    }
+
+    [Fact]
+    public void Overlapping_keys_take_the_first_then_the_longest_match()
+    {
+        var editor = WordEditor.Open(DocxFactory.Build("<w:p><w:r><w:t>abc bc</w:t></w:r><w:r><w:t>d</w:t></w:r></w:p>"));
+
+        var count = editor.ReplaceText(new Dictionary<string, string> { ["bcd"] = "3", ["ab"] = "1", ["abc"] = "2" });
+
+        Assert.Equal(2, count);
+        Assert.Equal("2 3", editor.ToDocument().Blocks.OfType<WordParagraph>().Single().Text);
+    }
+
+    [Fact]
+    public void An_empty_key_or_a_null_value_is_refused()
+    {
+        var editor = WordEditor.Open(DocxFactory.Build("<w:p><w:r><w:t>x</w:t></w:r></w:p>"));
+
+        Assert.Throws<ArgumentException>(() => editor.ReplaceText(new Dictionary<string, string> { [""] = "y" }));
+        Assert.Throws<ArgumentNullException>(() => editor.ReplaceText(new Dictionary<string, string> { ["x"] = null! }));
+    }
+
     [Theory]
     [InlineData("<w:r><w:t>a</w:t><w:tab/><w:t>b</w:t></w:r>")]
     [InlineData("<w:r><w:t>a</w:t><w:br/><w:t>b</w:t></w:r>")]

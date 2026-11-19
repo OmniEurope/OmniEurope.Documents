@@ -133,11 +133,37 @@ public sealed class WordEditor
         return count;
     }
 
-    /// <summary>Replaces each key by its value (for example <c>{{name}}</c> placeholders); returns the total count.</summary>
+    /// <summary>Replaces each key by its value (for example <c>{{name}}</c> placeholders) in one pass, with the
+    /// rules of <see cref="ReplaceText(string, string, StringComparison)"/>: a value is never searched again for
+    /// another key, and where two keys overlap the one starting first wins (the longer one at the same
+    /// position); returns the total count.</summary>
     public int ReplaceText(IReadOnlyDictionary<string, string> replacements)
     {
         ArgumentNullException.ThrowIfNull(replacements);
-        return replacements.Sum(pair => ReplaceText(pair.Key, pair.Value));
+        var pairs = new List<(string Search, string Replacement)>(replacements.Count);
+        foreach (var (search, replacement) in replacements)
+        {
+            ArgumentException.ThrowIfNullOrEmpty(search, nameof(replacements));
+            ArgumentNullException.ThrowIfNull(replacement, nameof(replacements));
+            pairs.Add((search, replacement));
+        }
+
+        if (pairs.Count == 0)
+        {
+            return 0;
+        }
+
+        var count = 0;
+        foreach (var part in TextParts)
+        {
+            var root = _package.GetXml(part)?.Root;
+            foreach (var paragraph in root is null ? [] : WordRunScanner.Paragraphs(root).ToList())
+            {
+                count += WordTextReplacer.Replace(paragraph, pairs, StringComparison.Ordinal);
+            }
+        }
+
+        return count;
     }
 
     /// <summary>

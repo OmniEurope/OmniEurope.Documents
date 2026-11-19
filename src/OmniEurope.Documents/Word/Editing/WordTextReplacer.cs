@@ -14,12 +14,17 @@ namespace OmniEurope.Documents.Word.Editing;
 /// </summary>
 internal static class WordTextReplacer
 {
-    public static int Replace(XElement paragraph, string search, string replacement, StringComparison comparison)
+    public static int Replace(XElement paragraph, string search, string replacement, StringComparison comparison) =>
+        Replace(paragraph, [(search, replacement)], comparison);
+
+    /// <summary>Replaces several texts in one pass: a replacement is never searched again, and where two
+    /// searched texts overlap the one starting first wins, the longer one at the same position.</summary>
+    public static int Replace(XElement paragraph, IReadOnlyList<(string Search, string Replacement)> pairs, StringComparison comparison)
     {
         var count = 0;
         foreach (var stretch in Stretches(paragraph))
         {
-            count += Replace(stretch, search, replacement, comparison);
+            count += Replace(stretch, pairs, comparison);
         }
 
         return count;
@@ -47,7 +52,7 @@ internal static class WordTextReplacer
         return stretches;
     }
 
-    private static int Replace(List<XElement> texts, string search, string replacement, StringComparison comparison)
+    private static int Replace(List<XElement> texts, IReadOnlyList<(string Search, string Replacement)> pairs, StringComparison comparison)
     {
         if (texts.Count == 0)
         {
@@ -56,7 +61,7 @@ internal static class WordTextReplacer
 
         var values = texts.Select(t => t.Value).ToArray();
         var joined = string.Concat(values);
-        var matches = FindMatches(joined, search, comparison);
+        var matches = FindMatches(joined, pairs, comparison);
         if (matches.Count == 0)
         {
             return 0;
@@ -71,7 +76,7 @@ internal static class WordTextReplacer
         // Right to left: the start of each segment keeps its offset while later text changes.
         for (var m = matches.Count - 1; m >= 0; m--)
         {
-            Apply(values, starts, matches[m].Position, matches[m].Length, replacement);
+            Apply(values, starts, matches[m].Position, matches[m].Length, matches[m].Replacement);
         }
 
         for (var i = 0; i < texts.Count; i++)
@@ -83,6 +88,35 @@ internal static class WordTextReplacer
         }
 
         return matches.Count;
+    }
+
+    // Every searched text's matches, then the leftmost (longest on a tie) of those that overlap.
+    private static List<(int Position, int Length, string Replacement)> FindMatches(string text, IReadOnlyList<(string Search, string Replacement)> pairs, StringComparison comparison)
+    {
+        var all = new List<(int Position, int Length, string Replacement)>();
+        foreach (var (search, replacement) in pairs)
+        {
+            all.AddRange(FindMatches(text, search, comparison).Select(m => (m.Position, m.Length, replacement)));
+        }
+
+        if (pairs.Count == 1)
+        {
+            return all;
+        }
+
+        all.Sort((a, b) => a.Position != b.Position ? a.Position.CompareTo(b.Position) : b.Length.CompareTo(a.Length));
+        var chosen = new List<(int Position, int Length, string Replacement)>();
+        var end = 0;
+        foreach (var match in all)
+        {
+            if (match.Position >= end)
+            {
+                chosen.Add(match);
+                end = match.Position + Math.Max(match.Length, 1);
+            }
+        }
+
+        return chosen;
     }
 
     // A linguistic comparison can match more or fewer UTF-16 units than the search has (an ignorable
