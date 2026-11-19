@@ -118,6 +118,7 @@ public sealed class XlsxWorksheet
     public void SetColumnWidth(int column, double width)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(column, 1);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(column, CellReference.MaxColumn);
         ArgumentOutOfRangeException.ThrowIfNegative(width);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(width, 255);
         _columnWidths[column] = width;

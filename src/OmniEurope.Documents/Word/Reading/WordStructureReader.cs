@@ -48,10 +48,17 @@ internal static class WordStructureReader
             },
             IsHeader = OnOff(trPr, "tblHeader"),
             CantSplit = OnOff(trPr, "cantSplit"),
-            GridBefore = Int(Val(trPr, "gridBefore")),
-            GridAfter = Int(Val(trPr, "gridAfter")),
+            GridBefore = GridCount(Val(trPr, "gridBefore"), 0),
+            GridAfter = GridCount(Val(trPr, "gridAfter"), 0),
         };
     }
+
+    // A count of grid columns (a span, the columns skipped before or after a row). Word tables hold 63 columns at
+    // most; up to 1,000 are read so that a table of another producer keeps its own, and a forged count (a span of
+    // a hundred million columns) cannot make every consumer build that many.
+    private const int MaxGridCount = 1000;
+
+    private static int? GridCount(string? value, int minimum) => Int(value) is { } count ? Math.Clamp(count, minimum, MaxGridCount) : null;
 
     public static WordTableCellProperties? Cell(XElement? tcPr)
     {
@@ -64,7 +71,7 @@ internal static class WordStructureReader
         return new WordTableCellProperties
         {
             Width = Width(tcPr.Element(W + "tcW")),
-            GridSpan = Int(Val(tcPr, "gridSpan")),
+            GridSpan = GridCount(Val(tcPr, "gridSpan"), 1),
             VerticalMerge = merge is null ? null : Attr(merge, "val") == "restart" ? WordVerticalMerge.Restart : WordVerticalMerge.Continue,
             VerticalAlignment = Val(tcPr, "vAlign") switch
             {

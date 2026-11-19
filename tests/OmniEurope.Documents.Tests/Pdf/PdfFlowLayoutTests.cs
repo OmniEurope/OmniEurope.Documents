@@ -86,6 +86,21 @@ public sealed class PdfFlowLayoutTests
     }
 
     [Fact]
+    public void A_first_row_taller_than_the_page_starts_on_the_current_page_and_leaves_no_blank_page()
+    {
+        var document = new PdfDocumentBuilder();
+        var flow = new PdfFlowLayout(document, new PdfFlowOptions { PageWidth = SquarePage, PageHeight = SquarePage, Margins = (20, 20, 20, 20) });
+        flow.AddTable(new PdfTable(1, 1) { HeaderFill = null }.Row(string.Join(' ', Enumerable.Repeat("tall", 120)), "A").Row("next", "B"));
+        flow.Finish();
+
+        var pdf = PdfDocument.Open(document.ToArray());
+
+        Assert.Equal(2, pdf.PageCount);
+        Assert.Contains("tall", pdf.GetPage(1).Text, StringComparison.Ordinal);
+        Assert.Contains("next", pdf.GetPage(2).Text, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void A_table_with_row_separators_only_draws_horizontal_rules_and_no_vertical_ones()
     {
         var document = new PdfDocumentBuilder();

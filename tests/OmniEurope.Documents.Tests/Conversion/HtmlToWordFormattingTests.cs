@@ -47,6 +47,24 @@ public sealed class HtmlToWordFormattingTests
     }
 
     [Fact]
+    public void Cells_that_declare_spans_of_a_thousand_rows_and_columns_span_the_rows_the_table_has()
+    {
+        const int Size = 30;
+        var row = "<tr>" + string.Concat(Enumerable.Repeat("<td colspan=\"1000\" rowspan=\"1000\">c</td>", Size)) + "</tr>";
+        var html = "<table>" + string.Concat(Enumerable.Repeat(row, Size)) + "</table>";
+
+        // Processor time of this thread, so the limit measures the conversion and not the parallel suite around it.
+        var (document, time) = ThreadCpuTime.Measure(() => RoundTrip(html));
+
+        var table = document.Body.OfType<WordTable>().Single();
+        Assert.Equal(Size, table.Rows.Count);
+        Assert.Equal(Size, table.Rows[0].Cells.Count);
+        Assert.Equal(Size * Size, table.Rows.Sum(r => r.Cells.Count(c => c.Properties.VerticalMerge == WordVerticalMerge.Restart)));
+        Assert.All(table.Rows.SelectMany(r => r.Cells), cell => Assert.Equal(1000, cell.Properties.GridSpan));
+        Assert.True(time < TimeSpan.FromSeconds(20), $"took {time}");
+    }
+
+    [Fact]
     public void Header_cells_stay_bold_unless_their_own_style_says_otherwise()
     {
         var document = RoundTrip("<table><tr><th>h</th><th style=\"font-weight:normal\">n</th></tr></table>");

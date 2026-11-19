@@ -161,11 +161,18 @@ internal static class FragmentPainter
 
         // Leader characters sit on a grid ending at the stop, like Word's, so successive lines line up.
         var step = context.Layout.Measure(glyph, style) * 1.5;
-        var count = (int)Math.Floor((width - 2) / step);
+        if (!(step > 0))
+        {
+            return;
+        }
+
+        var slots = Math.Floor((width - 2) / step);
+        // A stop far past the page (a forged tab position) draws only the leaders that can show on it: the first ones.
+        var count = (int)Math.Min(slots, Math.Ceiling(context.PageSize.Width / step));
         if (count > 0)
         {
             var text = string.Concat(Enumerable.Repeat(glyph, count));
-            context.Canvas.DrawText(text, x + width - (count * step) - 1, baseline, style.Font, style.Size, style.Color, characterSpacing: step - context.Layout.Measure(glyph, style));
+            context.Canvas.DrawText(text, x + width - (slots * step) - 1, baseline, style.Font, style.Size, style.Color, characterSpacing: step - context.Layout.Measure(glyph, style));
         }
     }
 

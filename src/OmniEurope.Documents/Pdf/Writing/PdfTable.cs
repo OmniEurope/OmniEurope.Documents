@@ -140,10 +140,13 @@ internal sealed class PdfTablePainter(PdfFlowLayout flow, PdfTable table)
         // this changes nothing, so a block taller than the page still ends).
         flow.EnsureSpace(headerHeight + (table.Rows.Count > 0 ? Height(table.Rows[0], header: false) : 0));
         PaintHeaders();
-        foreach (var row in table.Rows)
+        for (var index = 0; index < table.Rows.Count; index++)
         {
+            var row = table.Rows[index];
             var height = Height(row, header: false);
-            if (flow.Y + height > flow.Bottom)
+            // The first row already has its place: where it does not fit, the page is a fresh one and another page
+            // would only leave this one blank (or with the headers alone).
+            if (index > 0 && flow.Y + height > flow.Bottom)
             {
                 flow.NewPage();
                 if (flow.Y + headerHeight + height <= flow.Bottom)

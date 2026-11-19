@@ -13,11 +13,17 @@ namespace OmniEurope.Documents.Excel;
 /// </summary>
 public static class NumberFormatter
 {
-    /// <summary>Formats a number (a date is passed as its serial number).</summary>
+    /// <summary>Formats a number (a date is passed as its serial number). A number that is not finite gives
+    /// <c>#NUM!</c>, the error a cell set to one holds.</summary>
     public static string Format(double value, string format, CultureInfo culture, bool date1904 = false)
     {
         ArgumentNullException.ThrowIfNull(format);
         ArgumentNullException.ThrowIfNull(culture);
+        if (!double.IsFinite(value))
+        {
+            return "#NUM!";
+        }
+
         var sections = FormatTokens.SplitSections(format);
         var (section, autoMinus) = Pick(sections, value);
         if (sections.Count > 1 && value < 0)
@@ -115,9 +121,9 @@ internal static class NumberSection
         var integerEnd = pointAt >= 0 ? pointAt : exponentAt >= 0 ? exponentAt : tokens.Count;
         var (grouping, scale) = Commas(tokens, integerEnd);
         value *= Math.Pow(100, tokens.Count(t => t.Kind == FormatTokenKind.Percent));
-        value /= Math.Pow(1000, scale);
-
         var fractionEnd = exponentAt >= 0 ? exponentAt : tokens.Count;
+        value /= Math.Pow(1000, scale + FractionScale(tokens, pointAt, fractionEnd));
+
         var decimals = pointAt < 0 ? 0 : tokens.Skip(pointAt + 1).Take(fractionEnd - pointAt - 1).Count(t => t.Kind == FormatTokenKind.Digit);
         var exponent = 0;
         if (exponentAt >= 0 && value != 0)
@@ -179,6 +185,19 @@ internal static class NumberSection
         return (grouping, scale);
     }
 
+    // Commas right after the last digit placeholder of the decimals scale by a thousand each too ("0.0,," shows millions).
+    private static int FractionScale(List<FormatToken> tokens, int pointAt, int fractionEnd)
+    {
+        var lastDigit = pointAt < 0 || fractionEnd - pointAt - 1 <= 0 ? -1 : tokens.FindLastIndex(fractionEnd - 1, fractionEnd - pointAt - 1, t => t.Kind == FormatTokenKind.Digit);
+        var scale = 0;
+        while (lastDigit >= 0 && lastDigit + 1 + scale < fractionEnd && tokens[lastDigit + 1 + scale].Kind == FormatTokenKind.Comma)
+        {
+            scale++;
+        }
+
+        return scale;
+    }
+
     private static (string Integer, string Fraction) Split(double value, int decimals)
     {
         string text;
@@ -234,8 +253,9 @@ internal static class NumberSection
             });
         }
 
-        // A format without integer placeholders (".00") still shows a non-zero integer part.
-        if (placeholders.Count == 0 && digits != "0")
+        // A format without integer placeholders (".00") still shows a non-zero integer part; a section of literals
+        // alone ("n/a") shows no digit at all.
+        if (placeholders.Count == 0 && digits != "0" && integerEnd < tokens.Count)
         {
             output.Append(digits);
         }

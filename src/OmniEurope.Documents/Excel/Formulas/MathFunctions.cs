@@ -291,6 +291,9 @@ internal static class MathFunctions
 
         // Beyond the range of decimal every double is a whole number: nothing to round, and the conversion would throw.
         var quotient = Math.Abs(ratio) < MaxRoundable ? (double)Math.Round(ExcelDecimal.From(ratio), 9) : ratio;
-        return FormulaValue.Of(direction(quotient) * significance.Number);
+        var product = direction(quotient) * significance.Number;
+        // Kept to the 15 significant digits Excel works with (a whole number of more digits is left alone), so that
+        // 3 times 0.1 is 0.3 and not 0.30000000000000004.
+        return FormulaValue.Of(Math.Abs(product) is >= 1e-9 and < 1e15 ? (double)ExcelDecimal.From(product) : product);
     }
 }

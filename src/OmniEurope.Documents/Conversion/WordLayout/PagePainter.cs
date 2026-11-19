@@ -6,13 +6,26 @@ namespace OmniEurope.Documents.Conversion.WordLayout;
 /// <summary>Draws laid-out pages: header, body items, footnotes and footer, and adds heading bookmarks.</summary>
 internal sealed class PagePainter(LayoutContext context, bool bookmarks)
 {
+    // A PDF page is 3 to 14400 points a side (ISO 32000-1, annex C): a size a document declares outside that range
+    // (a forged or damaged section) is brought back to it and reported.
+    private double PageSide(double declared)
+    {
+        var side = double.IsNaN(declared) ? 3 : Math.Clamp(declared, 3, 14400);
+        if (side != declared)
+        {
+            context.Gaps.Add(DocumentGap.Of(WordPdfGapCodes.PdfPageSizeLimited));
+        }
+
+        return side;
+    }
+
     public void Paint(IReadOnlyList<PageFrame> pages)
     {
         var sectionPages = pages.GroupBy(p => p.Section).ToDictionary(g => g.Key, g => g.Count());
         foreach (var page in pages)
         {
             context.CancellationToken.ThrowIfCancellationRequested();
-            var canvas = context.Builder.AddPage(page.Setup.Width, page.Setup.Height);
+            var canvas = context.Builder.AddPage(PageSide(page.Setup.Width), PageSide(page.Setup.Height));
             var paint = new PaintContext(canvas, context)
             {
                 PageNumber = page.PageNumber,

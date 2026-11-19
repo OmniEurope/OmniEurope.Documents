@@ -7,6 +7,21 @@ Notable changes to this project are documented here, following the Keep a Change
 ### Fixed
 
 - Word to PDF: a cannot-split table row taller than a whole page body now starts right under the previous row and breaks across the following pages, as in Word, instead of moving to a new page and leaving a page that holds only the repeated heading rows.
+- Excel: `NaN`, `Infinity` and `1e999` stay text in `XlsxCsvConverter.FromCsv`; a stored number that is not finite
+  reads as `#NUM!`; `NumberFormatter.Format` shows `#NUM!` for such a number instead of throwing.
+- Excel number formats: commas after the decimals scale by a thousand (`0.0,,`), and a section of literal text only
+  (`0;"negative"`) no longer appends the digits.
+- Excel: a workbook declaring what a sheet cannot hold (a row past the last one, more cells than columns, a range or
+  sheet name that is not valid) throws `DocumentFormatException` instead of an argument or format exception;
+  `XlsxWorksheet.SetColumnWidth` refuses a column past the last one.
+- Excel formulas: `CEILING` and `FLOOR` return the multiple itself (`CEILING(0.3,0.1)` is 0.3).
+- PDF tables: a first row taller than the page starts on the current page instead of leaving a blank one.
+- Markdown: a heading ending with `#` keeps it on reading back.
+- Word to PDF: a section page size outside the 3 to 14400 points a PDF page allows is brought back to that range and
+  reported (`PdfPageSizeLimited`); a dot leader to a tab stop far past the page draws only the dots the page can show;
+  an unbroken word of tens of thousands of letters breaks in a time that follows its length.
+- Word reading: `gridSpan`, `gridBefore` and `gridAfter` are read up to 1000 columns.
+- HTML to Word: row spans stop at the last row of the table, so cells declaring huge spans convert quickly.
 
 ## [1.3.0] - 2026-11-17
 

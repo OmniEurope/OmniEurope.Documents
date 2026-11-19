@@ -88,8 +88,18 @@ public sealed class MarkdownWriter
         ArgumentOutOfRangeException.ThrowIfLessThan(level, 1);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(level, 6);
         Separate();
-        _text.Append('#', level).Append(' ').Append(Escape(text)).Append('\n');
+        _text.Append('#', level).Append(' ').Append(EscapeHeading(text)).Append('\n');
         return this;
+    }
+
+    // A heading that ends with "#" would lose it as a closing sequence ("# Note #" reads "Note"): the last one is
+    // escaped, unless it already is (a heading that is "#" alone).
+    private static string EscapeHeading(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        var escaped = Escape(text.TrimEnd(' ', '\t'));
+        var backslashes = escaped.Length - 1 - escaped.AsSpan(0, Math.Max(escaped.Length - 1, 0)).TrimEnd(Backslash).Length;
+        return escaped.EndsWith('#') && backslashes % 2 == 0 ? escaped[..^1] + Backslash + "#" : escaped;
     }
 
     /// <summary>Appends a paragraph of plain text.</summary>

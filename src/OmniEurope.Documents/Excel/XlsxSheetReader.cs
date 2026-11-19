@@ -178,6 +178,12 @@ internal sealed class XlsxSheetReader(XlsxWorksheet sheet, List<string> sharedSt
         }
 
         var number = XlsxPackageReader.ParseDouble(value);
+        // A cell cannot hold a number that is not finite (NaN, 1e999): it reads as the error a cell set to one holds.
+        if (!double.IsFinite(number))
+        {
+            return (new XlsxError("#NUM!"), XlsxValueType.Error);
+        }
+
         // A duration ([h]:mm) stays a number of days, as a TimeSpan value is stored.
         if (NumberFormatter.IsDateFormat(style.NumberFormat) && !NumberFormatter.IsDurationFormat(style.NumberFormat) && number <= 2958465 && ExcelDate.IsInRange(number, sheet.Workbook.Date1904))
         {

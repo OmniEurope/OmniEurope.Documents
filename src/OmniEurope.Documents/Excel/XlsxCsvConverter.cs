@@ -64,8 +64,9 @@ public static class XlsxCsvConverter
 
     /// <summary>
     /// Builds a one-sheet workbook from CSV records. Values stay text unless <paramref name="numberCulture"/> is
-    /// given, in which case fields that parse as numbers in that culture become numbers. The header row (when
-    /// the reader has one) is written in bold, frozen and given an auto-filter.
+    /// given, in which case fields that parse as finite numbers in that culture become numbers (<c>NaN</c>,
+    /// <c>Infinity</c> or <c>1e999</c> stay text). The header row (when the reader has one) is written in bold,
+    /// frozen and given an auto-filter.
     /// </summary>
     public static XlsxWorkbook FromCsv(CsvReader reader, string sheetName = "Sheet1", CultureInfo? numberCulture = null)
     {
@@ -94,7 +95,7 @@ public static class XlsxCsvConverter
             {
                 var text = reader.GetString(i);
                 sheet.Cell(row, i + 1).Value = numberCulture is not null
-                    && double.TryParse(text, NumberStyles.Number | NumberStyles.AllowExponent, numberCulture, out var number)
+                    && double.TryParse(text, NumberStyles.Number | NumberStyles.AllowExponent, numberCulture, out var number) && double.IsFinite(number)
                     ? number
                     : text;
             }

@@ -21,4 +21,5 @@ internal static class WordPdfGapCodes
     public static readonly GapCode PdfChartPointLimit = new(nameof(PdfChartPointLimit));
     public static readonly GapCode PdfEmfRotatedTextHorizontal = new(nameof(PdfEmfRotatedTextHorizontal));
     public static readonly GapCode PdfEmfBitmapSkipped = new(nameof(PdfEmfBitmapSkipped));
+    public static readonly GapCode PdfPageSizeLimited = new(nameof(PdfPageSizeLimited));
 }

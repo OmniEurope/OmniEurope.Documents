@@ -23,7 +23,7 @@ internal static class HtmlTableBuilder
         var result = new WordTable { Properties = new WordTableProperties { StyleId = writer.Document.Styles.Get("TableGrid") is null ? null : "TableGrid", Width = WordWidth.Percent(100) } };
         for (var r = 0; r < rows.Count; r++)
         {
-            Row(rows[r].Element, r, grid, writer);
+            Row(rows[r].Element, r, rows.Count, grid, writer);
         }
 
         var columns = Math.Max(1, grid.Max(g => g.Count));
@@ -70,7 +70,7 @@ internal static class HtmlTableBuilder
     private static bool IsRow(HtmlElement element) => element.TagName.Equals("tr", StringComparison.OrdinalIgnoreCase);
 
     // Places the row's cells in the grid, skipping slots taken by row spans from above.
-    private static void Row(HtmlElement tr, int r, List<List<WordTableCell?>> grid, HtmlWordWriter writer)
+    private static void Row(HtmlElement tr, int r, int rowCount, List<List<WordTableCell?>> grid, HtmlWordWriter writer)
     {
         while (grid.Count <= r)
         {
@@ -80,9 +80,22 @@ internal static class HtmlTableBuilder
         var column = 0;
         foreach (var td in tr.Children.Where(c => c.TagName.Equals("td", StringComparison.OrdinalIgnoreCase) || c.TagName.Equals("th", StringComparison.OrdinalIgnoreCase)))
         {
-            while (column < grid[r].Count && grid[r][column] is not null || Covered(grid, r, column))
+            // A slot taken by a cell is left by the whole width of that cell, not column by column: looking back
+            // for the cell that covers each slot of a wide span costs the square of its width.
+            while (column < grid[r].Count)
             {
-                column++;
+                if (grid[r][column] is { } taken)
+                {
+                    column += taken.Properties.GridSpan ?? 1;
+                }
+                else if (Covered(grid, r, column))
+                {
+                    column++;
+                }
+                else
+                {
+                    break;
+                }
             }
 
             var span = Math.Clamp(Number(td, "colspan"), 1, 1000);
@@ -91,7 +104,8 @@ internal static class HtmlTableBuilder
             var header = td.TagName.Equals("th", StringComparison.OrdinalIgnoreCase);
             writer.WriteInto(cell.Blocks, td, header ? new WordRunProperties { Bold = true } : null);
             Put(grid, r, column, cell, span);
-            for (var below = 1; below < down; below++)
+            // A span never runs past the last row of the table: the rows it declares beyond it do not exist.
+            for (var below = 1; below < Math.Min(down, rowCount - r); below++)
             {
                 while (grid.Count <= r + below)
                 {

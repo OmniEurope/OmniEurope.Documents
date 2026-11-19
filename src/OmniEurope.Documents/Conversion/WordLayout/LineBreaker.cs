@@ -277,17 +277,21 @@ internal sealed class LineBreaker(LayoutContext context, LineGeometry geometry)
             return;
         }
 
-        // Cuts fall between Unicode scalars, never inside a surrogate pair.
-        while (ScalarEnd(word.Text, length) < word.Text.Length && context.Measure(word.Text[..ScalarEnd(word.Text, length)], word.Style) <= room)
+        // Cuts fall between Unicode scalars, never inside a surrogate pair. Widths add up scalar by scalar, so the
+        // width of what stays grows with each scalar taken and what moves on keeps the rest of the word's width:
+        // measuring both again for each line would cost the square of the length of a very long word.
+        var width = context.Measure(word.Text[..length], word.Style);
+        while (ScalarEnd(word.Text, length) is var end && end < word.Text.Length
+            && width + context.Measure(word.Text[length..end], word.Style) is var wider && wider <= room)
         {
-            length = ScalarEnd(word.Text, length);
+            (length, width) = (end, wider);
         }
 
         var rest = new TextToken(word.Text[length..], word.Style) { Note = word.Note, BreakBefore = true, Levels = word.Levels?[length..] };
-        rest.Width = context.Measure(rest.Text, rest.Style);
+        rest.Width = Math.Max(0, word.Width - width);
         word.Text = word.Text[..length];
         word.Levels = word.Levels?[..length];
-        word.Width = context.Measure(word.Text, word.Style);
+        word.Width = width;
         _tokens.Insert(k + 1, rest);
     }
 

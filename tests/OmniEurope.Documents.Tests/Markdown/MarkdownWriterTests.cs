@@ -32,6 +32,20 @@ public sealed class MarkdownWriterTests
         Assert.Equal(text, plain.ToString());
     }
 
+    [Theory]
+    [InlineData("Hello #", "Hello #")]
+    [InlineData("a ##", "a ##")]
+    [InlineData("C#", "C#")]
+    [InlineData("#", "#")]
+    [InlineData("Title  ", "Title")]
+    [InlineData(@"back\#", @"back\#")]
+    public void A_heading_keeps_the_hashes_it_ends_with(string text, string expected)
+    {
+        var html = MarkdownRenderer.ToHtml(new MarkdownWriter().Heading(1, text).ToString(), MarkdownOptions.GitHub);
+
+        Assert.Equal("<h1>" + expected + "</h1>", html.Trim());
+    }
+
     [Fact]
     public void Builds_headings_lists_and_tables()
     {

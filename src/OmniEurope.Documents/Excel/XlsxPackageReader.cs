@@ -23,6 +23,12 @@ internal static class XlsxPackageReader
         {
             throw new DocumentFormatException("The workbook contains malformed XML.", exception);
         }
+        catch (Exception exception) when (exception is ArgumentException or FormatException)
+        {
+            // What the file declares and the model refuses: a cell outside the sheet, a range that is none, a sheet
+            // name that is not valid or used twice, a negative frozen pane.
+            throw new DocumentFormatException("The workbook is not valid: " + exception.Message, exception);
+        }
     }
 
     private static XlsxWorkbook ReadPackage(SafeZip zip)
