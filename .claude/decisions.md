@@ -23,3 +23,4 @@
 - 2026-11-17 : semi-gras (poids 600) dans la mise en page PDF : simulé (contour du glyphe), pas de nouvelle police.
 - 2026-11-17 : découplage Fonts vers Conversion et Charts vers Excel : reporté, inscrit dans PLAN-008.
 - 2026-11-17 : version : publication 1.3.0 (version du milieu augmentée).
+- 2026-11-19 : audit Fable : audit par échantillonnage large (pas chaque fichier) avec corrections directes ; changements d'API publique, de comportement visible ou touchant beaucoup de fichiers non corrigés, laissés à la décision du propriétaire.
