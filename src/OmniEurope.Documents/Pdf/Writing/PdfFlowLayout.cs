@@ -47,6 +47,8 @@ public sealed class PdfFlowLayout
     private bool _finished;
 
     /// <summary>Starts a flow on a new page of <paramref name="document"/>.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">A header or footer height is negative, or the margins, header
+    /// and footer leave no room on the page.</exception>
     public PdfFlowLayout(PdfDocumentBuilder document, PdfFlowOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(document);
@@ -55,6 +57,13 @@ public sealed class PdfFlowLayout
         if (!(_options.HeaderHeight >= 0) || !(_options.FooterHeight >= 0))
         {
             throw new ArgumentOutOfRangeException(nameof(options), "The header and footer heights cannot be negative.");
+        }
+
+        var margins = _options.Margins;
+        if (!(_options.PageWidth - margins.Left - margins.Right > 0)
+            || !(_options.PageHeight - margins.Top - margins.Bottom - _options.HeaderHeight - _options.FooterHeight > 0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(options), "The margins, header and footer leave no room on the page.");
         }
 
         _left = _options.Margins.Left;

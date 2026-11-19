@@ -83,6 +83,9 @@ public sealed class PdfFlowLayoutTests
         Assert.Equal(270, flow.Bottom);
         Assert.Throws<ArgumentOutOfRangeException>(() => new PdfFlowLayout(new PdfDocumentBuilder(), new PdfFlowOptions { HeaderHeight = -1 }));
         Assert.Throws<ArgumentOutOfRangeException>(() => new PdfFlowLayout(new PdfDocumentBuilder(), new PdfFlowOptions { FooterHeight = -1 }));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new PdfFlowLayout(new PdfDocumentBuilder(), new PdfFlowOptions { PageWidth = 100, Margins = (50, 10, 50, 10) }));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new PdfFlowLayout(new PdfDocumentBuilder(), new PdfFlowOptions { PageHeight = 100, Margins = (10, 40, 10, 40), HeaderHeight = 20 }));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new PdfFlowLayout(new PdfDocumentBuilder(), new PdfFlowOptions { Margins = (double.NaN, 0, 0, 0) }));
     }
 
     [Fact]

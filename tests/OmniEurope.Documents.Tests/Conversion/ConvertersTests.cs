@@ -159,5 +159,8 @@ public sealed class ConvertersTests
         Assert.Equal("Images", fitted.Information.Title);
         Assert.Throws<ArgumentException>(() => ImagesToPdf.Convert([[1, 2, 3]]));
         Assert.Throws<ArgumentException>(() => ImagesToPdf.Convert([]));
+        Assert.Throws<ArgumentOutOfRangeException>(() => ImagesToPdf.Convert([Png], new ImagePdfOptions { PageSize = (100, 400), Margin = 50 }));
+        Assert.Throws<ArgumentOutOfRangeException>(() => ImagesToPdf.Convert([Png], new ImagePdfOptions { PageSize = PdfPageSize.A4, Margin = double.NaN }));
+        Assert.Single(PdfDocument.Open(ImagesToPdf.Convert([Png], new ImagePdfOptions { PageSize = (100, 400), Margin = 49 })).GetPage(1).Images);
     }
 }

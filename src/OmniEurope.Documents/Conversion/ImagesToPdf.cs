@@ -31,10 +31,16 @@ public static class ImagesToPdf
 {
     /// <summary>Converts image files into a PDF.</summary>
     /// <exception cref="ArgumentException">An image format is not recognised.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">With a page size, the margin leaves no room for the image.</exception>
     public static byte[] Convert(IEnumerable<byte[]> images, ImagePdfOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(images);
         options ??= new ImagePdfOptions();
+        if (options.PageSize is { } page && (!(page.Width - (2 * options.Margin) > 0) || !(page.Height - (2 * options.Margin) > 0)))
+        {
+            throw new ArgumentOutOfRangeException(nameof(options), "The margin leaves no room for the image on the page.");
+        }
+
         var builder = new PdfDocumentBuilder { Title = options.Title, Creator = "OmniEurope.Documents", Conformance = options.Conformance };
         var count = 0;
         foreach (var data in images)
