@@ -185,7 +185,7 @@ internal sealed class XlsxSheetReader(XlsxWorksheet sheet, List<string> sharedSt
         }
 
         // A duration ([h]:mm) stays a number of days, as a TimeSpan value is stored.
-        if (NumberFormatter.IsDateFormat(style.NumberFormat) && !NumberFormatter.IsDurationFormat(style.NumberFormat) && number <= 2958465 && ExcelDate.IsInRange(number, sheet.Workbook.Date1904))
+        if (NumberFormatter.IsDateFormat(style.NumberFormat) && !NumberFormatter.IsDurationFormat(style.NumberFormat) && number <= 2958465 && ExcelDate.IsInRange(number, sheet.Workbook.Date1904) && !ExcelDate.IsFictitiousDay(number, sheet.Workbook.Date1904))
         {
             return (ExcelDate.FromSerial(number, sheet.Workbook.Date1904), XlsxValueType.DateTime);
         }

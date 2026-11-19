@@ -175,7 +175,7 @@ internal sealed class XlsxCalculator(XlsxWorkbook workbook, DateTime now, long m
     private void Store(XlsxCell cell, FormulaValue result)
     {
         var value = result.ToCellValue();
-        if (cell.ValueType == XlsxValueType.DateTime && value is double serial && ExcelDate.IsInRange(serial, workbook.Date1904))
+        if (cell.ValueType == XlsxValueType.DateTime && value is double serial && ExcelDate.IsInRange(serial, workbook.Date1904) && !ExcelDate.IsFictitiousDay(serial, workbook.Date1904))
         {
             value = ExcelDate.FromSerial(serial, workbook.Date1904);
         }
