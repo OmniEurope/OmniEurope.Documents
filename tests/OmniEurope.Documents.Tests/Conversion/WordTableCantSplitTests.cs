@@ -53,6 +53,46 @@ public sealed class WordTableCantSplitTests
         }
     }
 
+    [Fact]
+    public void A_cannot_split_row_taller_than_a_page_starts_right_under_the_previous_row()
+    {
+        var document = new WordDocument();
+        document.Sections[0].Page = WordPageSetup.A4;
+        var table = new WordTable(300);
+        table.Rows.Add(Row(new WordTableRowProperties { IsHeader = true }, "Heading"));
+        table.Rows.Add(Row(new WordTableRowProperties(), "Short row"));
+        table.Rows.Add(Row(new WordTableRowProperties { CantSplit = true }, [.. Enumerable.Range(1, 52).Select(k => $"Para {k:000} end")]));
+        document.Body.Add(table);
+        document.Body.Add(new WordParagraph("After"));
+
+        var pdf = PdfDocument.Open(WordToPdf.Convert(document, null, TestContext.Current.CancellationToken).Pdf);
+
+        var first = pdf.GetPage(1).Text;
+        Assert.Contains("Short row", first);
+        Assert.Contains("Para 001 ", first);
+        var limit = WordPageSetup.A4.Height - WordPageSetup.A4.MarginBottom;
+        for (var n = 1; n <= pdf.PageCount; n++)
+        {
+            var page = pdf.GetPage(n);
+            Assert.True(page.Text.Contains("Para ", StringComparison.Ordinal) || page.Text.Contains("After", StringComparison.Ordinal), $"page {n} holds only the repeated heading");
+            var lowest = page.Letters.Where(l => !string.IsNullOrWhiteSpace(l.Value)).Select(l => page.Height - l.Y).DefaultIfEmpty(0).Max();
+            Assert.True(lowest <= limit + 0.5, $"page {n} draws text down to {lowest}, past the bottom margin at {limit}");
+        }
+    }
+
+    private static WordTableRow Row(WordTableRowProperties properties, params string[] paragraphs)
+    {
+        var cell = new WordTableCell();
+        foreach (var text in paragraphs)
+        {
+            cell.Blocks.Add(Paragraph(text));
+        }
+
+        var row = new WordTableRow { Properties = properties };
+        row.Cells.Add(cell);
+        return row;
+    }
+
     private static WordDocument Document(int fillers, int paragraphs)
     {
         var document = new WordDocument();

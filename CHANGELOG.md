@@ -4,6 +4,10 @@ Notable changes to this project are documented here, following the Keep a Change
 
 ## [Unreleased]
 
+### Fixed
+
+- Word to PDF: a cannot-split table row taller than a whole page body now starts right under the previous row and breaks across the following pages, as in Word, instead of moving to a new page and leaving a page that holds only the repeated heading rows.
+
 ## [1.3.0] - 2026-11-17
 
 ### Added

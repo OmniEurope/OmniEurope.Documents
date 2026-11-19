@@ -146,6 +146,14 @@ internal sealed class Paginator(LayoutContext context, BlockLayout blocks)
             return PlaceSplit(parts, i, before + drop);
         }
 
+        // A cannot-split row taller than a whole page body cannot keep together anyway: Word starts it right where it
+        // stands and breaks it across the pages that follow.
+        if (item is RowItem { CantSplit: true } tall && tall.Height > bottom - _page.BodyTop + Epsilon
+            && tall.SplitOversized(bottom - _y - before - drop) is { } oversized)
+        {
+            return PlaceSplit(oversized, i, before + drop);
+        }
+
         return AtColumnTop() ? TooTall(item, i, before, drop) : Backtrack(i);
     }
 
