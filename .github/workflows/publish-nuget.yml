@@ -25,6 +25,20 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || '' }}
+          fetch-depth: 0
+      - name: Require the version tag on a commit of main
+        shell: pwsh
+        run: |
+          if ($env:RELEASE_TAG -notmatch '^v\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$') { throw "Release tag '$env:RELEASE_TAG' is not a version tag such as v1.2.3." }
+          git fetch --force --tags origin '+refs/heads/main:refs/remotes/origin/main'
+          if ($LASTEXITCODE -ne 0) { throw 'Could not fetch main and the tags from origin.' }
+          $tagSha = (git rev-parse --verify --quiet "refs/tags/$env:RELEASE_TAG^{commit}")
+          if (-not $tagSha) { throw "Tag $env:RELEASE_TAG does not exist on origin." }
+          $headSha = (git rev-parse HEAD).Trim()
+          if ($tagSha.Trim() -cne $headSha) { throw "Tag $env:RELEASE_TAG points to $tagSha, not to the checked out commit $headSha." }
+          git merge-base --is-ancestor $headSha refs/remotes/origin/main
+          if ($LASTEXITCODE -ne 0) { throw "Tag $env:RELEASE_TAG ($headSha) is not on main: publish only from a commit of main." }
+          "Tag $env:RELEASE_TAG is on main at $headSha."
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
