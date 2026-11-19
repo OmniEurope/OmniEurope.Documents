@@ -14,6 +14,13 @@ Notable changes to this project are documented here, following the Keep a Change
   the one starting first wins, the longer one at the same position.
 - PDF: `PdfFlowLayout` and `ImagesToPdf.Convert` (with a page size) throw `ArgumentOutOfRangeException` when the
   margins, header and footer leave no room on the page, instead of writing one page per line or a negative scale.
+- Excel: the 1900 date system follows the spreadsheet's calendar. Serial 60 is the fictitious 29 February 1900
+  (`DAY(60)` is 29, `DATE(1900,2,29)` is 60, shown as 1900-02-29) and `ExcelDate.FromSerial(60)` gives 28 February
+  1900 with the time of day; weekdays and day names before 1 March 1900 count 1 January 1900 as a Sunday
+  (`WEEKDAY(1)` is 1); serial 0 reads as 1900-01-00; a date-formatted cell holding serial 60 stays a number.
+- Excel: a cell or row whose `r` attribute names no position of a worksheet (`A99999999`, `XFE1`, row 0) refuses the
+  workbook with `DocumentFormatException` naming the sheet and the reference, instead of placing the cell by its
+  position in the file; `XlsxEditor` refuses it the same way.
 
 ### Fixed
 
@@ -23,6 +30,8 @@ Notable changes to this project are documented here, following the Keep a Change
   (`ROUND(-0.4,0)`); `VALUE` and text arithmetic read dollar amounts and parentheses (`"$1,000"`, `"(5)"`).
 - Excel to PDF: a merge reaching past the printed range spans the printed columns only, and is listed on the
   printed rows only.
+- Excel: `ExcelDate.ToSerial` keeps a time of day on 30 December 1899 (serial 0 plus its fraction) instead of
+  shifting it one day below zero, so a time-only cell no longer shows `########`.
 - HTML: legacy character references are read without their semicolon (`&amp`, `&nbsp`, `&eacute`, `&#38`) and the
   upper-case spellings (`&AMP;`, `&COPY`) are decoded; in an attribute value a legacy name followed by a letter, a
   digit or `=` stays as written. Table spans are parsed with the invariant culture.
