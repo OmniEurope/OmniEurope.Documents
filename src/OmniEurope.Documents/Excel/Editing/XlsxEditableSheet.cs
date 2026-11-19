@@ -242,11 +242,11 @@ public sealed class XlsxEditableSheet
             return;
         }
 
-        _normalized = true;
+        // Set once every position is valid: a refused sheet is refused again at each access.
         var row = 0;
         foreach (var element in SheetData().Elements(S + "row"))
         {
-            row = (int?)element.Attribute("r") ?? row + 1;
+            row = XlsxPlacement.Row((string?)element.Attribute("r"), row, Name);
             if (element.Attribute("r") is null)
             {
                 element.SetAttributeValue("r", row);
@@ -255,13 +255,15 @@ public sealed class XlsxEditableSheet
             var column = 0;
             foreach (var cell in element.Elements(S + "c"))
             {
-                column = CellReference.TryParse((string?)cell.Attribute("r") ?? string.Empty, out _, out var at) ? at : column + 1;
+                column = XlsxPlacement.Cell((string?)cell.Attribute("r"), row, column, Name).Column;
                 if (cell.Attribute("r") is null)
                 {
                     cell.SetAttributeValue("r", CellReference.Format(row, column));
                 }
             }
         }
+
+        _normalized = true;
     }
 
     private XElement AddCell((int Row, int Column) position)

@@ -33,7 +33,7 @@ internal sealed class XlsxSheetReader(XlsxWorksheet sheet, List<string> sharedSt
                     ReadColumn(xml);
                     break;
                 case "row":
-                    _row = int.TryParse(xml.GetAttribute("r"), NumberStyles.None, CultureInfo.InvariantCulture, out var r) ? r : _row + 1;
+                    _row = XlsxPlacement.Row(xml.GetAttribute("r"), _row, sheet.Name);
                     _column = 0;
                     break;
                 case "c":
@@ -80,12 +80,8 @@ internal sealed class XlsxSheetReader(XlsxWorksheet sheet, List<string> sharedSt
     // Leaves the reader after the cell element.
     private void ReadCell(XmlReader xml)
     {
-        if (!CellReference.TryParse(xml.GetAttribute("r"), out var row, out var column))
-        {
-            row = Math.Max(_row, 1);
-            column = _column + 1;
-        }
-
+        // A cell outside any row element sits on row 1.
+        var (row, column) = XlsxPlacement.Cell(xml.GetAttribute("r"), Math.Max(_row, 1), _column, sheet.Name);
         _row = row;
         _column = column;
         var type = xml.GetAttribute("t") ?? "n";
